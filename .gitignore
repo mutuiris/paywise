@@ -1,0 +1,29 @@
+# Environment / secrets
+backend/env.sh
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+
+# Virtual environments
+.venv/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml

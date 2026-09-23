@@ -1,0 +1,40 @@
+[project]
+name = "paywise-backend"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.1,<6.2",
+    "psycopg[binary]>=3.3,<3.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1,<9.2",
+    "pytest-cov>=7.1,<7.2",
+    "pytest-django>=4.14,<4.15",
+    "ruff>=0.16,<0.17",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.base"
+python_files = [
+    "test_*.py",
+    "*_test.py",
+    "tests.py",
+]
+addopts = "-ra"
