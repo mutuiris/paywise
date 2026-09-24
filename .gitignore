@@ -27,3 +27,6 @@ staticfiles/
 .coverage.*
 htmlcov/
 coverage.xml
+
+#implementation documents
+backend/docs/
