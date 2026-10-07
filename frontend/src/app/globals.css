@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --ink: #0f172a;
+  --muted-ink: #64748b;
+  --line: #e2e8f0;
+  --brand: #2563eb;
+  --brand-deep: #1d4ed8;
+  --brand-light: #eff6ff;
+  --brand-foreground: #ffffff;
+  --err: #dc2626;
+  --ok: #16a34a;
+  --warn: #d97706;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --font-lora: var(--font-lora), serif;
+  --font-serif: var(--font-lora), serif;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted-ink: var(--muted-ink);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-light: var(--brand-light);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-err: var(--err);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Custom UI helpers */
+.input-field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  font-size: 0.875rem;
+  color: var(--ink);
+  transition: all 0.15s ease-in-out;
+}
+
+.input-field::placeholder {
+  color: rgba(100, 116, 139, 0.6);
+}
+
+.input-field:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.input-field[aria-invalid="true"] {
+  border-color: var(--err);
+}
+
+.input-field[aria-invalid="true"]:focus {
+  border-color: var(--err);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
