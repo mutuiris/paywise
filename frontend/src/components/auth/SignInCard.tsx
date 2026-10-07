@@ -1,78 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import {
   Eye,
   EyeOff,
-  Loader2,
-  Info,
   Lock,
   Mail,
   ArrowRight,
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 
 export function SignInCard() {
-  const router = useRouter();
-  const { user, hydrated, isLoading: isAuthLoading, login } = useAuth();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotNotice, setShowForgotNotice] = useState(false);
 
-  // If already authenticated, redirect to dashboard
-  useEffect(() => {
-    if (hydrated && user) {
-      router.push('/dashboard');
-    }
-  }, [hydrated, user, router]);
-
-  const validateForm = () => {
-    const errs: { email?: string; password?: string } = {};
-    const trimmedEmail = email.trim();
-
-    if (!trimmedEmail) {
-      errs.email = 'Enter your work email.';
-    } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-      errs.email = 'Enter a valid email address.';
-    }
-
-    if (!password) {
-      errs.password = 'Enter your password.';
-    }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage(null);
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await login(email, password);
-      router.push('/dashboard');
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Something went wrong. Please try again.');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    // UI sign-in action handler
   };
 
   return (
@@ -95,20 +42,12 @@ export function SignInCard() {
           {/* Heading */}
           <div className="mb-8">
             <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-              Sign in
+              Welcome back!
             </h1>
+            <p className="mt-2 text-sm text-muted-ink">
+             Signin to continue with PayWise
+            </p>
           </div>
-
-          {/* Error message alert */}
-          {errorMessage && (
-            <div
-              role="alert"
-              className="mb-6 rounded-lg border border-err/30 bg-red-50/90 p-3.5 text-sm text-err flex items-start gap-2.5 animate-in fade-in duration-200"
-            >
-              <Info className="size-4 shrink-0 mt-0.5 text-err" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
 
           {/* Forgot password notice */}
           {showForgotNotice && (
@@ -139,21 +78,11 @@ export function SignInCard() {
                   type="email"
                   autoComplete="username"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
-                  }}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? 'email-err' : undefined}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="input-field pl-11 pr-4 py-2.5 text-sm font-serif bg-surface border-line text-ink placeholder:text-muted-ink/60 focus:border-brand"
                   placeholder="Enter your work email"
                 />
               </div>
-              {errors.email && (
-                <p id="email-err" className="mt-1.5 text-xs text-err font-medium">
-                  {errors.email}
-                </p>
-              )}
             </div>
 
             {/* Password Field */}
@@ -182,13 +111,7 @@ export function SignInCard() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password)
-                      setErrors((prev) => ({ ...prev, password: undefined }));
-                  }}
-                  aria-invalid={!!errors.password}
-                  aria-describedby={errors.password ? 'pw-err' : undefined}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="input-field pl-11 pr-11 py-2.5 text-sm font-serif bg-surface border-line text-ink placeholder:text-muted-ink/60 focus:border-brand"
                   placeholder="Enter your password"
                 />
@@ -205,11 +128,6 @@ export function SignInCard() {
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p id="pw-err" className="mt-1.5 text-xs text-err font-medium">
-                  {errors.password}
-                </p>
-              )}
             </div>
 
             {/* Remember Me Checkbox */}
@@ -221,27 +139,17 @@ export function SignInCard() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="size-4 rounded border-line text-brand focus:ring-brand accent-brand cursor-pointer"
                 />
-                <span>Remember me on this device</span>
+                <span>Remember me</span>
               </label>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || isAuthLoading}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-2.5 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-deep active:scale-[0.99] transition-all disabled:opacity-70 disabled:pointer-events-none cursor-pointer"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-2.5 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-deep active:scale-[0.99] transition-all cursor-pointer"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  <span>Signing in…</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign in</span>
-                  <ArrowRight className="size-4" />
-                </>
-              )}
+              <span>Sign in</span>
+              <ArrowRight className="size-4" />
             </button>
           </form>
         </div>

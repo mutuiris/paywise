@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, IBM_Plex_Mono, Lora } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/context/AuthContext';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -23,7 +22,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Sign in — PayWise',
+  title: 'PayWise — Vendor Payment Management',
   description: 'Vendor payment requests, approvals and tracking for ImaraWorks.',
 };
 
@@ -35,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable} ${ibmPlexMono.variable} h-full`}>
       <body className="min-h-full flex flex-col font-sans antialiased text-ink bg-canvas">
-        <AuthProvider>{children}</AuthProvider>
+        {children}
       </body>
     </html>
   );
