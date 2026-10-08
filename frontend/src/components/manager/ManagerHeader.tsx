@@ -3,13 +3,18 @@
 import React from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
 
-export function ManagerHeader() {
+interface ManagerHeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function ManagerHeader({ onMenuClick }: ManagerHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6 font-serif">
       {/* Mobile Menu Button */}
       <button
         type="button"
-        className="grid size-9 place-items-center rounded-md border border-line text-ink hover:bg-canvas lg:hidden"
+        onClick={onMenuClick}
+        className="grid size-9 place-items-center rounded-md border border-line text-ink hover:bg-canvas lg:hidden cursor-pointer"
         aria-label="Open navigation"
       >
         <Menu className="size-4" />
@@ -28,7 +33,7 @@ export function ManagerHeader() {
           id="global-search"
           type="search"
           placeholder="Search requests, vendors, invoices…"
-          className="w-full rounded-md border border-line bg-canvas/60 py-1.5 pl-8 pr-3 text-sm text-ink placeholder:text-muted-ink/70 focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
+          className="w-full rounded-md border border-line bg-canvas/60 py-1.5 pl-8 pr-3 text-sm text-ink placeholder:text-muted-ink/70 focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all font-serif"
         />
       </form>
 
