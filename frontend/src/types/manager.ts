@@ -44,6 +44,21 @@ export interface PaymentRequestItem {
   approvals?: ApprovalStep[];
 }
 
+export interface VendorItem {
+  id: string;
+  name: string;
+  service: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  payoutMethod: PaymentMethod;
+  accountNumber?: string;
+  bankName?: string;
+  tillNumber?: string;
+  paybillNumber?: string;
+  isActive: boolean;
+}
+
 export interface ActivityEvent {
   id: string;
   at: string;

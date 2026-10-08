@@ -1,4 +1,4 @@
-import { PaymentRequestItem, ActivityEvent } from '@/types/manager';
+import { PaymentRequestItem, ActivityEvent, VendorItem } from '@/types/manager';
 
 export const CURRENT_MANAGER = {
   id: 'u3',
@@ -9,6 +9,87 @@ export const CURRENT_MANAGER = {
   approvalLimit: 50000,
   approvalLimitLabel: 'Up to KES 50,000 (Single) · > KES 50,000 (Manager + Finance)',
 };
+
+export const MOCK_PROJECTS = [
+  'Nairobi HQ Tower',
+  'Kisumu Depot',
+  'Thika Road Bridge',
+  'Mombasa Warehouse',
+  'Operations / Fleet',
+];
+
+export const MOCK_VENDORS: VendorItem[] = [
+  {
+    id: 'v1',
+    name: 'Metro Hardware Ltd.',
+    service: 'Construction materials & fixings',
+    contactName: 'James Kariuki',
+    contactEmail: 'accounts@metrohardware.co.ke',
+    contactPhone: '+254 712 004 551',
+    payoutMethod: 'MPESA',
+    tillNumber: '541098',
+    isActive: true,
+  },
+  {
+    id: 'v2',
+    name: 'Prime Cement Supplies',
+    service: 'Portland cement bulk supplies',
+    contactName: 'Naomi Achieng',
+    contactEmail: 'billing@primecement.co.ke',
+    contactPhone: '+254 733 118 902',
+    payoutMethod: 'BANK_TRANSFER',
+    bankName: 'Equity Bank',
+    accountNumber: '0110298374100',
+    isActive: true,
+  },
+  {
+    id: 'v3',
+    name: 'SwiftHaul Logistics',
+    service: 'Heavy transport & flatbed haulage',
+    contactName: 'Peter Kimani',
+    contactEmail: 'finance@swifthaul.co.ke',
+    contactPhone: '+254 720 445 118',
+    payoutMethod: 'BANK_TRANSFER',
+    bankName: 'KCB Bank Kenya',
+    accountNumber: '1182903847',
+    isActive: true,
+  },
+  {
+    id: 'v4',
+    name: 'PowerHire Kenya',
+    service: 'Excavator & heavy equipment rental',
+    contactName: 'Susan Chebet',
+    contactEmail: 'hire@powerhire.co.ke',
+    contactPhone: '+254 701 559 220',
+    payoutMethod: 'MPESA',
+    paybillNumber: '247247',
+    accountNumber: 'POWHIRE-99',
+    isActive: true,
+  },
+  {
+    id: 'v5',
+    name: 'Apex Electricals',
+    service: 'Substation & electrical installation',
+    contactName: 'Dennis Ouma',
+    contactEmail: 'invoices@apexelectricals.co.ke',
+    contactPhone: '+254 726 330 887',
+    payoutMethod: 'BANK_TRANSFER',
+    bankName: 'Standard Chartered',
+    accountNumber: '0100293847500',
+    isActive: true,
+  },
+  {
+    id: 'v6',
+    name: 'BlueLine Plumbing',
+    service: 'Commercial plumbing & drainage',
+    contactName: 'Mercy Wairimu',
+    contactEmail: 'accounts@blueline.co.ke',
+    contactPhone: '+254 718 662 043',
+    payoutMethod: 'MPESA',
+    tillNumber: '881290',
+    isActive: true,
+  },
+];
 
 export const INITIAL_PAYMENT_REQUESTS: PaymentRequestItem[] = [
   {
@@ -225,6 +306,33 @@ export const INITIAL_PAYMENT_REQUESTS: PaymentRequestItem[] = [
         approverName: 'Carol Wanjiku',
         decidedAt: '2026-10-01T11:20:00Z',
         reason: 'Rate per bag exceeds the framework contract price. Please adjust and resubmit.',
+      },
+    ],
+  },
+  {
+    id: 'pr8',
+    reference: 'PR-000135',
+    vendorId: 'v1',
+    vendorName: 'Metro Hardware Ltd.',
+    amount: 45200,
+    currency: 'KES',
+    invoiceNumber: 'INV-1044',
+    reason: 'Galvanized roofing sheets & guttering',
+    project: 'Mombasa Warehouse',
+    paymentMethod: 'BANK_TRANSFER',
+    requestedPaymentDate: '2026-10-08T08:00:00Z',
+    notes: 'Warehouse roof maintenance materials.',
+    requesterId: 'u2',
+    requesterName: 'Brian Otieno',
+    status: 'SUBMITTED',
+    createdAt: '2026-10-08T07:15:00Z',
+    submittedAt: '2026-10-08T07:20:00Z',
+    updatedAt: '2026-10-08T07:20:00Z',
+    approvals: [
+      {
+        id: 'ap11',
+        type: 'MANAGER',
+        decision: 'PENDING',
       },
     ],
   },

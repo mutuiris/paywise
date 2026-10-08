@@ -154,10 +154,10 @@ export function PaymentRequestTable({
                     >
                       {/* Reference */}
                       <td className="whitespace-nowrap px-5 py-3.5">
-                        <span className="font-mono text-[13px] font-semibold text-brand group-hover:underline">
+                        <span className="font-serif text-[13px] font-semibold text-brand group-hover:underline">
                           {req.reference}
                         </span>
-                        <span className="block font-mono text-[11px] text-muted-ink">
+                        <span className="block font-serif text-[11px] text-muted-ink">
                           {req.invoiceNumber}
                         </span>
                       </td>
@@ -173,7 +173,7 @@ export function PaymentRequestTable({
                       </td>
 
                       {/* Amount */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-mono font-semibold tabular-nums text-ink">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">
                         {formatCurrency(req.amount)}
                       </td>
 
@@ -237,7 +237,7 @@ export function PaymentRequestTable({
                 onClick={() => onReview(req)}
               >
                 <div className="min-w-0 pr-3">
-                  <span className="font-mono text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
+                  <span className="font-serif text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
                     {req.reference}
                   </span>
                   <p className="mt-0.5 font-semibold text-ink text-sm truncate group-hover:text-brand-deep transition-colors">
@@ -245,10 +245,7 @@ export function PaymentRequestTable({
                   </p>
                 </div>
 
-                <div className="text-right shrink-0 flex items-center gap-2.5">
-                  <span className="font-mono text-sm font-semibold tabular-nums text-ink">
-                    {formatCurrency(req.amount)}
-                  </span>
+                <div className="shrink-0">
                   <Eye className="size-4 text-muted-ink group-hover:text-brand group-hover:scale-110 transition-all" />
                 </div>
               </li>

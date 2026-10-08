@@ -1,2 +1,2 @@
-// Vendors management components for Manager portal
-export {};
+export { VendorsList } from './VendorsList';
+export { VendorDetail } from './VendorDetail';

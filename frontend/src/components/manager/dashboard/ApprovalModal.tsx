@@ -79,7 +79,7 @@ export function ApprovalModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-line px-6 py-4 bg-surface-subtle">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-sm font-semibold text-brand">
+            <span className="font-serif text-sm font-semibold text-brand">
               {request.reference}
             </span>
             <StatusBadge status={request.status} />
@@ -102,14 +102,14 @@ export function ApprovalModal({
               <p className="text-xs font-medium text-muted-ink uppercase tracking-wider">
                 Total Payable Amount
               </p>
-              <p className="mt-1 font-mono text-3xl font-bold tracking-tight text-ink">
+              <p className="mt-1 font-serif text-3xl font-bold tracking-tight text-ink">
                 {formatCurrency(request.amount)}
               </p>
             </div>
             <div className="sm:text-right">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-deep border border-brand/20">
                 <CreditCard className="size-3.5" />
-                {request.paymentMethod === 'MPESA' ? 'M-Pesa Payout' : 'Bank Wire Transfer'}
+                {request.paymentMethod === 'MPESA' ? 'M-Pesa Payout' : 'Bank'}
               </span>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function ApprovalModal({
               <FileText className="size-4.5 text-muted-ink shrink-0 mt-0.5" />
               <div>
                 <span className="block text-xs text-muted-ink font-medium">Invoice Number</span>
-                <span className="font-mono font-semibold text-ink">{request.invoiceNumber}</span>
+                <span className="font-serif font-semibold text-ink">{request.invoiceNumber}</span>
               </div>
             </div>
 
