@@ -1,11 +1,5 @@
-import { Metadata } from 'next';
-import { ManagerShell } from '@/components/manager';
-
-export const metadata: Metadata = {
-  title: 'Manager — ImaraPay',
-  description: 'Manager portal with sidebar and header.',
-};
+import { redirect } from 'next/navigation';
 
 export default function ManagerPage() {
-  return <ManagerShell />;
+  redirect('/manager/dashboard');
 }

@@ -14,28 +14,28 @@ import {
 
 const NAV_ITEMS = [
   {
-    to: '/dashboard',
+    to: '/manager/dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
   },
   {
-    to: '/requests',
+    to: '/manager/requests',
     label: 'Payment Requests',
     icon: FileText,
   },
   {
-    to: '/approvals',
+    to: '/manager/approvals',
     label: 'Approvals',
     icon: SquareCheckBig,
     badge: 3,
   },
   {
-    to: '/vendors',
+    to: '/manager/vendors',
     label: 'Vendors',
     icon: Building2,
   },
   {
-    to: '/reports',
+    to: '/manager/reports',
     label: 'Reports',
     icon: ChartColumn,
   },
@@ -70,7 +70,7 @@ export function ManagerSidebar({ mobileOpen = false, onClose }: ManagerSidebarPr
       <nav aria-label="Main" className="flex-1 px-2 pt-4">
         <ul className="space-y-0.5">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.to;
+            const isActive = pathname === item.to || (item.to !== '/manager/dashboard' && pathname?.startsWith(item.to));
             const Icon = item.icon;
 
             return (
@@ -113,7 +113,7 @@ export function ManagerSidebar({ mobileOpen = false, onClose }: ManagerSidebarPr
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line bg-surface lg:flex font-serif">
         {/* Brand Header */}
         <div className="flex h-14 items-center px-4 border-b border-line">
-          <Link href="/manager" className="flex items-center">
+          <Link href="/manager/dashboard" className="flex items-center">
             <span className="font-serif text-lg font-bold tracking-tight text-brand">
               PayWise
             </span>
@@ -136,7 +136,7 @@ export function ManagerSidebar({ mobileOpen = false, onClose }: ManagerSidebarPr
           <aside className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-line bg-surface shadow-2xl font-serif">
             {/* Header with Brand & Close button */}
             <div className="flex h-14 items-center justify-between px-4 border-b border-line">
-              <Link href="/manager" className="flex items-center" onClick={onClose}>
+              <Link href="/manager/dashboard" className="flex items-center" onClick={onClose}>
                 <span className="font-serif text-lg font-bold tracking-tight text-brand">
                   PayWise
                 </span>

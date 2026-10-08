@@ -1,3 +1,9 @@
 export { ManagerSidebar } from './ManagerSidebar';
 export { ManagerHeader } from './ManagerHeader';
 export { ManagerShell } from './ManagerShell';
+export { ManagerDashboard } from './ManagerDashboard';
+export { SummaryCard } from './SummaryCard';
+export { StatusBadge } from './StatusBadge';
+export { PaymentRequestTable } from './PaymentRequestTable';
+export { ApprovalModal } from './ApprovalModal';
+export { RecentActivity } from './RecentActivity';
