@@ -18,7 +18,7 @@ import {
   formatCurrency,
   getApprovalRoute,
 } from '@/data/mock-manager-data';
-import { StatusBadge } from './StatusBadge';
+import { StatusBadge } from '../common/StatusBadge';
 
 interface ApprovalModalProps {
   request: PaymentRequestItem | null;

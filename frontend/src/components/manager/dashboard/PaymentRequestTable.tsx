@@ -8,7 +8,7 @@ import {
   formatDate,
   getApprovalRoute,
 } from '@/data/mock-manager-data';
-import { StatusBadge } from './StatusBadge';
+import { StatusBadge } from '../common/StatusBadge';
 
 interface PaymentRequestTableProps {
   requests: PaymentRequestItem[];
