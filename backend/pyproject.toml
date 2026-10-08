@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "django>=6.1,<6.2",
+    "django-simple-history>=3.13,<3.14",
     "psycopg[binary]>=3.3,<3.4",
 ]
 
