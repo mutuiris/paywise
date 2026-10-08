@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   PayWise Design System — Color Tokens & Theme Configuration
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 1. Backgrounds & Surfaces */
+  --canvas: #ffffff;             /* Primary app background (Pure White) */
+  --surface: #ffffff;            /* Card, container & input surface */
+  --surface-subtle: #f8fafc;     /* Soft slate-50 tinted surface */
+  --surface-muted: #f1f5f9;      /* Muted background for tags & hover states */
+
+  /* 2. Typography & Text */
+  --ink: #0f172a;                /* Primary text color (Slate-900) */
+  --ink-secondary: #334155;      /* Secondary text color (Slate-700) */
+  --muted-ink: #64748b;          /* Muted descriptions & labels (Slate-500) */
+  --subtle-ink: #94a3b8;         /* Disabled text & icon placeholders (Slate-400) */
+
+  /* 3. Borders & Dividers */
+  --line: #e2e8f0;               /* Standard structural border (Slate-200) */
+  --line-subtle: #f1f5f9;        /* Delicate divider line (Slate-100) */
+  --line-strong: #cbd5e1;        /* Emphasized / active border (Slate-300) */
+
+  /* 4. Brand Primary (PayWise Royal Blue) */
+  --brand: #2563eb;              /* Primary interactive blue (Blue-600) */
+  --brand-deep: #1d4ed8;         /* Darker blue for hover/active (Blue-700) */
+  --brand-light: #eff6ff;        /* Soft tinted background (Blue-50) */
+  --brand-foreground: #ffffff;   /* Text on top of brand backgrounds */
+
+  /* 5. Semantic Status Colors */
+  /* Success / Approved / Settled */
+  --ok: #16a34a;                 /* Green-600 */
+  --ok-light: #f0fdf4;           /* Green-50 */
+  --ok-border: #bbf7d0;          /* Green-200 */
+
+  /* Warning / Pending Review */
+  --warn: #d97706;               /* Amber-600 */
+  --warn-light: #fffbeb;         /* Amber-50 */
+  --warn-border: #fde68a;        /* Amber-200 */
+
+  /* Error / Rejected / Overdue */
+  --err: #dc2626;                /* Red-600 */
+  --err-light: #fef2f2;          /* Red-50 */
+  --err-border: #fecaca;         /* Red-200 */
+
+  /* Info / In-Progress */
+  --info: #0284c7;               /* Sky-600 */
+  --info-light: #f0f9ff;         /* Sky-50 */
+  --info-border: #bae6fd;        /* Sky-200 */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ==========================================================================
+   Tailwind CSS v4 Theme Bindings
+   ========================================================================== */
+
+@theme {
+  /* Typography */
+  --font-lora: var(--font-lora), serif;
+  --font-serif: var(--font-lora), serif;
+
+  /* Surfaces */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-muted: var(--surface-muted);
+
+  /* Text & Ink */
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-muted-ink: var(--muted-ink);
+  --color-subtle-ink: var(--subtle-ink);
+
+  /* Lines */
+  --color-line: var(--line);
+  --color-line-subtle: var(--line-subtle);
+  --color-line-strong: var(--line-strong);
+
+  /* Brand */
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-light: var(--brand-light);
+  --color-brand-foreground: var(--brand-foreground);
+
+  /* Semantic */
+  --color-ok: var(--ok);
+  --color-ok-light: var(--ok-light);
+  --color-ok-border: var(--ok-border);
+
+  --color-warn: var(--warn);
+  --color-warn-light: var(--warn-light);
+  --color-warn-border: var(--warn-border);
+
+  --color-err: var(--err);
+  --color-err-light: var(--err-light);
+  --color-err-border: var(--err-border);
+
+  --color-info: var(--info);
+  --color-info-light: var(--info-light);
+  --color-info-border: var(--info-border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ==========================================================================
+   Base & Global Styles
+   ========================================================================== */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* ==========================================================================
+   Reusable UI Components
+   ========================================================================== */
+
+.input-field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  font-size: 0.875rem;
+  color: var(--ink);
+  transition: all 0.15s ease-in-out;
+}
+
+.input-field::placeholder {
+  color: var(--subtle-ink);
+}
+
+.input-field:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.input-field[aria-invalid="true"] {
+  border-color: var(--err);
+}
+
+.input-field[aria-invalid="true"]:focus {
+  border-color: var(--err);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
