@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "django>=6.1,<6.2",
+    "django-simple-history>=3.13,<3.14",
     "psycopg[binary]>=3.3,<3.4",
 ]
 
@@ -26,12 +27,16 @@ select = [
     "I",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*" = ["E501"]
+
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings.base"
+DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = [
     "test_*.py",
     "*_test.py",

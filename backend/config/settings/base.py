@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "simple_history",
     # Local Apps
     "apps.core",
     "apps.accounts",
@@ -60,6 +61,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+
+AUTH_USER_MODEL = "accounts.UserAccount"
 
 
 # Database
