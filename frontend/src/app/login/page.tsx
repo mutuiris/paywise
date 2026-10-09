@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: 'Vendor payment requests, approvals and processing for ImaraWorks Ltd.',
 };
 
-export default function HomePage() {
+export default function LoginPage() {
   return <SignInCard />;
 }
