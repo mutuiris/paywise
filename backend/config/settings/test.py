@@ -1,4 +1,4 @@
-"""Test settings for Paywise."""
+import os
 
 from .base import *  # noqa: F403
 
@@ -13,3 +13,11 @@ MAILERS = {
         "BACKEND": "django.core.mail.backends.locmem.EmailBackend",
     },
 }
+
+if not os.environ.get("POSTGRES_DB"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
