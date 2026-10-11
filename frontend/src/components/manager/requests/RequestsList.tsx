@@ -21,7 +21,11 @@ import {
 } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
 
-export function RequestsList() {
+export interface RequestsListProps {
+  basePath?: string;
+}
+
+export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) {
   const [requests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -84,7 +88,7 @@ export function RequestsList() {
         </div>
 
         <Link
-          href="/manager/requests/new"
+          href={`${basePath}/requests/new`}
           className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3.5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
         >
           <Plus className="size-4" />
@@ -239,7 +243,7 @@ export function RequestsList() {
                       {/* ID */}
                       <td className="whitespace-nowrap px-5 py-3.5">
                         <Link
-                          href={`/manager/requests/${req.id}`}
+                          href={`${basePath}/requests/${req.id}`}
                           className="font-serif text-[13px] font-semibold text-brand group-hover:underline"
                         >
                           {req.reference}
@@ -292,7 +296,7 @@ export function RequestsList() {
                       {/* Action Link */}
                       <td className="whitespace-nowrap px-5 py-3.5 text-right">
                         <Link
-                          href={`/manager/requests/${req.id}`}
+                          href={`${basePath}/requests/${req.id}`}
                           className="inline-flex items-center gap-1 rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink hover:bg-canvas hover:border-brand/40 cursor-pointer transition-all shadow-2xs"
                         >
                           <Eye className="size-3.5 text-muted-ink" />
@@ -310,7 +314,7 @@ export function RequestsList() {
               {paginatedRequests.map((req) => (
                 <li key={req.id}>
                   <Link
-                    href={`/manager/requests/${req.id}`}
+                    href={`${basePath}/requests/${req.id}`}
                     className="group flex items-center justify-between p-4 hover:bg-slate-50/90 active:bg-slate-100 transition-colors block"
                   >
                     <div className="min-w-0 pr-3">
