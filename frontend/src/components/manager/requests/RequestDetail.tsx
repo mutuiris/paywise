@@ -24,11 +24,12 @@ import {
 import { PaymentRequestItem } from '@/types/manager';
 import { StatusBadge } from '../common/StatusBadge';
 
-interface RequestDetailProps {
+export interface RequestDetailProps {
   requestId: string;
+  basePath?: string;
 }
 
-export function RequestDetail({ requestId }: RequestDetailProps) {
+export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetailProps) {
   const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -123,7 +124,7 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
       {/* Back Link */}
       <div>
         <Link
-          href="/manager/requests"
+          href={`${basePath}/requests`}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-ink hover:text-ink transition-colors"
         >
           <ArrowLeft className="size-3.5" />
@@ -427,7 +428,7 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
               </strong>
             </p>
             <Link
-              href="/manager/vendors"
+              href={`${basePath}/vendors`}
               className="text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1 mt-1"
             >
               <span>View full vendor profile</span>

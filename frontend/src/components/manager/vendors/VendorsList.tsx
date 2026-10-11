@@ -14,7 +14,11 @@ import {
 } from '@/data/mock-manager-data';
 import { SummaryCard } from '../dashboard/SummaryCard';
 
-export function VendorsList() {
+export interface VendorsListProps {
+  basePath?: string;
+}
+
+export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
   const [search, setSearch] = useState('');
 
   // Calculate dynamic stats for each vendor
@@ -140,7 +144,7 @@ export function VendorsList() {
                       {/* Vendor Name & Contact */}
                       <td className="whitespace-nowrap px-5 py-3.5">
                         <Link
-                          href={`/manager/vendors/${vendor.id}`}
+                          href={`${basePath}/vendors/${vendor.id}`}
                           className="font-semibold text-ink group-hover:text-brand transition-colors block"
                         >
                           {vendor.name}
@@ -203,7 +207,7 @@ export function VendorsList() {
                       {/* Action */}
                       <td className="whitespace-nowrap px-5 py-3.5 text-right">
                         <Link
-                          href={`/manager/vendors/${vendor.id}`}
+                          href={`${basePath}/vendors/${vendor.id}`}
                           className="inline-flex items-center gap-1 rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink hover:bg-canvas hover:border-brand/40 cursor-pointer transition-all shadow-2xs"
                         >
                           <Eye className="size-3.5 text-muted-ink" />
@@ -221,7 +225,7 @@ export function VendorsList() {
               {filteredVendors.map((vendor) => (
                 <li key={vendor.id}>
                   <Link
-                    href={`/manager/vendors/${vendor.id}`}
+                    href={`${basePath}/vendors/${vendor.id}`}
                     className="group flex items-center justify-between p-4 hover:bg-slate-50/90 active:bg-slate-100 transition-colors block"
                   >
                     <div className="min-w-0 pr-3">
