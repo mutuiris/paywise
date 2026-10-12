@@ -13,28 +13,28 @@ import {
 
 const NAV_ITEMS = [
   {
-    to: '/dashboard',
+    to: '/manager',
     label: 'Dashboard',
     icon: LayoutDashboard,
   },
   {
-    to: '/requests',
+    to: '/manager/requests',
     label: 'Payment Requests',
     icon: FileText,
   },
   {
-    to: '/approvals',
+    to: '/manager/approvals',
     label: 'Approvals',
     icon: SquareCheckBig,
     badge: 3,
   },
   {
-    to: '/vendors',
+    to: '/manager/vendors',
     label: 'Vendors',
     icon: Building2,
   },
   {
-    to: '/reports',
+    to: '/manager/reports',
     label: 'Reports',
     icon: ChartColumn,
   },
@@ -49,7 +49,10 @@ export function ManagerSidebar() {
       <nav aria-label="Main" className="flex-1 px-2 pt-4">
         <ul className="space-y-0.5">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.to;
+            const isActive =
+              item.to === '/manager'
+                ? pathname === '/manager'
+                : pathname.startsWith(item.to);
             const Icon = item.icon;
 
             return (

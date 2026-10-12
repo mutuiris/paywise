@@ -60,3 +60,16 @@ export interface SummaryMetric {
   hint?: string;
   tone?: 'neutral' | 'ok' | 'warn' | 'err' | 'brand';
 }
+
+export interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  paymentMethod: PaymentMethod;
+  status: 'ACTIVE' | 'INACTIVE';
+  onboardingDate: string;
+  notes?: string;
+}

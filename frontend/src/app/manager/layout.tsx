@@ -1,0 +1,28 @@
+import React, { Suspense } from 'react';
+import { ManagerHeader } from '@/components/manager/ManagerHeader';
+import { ManagerSidebar } from '@/components/manager/ManagerSidebar';
+
+export default function ManagerLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-screen bg-canvas">
+      <ManagerSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Suspense
+          fallback={
+            <div
+              aria-hidden="true"
+              className="sticky top-0 z-20 h-14 shrink-0 border-b border-line bg-surface"
+            />
+          }
+        >
+          <ManagerHeader />
+        </Suspense>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
