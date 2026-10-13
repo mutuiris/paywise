@@ -104,6 +104,18 @@ class PaymentRequest(OwnerAbstract):
                 }
             )
 
+        # Inactive entity checks only apply upon initial creation, preserving
+        # mutability of historical records if a vendor or project is deactivated.
+        if self._state.adding:
+            if self.vendor_id and self.vendor and not self.vendor.is_active:
+                raise ValidationError(
+                    {"vendor": "Cannot create payment request for an inactive vendor."}
+                )
+            if self.project_id and self.project and not self.project.is_active:
+                raise ValidationError(
+                    {"project": "Cannot reference an inactive project."}
+                )
+
     def __str__(self) -> str:
         return (
             f"{self.invoice_number} - {self.vendor.name} "
