@@ -7,6 +7,12 @@ export interface DemoAccount {
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
+    name: 'Grace Kamau',
+    role: 'Administrator',
+    email: 'grace.kamau@imaraworks.co.ke',
+    target: '/admin/dashboard',
+  },
+  {
     name: 'Faith Njeri',
     role: 'Finance Officer',
     email: 'faith.njeri@imaraworks.co.ke',

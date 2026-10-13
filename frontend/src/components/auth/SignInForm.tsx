@@ -18,8 +18,10 @@ export function SignInForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const isFin = email.toLowerCase().includes('faith') || email.toLowerCase().includes('finance');
-    router.push(isFin ? '/finance/dashboard' : '/manager/dashboard');
+    const l = email.toLowerCase();
+    if (l.includes('grace') || l.includes('admin')) router.push('/admin/dashboard');
+    else if (l.includes('faith') || l.includes('finance')) router.push('/finance/dashboard');
+    else router.push('/manager/dashboard');
   };
 
   const handleSelectDemo = (demo: DemoAccount) => {
