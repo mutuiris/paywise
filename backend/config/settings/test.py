@@ -4,6 +4,11 @@ from .base import *  # noqa: F403
 
 DEBUG = False
 
+SECRET_KEY = (
+    os.environ.get("DJANGO_SECRET_KEY")
+    or "django-insecure-test-key-for-paywise-testing"
+)
+
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
