@@ -29,13 +29,13 @@ export function LandingPage() {
           ========================================================================= */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Brand Logo with v4-clean transparent logo */}
+          {/* Brand Logo with new official transparent logo */}
           <Link href="/" className="flex items-center py-1 group">
             <Image
-              src="/images/v4-clean.png"
+              src="/images/logo.png"
               alt="PayWise Logo"
               width={200}
-              height={55}
+              height={60}
               className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
               priority
             />
@@ -399,7 +399,7 @@ export function LandingPage() {
       {/* =========================================================================
           6. Footer Resembling Reclaim EU Exactly (White Canvas, Blue Accents, Maps)
           ========================================================================= */}
-      <footer id="contact" className="w-full border-t border-slate-200 bg-linear-to-b from-white via-slate-50/30 to-slate-50/70">
+      <footer id="contact" className="w-full bg-[url('/images/footer.webp')] bg-cover bg-no-repeat bg-center border-t border-slate-200 bg-linear-to-b from-white/95 to-white/80">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           {/* Main Footer Multi-column Grid (matching Reclaim EU 6-column layout) */}
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-10 mb-12">
@@ -407,7 +407,7 @@ export function LandingPage() {
             <div className="md:col-span-2 space-y-4">
               <Link href="/" className="inline-block">
                 <Image
-                  src="/images/v4-clean.png"
+                  src="/images/logo.png"
                   alt="PayWise Logo"
                   width={240}
                   height={65}
