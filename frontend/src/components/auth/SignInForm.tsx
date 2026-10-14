@@ -20,6 +20,7 @@ export function SignInForm() {
     const l = email.toLowerCase();
     if (l.includes('grace') || l.includes('admin')) router.push('/admin/dashboard');
     else if (l.includes('faith') || l.includes('finance')) router.push('/finance/dashboard');
+    else if (l.includes('employee') || l.includes('alice') || l.includes('bernadette')) router.push('/employee');
     else router.push('/manager/dashboard');
   };
 

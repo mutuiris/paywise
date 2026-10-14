@@ -24,15 +24,13 @@ export default function EmployeeSidebar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 text-gray-800 flex flex-col justify-between shrink-0">
       <div>
-        {/* ImaraPay Brand Header */}
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200">
-          <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter shadow-sm">
-            IP
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-gray-900 leading-none">ImaraPay</h1>
-            <p className="text-[11px] text-gray-400 mt-0.5">Request · Approve · Pay</p>
-          </div>
+        {/* PayWise Brand Header */}
+        <div className="h-16 flex items-center px-6 border-b border-gray-200">
+          <Link href="/employee" className="flex items-center">
+            <span className="font-serif text-lg font-bold tracking-tight text-brand">
+              PayWise
+            </span>
+          </Link>
         </div>
 
         {/* Create New Request CTA */}
