@@ -7,7 +7,6 @@ import { PasswordField } from './PasswordField';
 import { RememberMeCheckbox } from './RememberMeCheckbox';
 import { SubmitButton } from './SubmitButton';
 import { ForgotNotice } from './ForgotNotice';
-import { DemoAccountsPicker, DemoAccount } from './DemoAccountsPicker';
 
 export function SignInForm() {
   const router = useRouter();
@@ -24,12 +23,6 @@ export function SignInForm() {
     else router.push('/manager/dashboard');
   };
 
-  const handleSelectDemo = (demo: DemoAccount) => {
-    setEmail(demo.email);
-    setPassword('paywise');
-    router.push(demo.target);
-  };
-
   return (
     <div>
       <ForgotNotice show={showForgotNotice} />
@@ -43,7 +36,6 @@ export function SignInForm() {
         <RememberMeCheckbox checked={rememberMe} onChange={setRememberMe} />
         <SubmitButton />
       </form>
-      <DemoAccountsPicker onSelect={handleSelectDemo} />
     </div>
   );
 }

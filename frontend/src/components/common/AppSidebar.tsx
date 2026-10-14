@@ -42,44 +42,16 @@ export function AppSidebar({
   }, [mobileOpen, onClose]);
 
   const navContent = (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col font-serif">
       {/* Brand Logo & Header */}
       <div className="flex h-14 items-center justify-between border-b border-line px-4">
         <Link
           href={`${basePath}/dashboard`}
-          className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+          className="flex items-center transition-opacity hover:opacity-90"
         >
-          <span
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-brand text-brand-foreground"
-            aria-hidden="true"
-          >
-            <svg viewBox="0 0 40 40" fill="none" className="size-5">
-              <path
-                d="M10 12v16M18 12v10"
-                stroke="currentColor"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              <path
-                d="M18 12h7a6 6 0 0 1 0 12h-3"
-                stroke="currentColor"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              <path
-                d="m18 28 4 4 9-10"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <span className="font-serif text-lg font-bold tracking-tight text-brand">
+            PayWise
           </span>
-          <div className="min-w-0">
-            <span className="block font-serif text-lg font-bold tracking-tight text-brand">
-              PayWise
-            </span>
-          </div>
         </Link>
 
         {/* Mobile Close Button */}
@@ -141,19 +113,19 @@ export function AppSidebar({
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line bg-surface lg:flex lg:flex-col">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line bg-surface lg:flex lg:flex-col font-serif">
         {navContent}
       </aside>
 
       {/* Mobile Drawer Backdrop & Container */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs lg:hidden font-serif"
           onClick={onClose}
           aria-hidden="true"
         >
           <div
-            className="h-full w-72 bg-surface shadow-xl"
+            className="h-full w-72 bg-surface shadow-xl font-serif"
             onClick={(e) => e.stopPropagation()}
           >
             {navContent}

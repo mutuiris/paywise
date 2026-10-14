@@ -22,7 +22,7 @@ export function AppHeader({
     user.role === 'FINANCE' ? 'Switch to Manager' : 'Switch to Finance';
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur-md sm:px-6">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur-md sm:px-6 font-serif">
       {/* Mobile Menu Trigger */}
       <button
         type="button"
