@@ -25,18 +25,18 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 antialiased selection:bg-amber-500 selection:text-slate-950">
       {/* =========================================================================
-          1. Header Navigation (White Canvas with Warm Amber Accents)
+          1. Header Navigation (Prominent Logo Size + White Canvas)
           ========================================================================= */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Brand Logo with v4.png */}
-          <Link href="/" className="flex items-center gap-2">
+        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Brand Logo with Increased Size */}
+          <Link href="/" className="flex items-center py-1 group">
             <Image
               src="/images/v4.png"
               alt="PayWise Logo"
-              width={160}
-              height={44}
-              className="h-10 w-auto object-contain"
+              width={220}
+              height={64}
+              className="h-13 sm:h-16 w-auto object-contain transition-transform group-hover:scale-[1.02]"
               priority
             />
           </Link>
@@ -69,7 +69,7 @@ export function LandingPage() {
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-amber-400 hover:shadow-md hover:shadow-amber-500/20 active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-amber-400 hover:shadow-md hover:shadow-amber-500/20 active:scale-95"
             >
               <span>Sign In</span>
               <ArrowRight className="size-4" />
@@ -79,7 +79,7 @@ export function LandingPage() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 md:hidden"
+            className="grid size-10 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 md:hidden"
             aria-label="Toggle navigation"
           >
             {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -134,7 +134,6 @@ export function LandingPage() {
       <main>
         {/* =========================================================================
             2. Hero Section (Crystal Clear Sunrise Construction Desk Image)
-               Minimal layout styled with Warm Amber & White Accents
             ========================================================================= */}
         <section
           id="hero"
@@ -163,7 +162,7 @@ export function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
           </div>
 
-          {/* Hero Content — Very Less Information, Punchy & Clean */}
+          {/* Hero Content — Minimal Information, Punchy & Clean */}
           <div className="relative z-10 mx-auto w-full max-w-7xl">
             <div className="max-w-2xl space-y-6 text-left">
               {/* Eyebrow Pill with Warm Yellowish/Amber Hue */}
@@ -352,7 +351,7 @@ export function LandingPage() {
         </section>
 
         {/* =========================================================================
-            5. Core Highlights Row (White Cards with Yellowish Badges)
+            5. Core Highlights Row
             ========================================================================= */}
         <section id="features" className="border-t border-slate-200/80 bg-white py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -392,151 +391,148 @@ export function LandingPage() {
       </main>
 
       {/* =========================================================================
-          6. Footer Inspired by Reclaim EU (with Interactive Location Maps & Warm Accents)
+          6. Footer Resembling Reclaim EU Exactly (Structure, Stylings, Map, Icons)
           ========================================================================= */}
-      <footer id="contact" className="border-t border-slate-800 bg-slate-950 text-slate-300">
+      <footer id="contact" className="w-full border-t border-slate-200 bg-linear-to-b from-white via-amber-50/15 to-amber-50/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-          {/* Main Footer Grid */}
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 mb-12">
-            {/* Column 1: Brand & Overview */}
-            <div className="space-y-4 lg:col-span-4">
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-white p-2 shadow-sm inline-block">
-                  <Image
-                    src="/images/v4.png"
-                    alt="PayWise Logo"
-                    width={150}
-                    height={40}
-                    className="h-9 w-auto object-contain"
-                  />
-                </div>
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-                PayWise is the enterprise vendor payment request and tiered approval management system
-                tailored for ImaraWorks Ltd construction and infrastructure engineering projects.
+          {/* Main Footer Multi-column Grid (matching Reclaim EU 6-column layout) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-10 mb-12">
+            {/* Column 1 & 2: Large Logo & Official Organization Info (md:col-span-2) */}
+            <div className="md:col-span-2 space-y-4">
+              <Link href="/" className="inline-block">
+                <Image
+                  src="/images/v4.png"
+                  alt="PayWise Logo"
+                  width={260}
+                  height={80}
+                  className="h-16 sm:h-18 w-auto max-w-70 object-contain"
+                />
+              </Link>
+              <p className="text-sm text-slate-600 leading-relaxed max-w-md">
+                PayWise by ImaraWorks Ltd is an enterprise payment request and tiered approval workflow
+                platform for construction and infrastructure engineering. Centralizing vendor governance,
+                dual-approval controls, and automated disbursement tracking.
               </p>
+            </div>
 
-              {/* Contact Information Cards like Reclaim */}
-              <div className="space-y-2.5 pt-2">
-                <div className="flex items-start gap-3 text-sm text-slate-300">
-                  <div className="rounded-lg border border-amber-500/30 bg-slate-900 p-2 text-amber-400 shrink-0">
-                    <Mail className="size-4" />
+            {/* Column 3: Project / Platform */}
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-4">Platform</h4>
+              <ul className="space-y-2.5">
+                <li>
+                  <Link href="#hero" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Overview
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#how-it-works" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    How It Works
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#features" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Key Features
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#portals" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Portals
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Portals / Resources */}
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-4">Portals</h4>
+              <ul className="space-y-2.5">
+                <li>
+                  <Link href="/login?role=employee" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Employee Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login?role=manager" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Manager Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login?role=finance" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Finance Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login?role=admin" className="text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                    Admin Console
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 5: Contact Stack (matching Reclaim rounded white icon boxes) */}
+            <div className="xl:col-span-1">
+              <h4 className="font-semibold text-slate-900 mb-4">Contact</h4>
+              <div className="space-y-3">
+                {/* Email Us */}
+                <div className="flex items-start gap-3 text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                  <div className="border border-amber-500/40 rounded-lg p-2 bg-white shadow-2xs shrink-0">
+                    <Mail className="size-3.5 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-white">Email Us</p>
+                    <p className="text-xs font-semibold text-slate-900">Email Us</p>
                     <a
+                      className="text-xs text-amber-600 hover:underline break-all"
                       href="mailto:payments@imaraworks.com"
-                      className="text-xs text-slate-400 hover:text-amber-400 transition-colors"
                     >
                       payments@imaraworks.com
                     </a>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 text-sm text-slate-300">
-                  <div className="rounded-lg border border-amber-500/30 bg-slate-900 p-2 text-amber-400 shrink-0">
-                    <Phone className="size-4" />
+                {/* Call Us */}
+                <div className="flex items-start gap-3 text-sm text-slate-600 hover:text-amber-600 transition-colors">
+                  <div className="border border-amber-500/40 rounded-lg p-2 bg-white shadow-2xs shrink-0">
+                    <Phone className="size-3.5 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-white">Call Us</p>
-                    <span className="text-xs text-slate-400">+254 700 123 456</span>
+                    <p className="text-xs font-semibold text-slate-900">Call Us</p>
+                    <a className="text-xs text-amber-600 hover:underline" href="tel:+254700123456">
+                      +254 700 123 456
+                    </a>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 text-sm text-slate-300">
-                  <div className="rounded-lg border border-amber-500/30 bg-slate-900 p-2 text-amber-400 shrink-0">
-                    <Clock className="size-4" />
+                {/* Operating Hours */}
+                <div className="flex items-start gap-3 text-sm text-slate-600">
+                  <div className="border border-amber-500/40 rounded-lg p-2 bg-white shadow-2xs shrink-0">
+                    <Clock className="size-3.5 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-white">Office Hours</p>
-                    <span className="text-xs text-slate-400">Mon – Fri, 08:00 – 17:00 (EAT)</span>
+                    <p className="text-xs font-semibold text-slate-900">Office Hours</p>
+                    <p className="text-xs text-slate-600">08:00 – 17:00 EAT</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Column 2: Quick Links */}
-            <div className="lg:col-span-2 space-y-4">
-              <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-amber-400">
-                Platform
-              </h4>
-              <ul className="space-y-2.5 text-xs text-slate-400">
-                <li>
-                  <Link href="#hero" className="hover:text-amber-300 transition-colors">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#how-it-works" className="hover:text-amber-300 transition-colors">
-                    How It Works
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#portals" className="hover:text-amber-300 transition-colors">
-                    Role Portals
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#features" className="hover:text-amber-300 transition-colors">
-                    Key Features
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login" className="font-semibold text-amber-400 hover:text-amber-300 transition-colors">
-                    Sign In
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: Portals */}
-            <div className="lg:col-span-2 space-y-4">
-              <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-amber-400">
-                Portals
-              </h4>
-              <ul className="space-y-2.5 text-xs text-slate-400">
-                <li>
-                  <Link href="/login?role=employee" className="hover:text-amber-300 transition-colors">
-                    Employee Portal
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login?role=manager" className="hover:text-amber-300 transition-colors">
-                    Manager Portal
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login?role=finance" className="hover:text-amber-300 transition-colors">
-                    Finance Portal
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login?role=admin" className="hover:text-amber-300 transition-colors">
-                    Administrator
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4: Interactive Location Map (Reclaim Style) */}
-            <div className="lg:col-span-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-                  <MapPin className="size-4 text-amber-400" />
-                  <span>Headquarters & Operations</span>
+            {/* Column 6: Location & Interactive Map (matching Reclaim's Location) */}
+            <div className="xl:col-span-1">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-semibold text-slate-900 flex items-center gap-1.5">
+                  <MapPin className="size-4 text-amber-600" />
+                  <span>Location</span>
                 </h4>
-                <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 font-mono text-[10px] font-bold text-amber-300 border border-amber-500/30">
-                  Nairobi, Kenya
+                <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                  Nairobi
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                ImaraWorks Tower, Upper Hill Commercial District, Nairobi, Kenya
+              <p className="text-xs text-slate-600 mb-2 leading-tight">
+                ImaraWorks Tower, Upper Hill, Nairobi, Kenya
               </p>
-
-              {/* Embedded Google Map */}
-              <div className="relative w-full h-44 overflow-hidden rounded-xl border border-white/10 shadow-md">
+              {/* Google Map Embedded Card */}
+              <div className="overflow-hidden rounded-xl border border-slate-200/90 shadow-2xs h-36 w-full">
                 <iframe
-                  title="ImaraWorks Headquarters Location Map"
+                  title="Headquarters Location Map"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.814321956123!2d36.8155!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10dfb9e4a3b1%3A0x7d6b38c29b71e16a!2sUpper%20Hill%2C%20Nairobi!5e0!3m2!1sen!2ske!4v1700000000000!5m2!1sen!2ske"
                   width="100%"
                   height="100%"
@@ -544,18 +540,18 @@ export function LandingPage() {
                   allowFullScreen={false}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-full grayscale-[20%] contrast-105"
+                  className="w-full h-full"
                 />
               </div>
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-            <p>© 2026 PayWise · ImaraWorks Ltd. All rights reserved.</p>
+          {/* Bottom Bar (Exact Reclaim structure) */}
+          <div className="border-t border-slate-200 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+            <p>© 2026 PayWise (ImaraWorks Ltd). All rights reserved.</p>
             <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-slate-400">System Status: All services operational</span>
+              <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>System Status: All services operational</span>
             </div>
           </div>
         </div>
