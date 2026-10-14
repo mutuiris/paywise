@@ -62,7 +62,7 @@ const MOCK_VENDORS_DIRECTORY = [
   },
 ];
 
-export default function EmployeeVendorsPage() {
+function EmployeeVendorsContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.toLowerCase() || '';
 
@@ -138,5 +138,13 @@ export default function EmployeeVendorsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function EmployeeVendorsPage() {
+  return (
+    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500 font-serif">Loading vendors…</div>}>
+      <EmployeeVendorsContent />
+    </React.Suspense>
   );
 }

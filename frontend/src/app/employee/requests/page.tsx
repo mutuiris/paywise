@@ -53,7 +53,7 @@ const MOCK_ALL_REQUESTS = [
   },
 ];
 
-export default function EmployeeRequestsPage() {
+function EmployeeRequestsContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.toLowerCase() || '';
   const [statusFilter, setStatusFilter] = useState('All');
@@ -166,5 +166,13 @@ export default function EmployeeRequestsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EmployeeRequestsPage() {
+  return (
+    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500 font-serif">Loading requests…</div>}>
+      <EmployeeRequestsContent />
+    </React.Suspense>
   );
 }

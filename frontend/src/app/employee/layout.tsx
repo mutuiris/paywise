@@ -13,7 +13,9 @@ export default function EmployeeLayout({
     <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden">
       <EmployeeSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <EmployeeHeader />
+        <React.Suspense fallback={<div className="h-16 bg-white border-b border-gray-200" />}>
+          <EmployeeHeader />
+        </React.Suspense>
         <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>

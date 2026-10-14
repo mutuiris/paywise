@@ -47,7 +47,7 @@ const MOCK_EMPLOYEE_REQUESTS = [
   },
 ];
 
-export default function EmployeeDashboard() {
+function EmployeeDashboardContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.toLowerCase() || '';
 
@@ -192,5 +192,13 @@ export default function EmployeeDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EmployeeDashboard() {
+  return (
+    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500 font-serif">Loading dashboard…</div>}>
+      <EmployeeDashboardContent />
+    </React.Suspense>
   );
 }
