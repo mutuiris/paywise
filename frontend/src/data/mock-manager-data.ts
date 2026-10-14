@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { PaymentRequestItem, ActivityEvent, VendorItem } from '@/types/manager';
+=======
+import { PaymentRequestItem, ActivityEvent } from '@/types/manager';
+>>>>>>> origin/feature/manager-requests-vendors
 
 export const CURRENT_MANAGER = {
   id: 'u3',
@@ -10,6 +14,7 @@ export const CURRENT_MANAGER = {
   approvalLimitLabel: 'Up to KES 50,000 (Single) · > KES 50,000 (Manager + Finance)',
 };
 
+<<<<<<< HEAD
 export const MOCK_PROJECTS = [
   'Nairobi HQ Tower',
   'Kisumu Depot',
@@ -91,6 +96,8 @@ export const MOCK_VENDORS: VendorItem[] = [
   },
 ];
 
+=======
+>>>>>>> origin/feature/manager-requests-vendors
 export const INITIAL_PAYMENT_REQUESTS: PaymentRequestItem[] = [
   {
     id: 'pr1',
@@ -309,6 +316,7 @@ export const INITIAL_PAYMENT_REQUESTS: PaymentRequestItem[] = [
       },
     ],
   },
+<<<<<<< HEAD
   {
     id: 'pr8',
     reference: 'PR-000135',
@@ -336,6 +344,8 @@ export const INITIAL_PAYMENT_REQUESTS: PaymentRequestItem[] = [
       },
     ],
   },
+=======
+>>>>>>> origin/feature/manager-requests-vendors
 ];
 
 export const INITIAL_ACTIVITY_LOG: ActivityEvent[] = [

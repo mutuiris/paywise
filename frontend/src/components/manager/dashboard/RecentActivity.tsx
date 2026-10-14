@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { ActivityEvent } from '@/types/manager';
+<<<<<<< HEAD
 import { INITIAL_PAYMENT_REQUESTS, formatDateTime } from '@/data/mock-manager-data';
+=======
+import { formatDateTime } from '@/data/mock-manager-data';
+>>>>>>> origin/feature/manager-requests-vendors
 import { CheckCircle2, XCircle, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -33,6 +37,7 @@ export function RecentActivity({ events }: RecentActivityProps) {
         {events.slice(0, 5).map((evt) => {
           const isApproved = evt.action.toLowerCase().includes('approved');
           const isRejected = evt.action.toLowerCase().includes('rejected');
+<<<<<<< HEAD
           const isSubmitted = evt.action.toLowerCase().includes('submitted');
 
           let badgeLabel = evt.action;
@@ -87,6 +92,13 @@ export function RecentActivity({ events }: RecentActivityProps) {
             <li key={evt.id} className="p-4 hover:bg-slate-50/90 active:bg-slate-100 transition-colors">
               <div className="flex items-start gap-3">
                 <div className="mt-1 shrink-0">
+=======
+
+          return (
+            <li key={evt.id} className="p-4 hover:bg-slate-50/90 active:bg-slate-100 transition-colors cursor-pointer">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0">
+>>>>>>> origin/feature/manager-requests-vendors
                   {isApproved ? (
                     <span className="grid size-7 place-items-center rounded-full bg-ok/10 text-ok">
                       <CheckCircle2 className="size-4" />
@@ -102,6 +114,7 @@ export function RecentActivity({ events }: RecentActivityProps) {
                   )}
                 </div>
 
+<<<<<<< HEAD
                 <div className="min-w-0 flex-1 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     {/* Main Title: Company Name */}
@@ -145,6 +158,26 @@ export function RecentActivity({ events }: RecentActivityProps) {
                       {badgeLabel}
                     </span>
                   </div>
+=======
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-ink">
+                      {evt.action}
+                      <span className="ml-2 font-mono text-xs font-normal text-brand">
+                        {evt.requestReference}
+                      </span>
+                    </p>
+                    <time className="text-[11px] text-muted-ink whitespace-nowrap">
+                      {formatDateTime(evt.at)}
+                    </time>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-ink">
+                    {evt.description}
+                  </p>
+                  <p className="mt-1 text-[11px] font-medium text-slate-500">
+                    Actor: <span className="text-ink">{evt.actorName}</span>
+                  </p>
+>>>>>>> origin/feature/manager-requests-vendors
                 </div>
               </div>
             </li>

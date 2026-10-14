@@ -10,7 +10,11 @@ interface StatusBadgeProps {
 
 const STATUS_CONFIG: Record<
   PaymentStatus,
+<<<<<<< HEAD
   { label: string; shortLabel?: string; bg: string; dot: string }
+=======
+  { label: string; bg: string; dot: string }
+>>>>>>> origin/feature/manager-requests-vendors
 > = {
   DRAFT: {
     label: 'Draft',
@@ -24,7 +28,10 @@ const STATUS_CONFIG: Record<
   },
   PENDING_APPROVAL: {
     label: 'Pending Approval',
+<<<<<<< HEAD
     shortLabel: 'Pending',
+=======
+>>>>>>> origin/feature/manager-requests-vendors
     bg: 'bg-warn/10 text-warn border-warn/30',
     dot: 'bg-warn',
   },
@@ -63,6 +70,7 @@ export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium font-serif ${config.bg} ${className}`}
     >
       <span className={`size-1.5 rounded-full ${config.dot}`} aria-hidden="true" />
+<<<<<<< HEAD
       {config.shortLabel ? (
         <>
           <span className="sm:hidden">{config.shortLabel}</span>
@@ -71,6 +79,9 @@ export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
       ) : (
         <span>{config.label}</span>
       )}
+=======
+      <span>{config.label}</span>
+>>>>>>> origin/feature/manager-requests-vendors
     </span>
   );
 }

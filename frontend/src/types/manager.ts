@@ -44,6 +44,7 @@ export interface PaymentRequestItem {
   approvals?: ApprovalStep[];
 }
 
+<<<<<<< HEAD
 export interface VendorItem {
   id: string;
   name: string;
@@ -59,6 +60,8 @@ export interface VendorItem {
   isActive: boolean;
 }
 
+=======
+>>>>>>> origin/feature/manager-requests-vendors
 export interface ActivityEvent {
   id: string;
   at: string;
@@ -75,3 +78,19 @@ export interface SummaryMetric {
   hint?: string;
   tone?: 'neutral' | 'ok' | 'warn' | 'err' | 'brand';
 }
+<<<<<<< HEAD
+=======
+
+export interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  paymentMethod: PaymentMethod;
+  status: 'ACTIVE' | 'INACTIVE';
+  onboardingDate: string;
+  notes?: string;
+}
+>>>>>>> origin/feature/manager-requests-vendors
