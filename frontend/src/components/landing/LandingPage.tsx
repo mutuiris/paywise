@@ -23,11 +23,11 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-canvas font-sans text-ink antialiased selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-white font-sans text-slate-900 antialiased selection:bg-amber-500 selection:text-slate-950">
       {/* =========================================================================
-          1. Header Navigation with Official v4 Logo
+          1. Header Navigation (White Canvas with Warm Amber Accents)
           ========================================================================= */}
-      <header className="sticky top-0 z-50 w-full border-b border-line bg-canvas/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Brand Logo with v4.png */}
           <Link href="/" className="flex items-center gap-2">
@@ -45,31 +45,31 @@ export function LandingPage() {
           <div className="hidden items-center gap-8 md:flex">
             <Link
               href="#how-it-works"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-amber-600"
             >
               How It Works
             </Link>
             <Link
               href="#portals"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-amber-600"
             >
               Portals
             </Link>
             <Link
               href="#features"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-amber-600"
             >
               Features
             </Link>
             <Link
               href="#contact"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-amber-600"
             >
               Location
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-xs transition-all hover:bg-blue-700 hover:shadow-md hover:shadow-blue-600/20 active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-amber-400 hover:shadow-md hover:shadow-amber-500/20 active:scale-95"
             >
               <span>Sign In</span>
               <ArrowRight className="size-4" />
@@ -79,7 +79,7 @@ export function LandingPage() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="grid size-9 place-items-center rounded-lg border border-line text-ink hover:bg-surface md:hidden"
+            className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 md:hidden"
             aria-label="Toggle navigation"
           >
             {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -88,40 +88,40 @@ export function LandingPage() {
 
         {/* Mobile Dropdown */}
         {mobileMenuOpen && (
-          <div className="border-b border-line bg-surface px-4 py-4 md:hidden animate-in slide-in-from-top-2">
+          <div className="border-b border-slate-200 bg-white px-4 py-4 md:hidden animate-in slide-in-from-top-2">
             <div className="flex flex-col space-y-3">
               <Link
                 href="#how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
+                className="text-sm font-medium text-slate-700 hover:text-amber-600"
               >
                 How It Works
               </Link>
               <Link
                 href="#portals"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
+                className="text-sm font-medium text-slate-700 hover:text-amber-600"
               >
                 Portals
               </Link>
               <Link
                 href="#features"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
+                className="text-sm font-medium text-slate-700 hover:text-amber-600"
               >
                 Features
               </Link>
               <Link
                 href="#contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
+                className="text-sm font-medium text-slate-700 hover:text-amber-600"
               >
                 Location
               </Link>
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-slate-950"
               >
                 <span>Sign In to Portal</span>
                 <ArrowRight className="size-4" />
@@ -133,8 +133,8 @@ export function LandingPage() {
 
       <main>
         {/* =========================================================================
-            2. Hero Section (Minimal Information + Crystal Clear Sunrise Image)
-               Modeled after mytravel-two.vercel.app
+            2. Hero Section (Crystal Clear Sunrise Construction Desk Image)
+               Minimal layout styled with Warm Amber & White Accents
             ========================================================================= */}
         <section
           id="hero"
@@ -151,7 +151,7 @@ export function LandingPage() {
               className="object-cover object-center"
               sizes="100vw"
             />
-            {/* Directional Gradient: Dark on left for crisp contrast, completely clear on right */}
+            {/* Directional gradient: Dark on left for text readability, clear on right for desk/crane/sunrise */}
             <div
               className="absolute inset-0"
               style={{
@@ -159,24 +159,24 @@ export function LandingPage() {
                   'linear-gradient(to right, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.72) 42%, rgba(15, 23, 42, 0.25) 80%, rgba(15, 23, 42, 0.1) 100%)',
               }}
             />
-            {/* Subtle bottom vignette to blend smoothly into the next section */}
+            {/* Bottom transition to white canvas */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
           </div>
 
           {/* Hero Content — Very Less Information, Punchy & Clean */}
           <div className="relative z-10 mx-auto w-full max-w-7xl">
             <div className="max-w-2xl space-y-6 text-left">
-              {/* Eyebrow Pill */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/15 px-3.5 py-1.5 text-xs font-mono font-semibold uppercase tracking-wider text-blue-300 backdrop-blur-xs">
-                <Sparkles className="size-3.5 text-blue-400" />
+              {/* Eyebrow Pill with Warm Yellowish/Amber Hue */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/15 px-3.5 py-1.5 text-xs font-mono font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-xs">
+                <Sparkles className="size-3.5 text-amber-400" />
                 <span>Vendor Payment & Approval System</span>
               </div>
 
-              {/* Main Headline: Bold Serif with Elegant Italic Accent */}
+              {/* Main Headline: Bold Serif with Warm Yellowish Accent */}
               <div className="space-y-2">
                 <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.12]">
                   Manage Vendor Payouts, <br />
-                  <span className="font-light italic text-blue-300">
+                  <span className="font-light italic text-amber-300">
                     Without the Chaos.
                   </span>
                 </h1>
@@ -188,18 +188,18 @@ export function LandingPage() {
                 tracking into one clear, auditable workflow for ImaraWorks.
               </p>
 
-              {/* Action Buttons */}
+              {/* Action Buttons with Yellowish / Amber Primary */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3">
                 <Link
                   href="/login"
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 hover:shadow-blue-600/40 active:scale-95"
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-400 hover:shadow-amber-500/35 active:scale-95"
                 >
                   <span>Sign In to Portal</span>
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/30 active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/40 active:scale-95"
                 >
                   <span>See How It Works</span>
                 </Link>
@@ -208,72 +208,72 @@ export function LandingPage() {
           </div>
 
           {/* "Scroll to Explore" indicator */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 cursor-pointer text-slate-400 hover:text-white transition-colors duration-300">
-            <span className="text-[11px] font-mono font-medium tracking-wider uppercase text-slate-400">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 cursor-pointer text-amber-200/70 hover:text-amber-200 transition-colors duration-300">
+            <span className="text-[11px] font-mono font-medium tracking-wider uppercase text-amber-200/80">
               Scroll to Explore
             </span>
-            <ChevronDown className="size-4 animate-bounce text-slate-400" />
+            <ChevronDown className="size-4 animate-bounce text-amber-300" />
           </div>
         </section>
 
         {/* =========================================================================
-            3. How It Works (Clean 3-Step Timeline)
+            3. How It Works (White Background with Amber Number Badges)
             ========================================================================= */}
-        <section id="how-it-works" className="border-t border-line bg-surface py-20 sm:py-24">
+        <section id="how-it-works" className="border-t border-slate-200/80 bg-white py-20 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-blue-600">
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-amber-600">
                 How PayWise Works
               </span>
-              <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              <h2 className="font-serif text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 A simple path from request to reconciled payment
               </h2>
-              <p className="text-sm sm:text-base text-ink-secondary leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                 Clear governance that keeps project teams, managers, and finance perfectly aligned.
               </p>
             </div>
 
             <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Step 1 */}
-              <div className="relative rounded-2xl border border-line bg-canvas p-6 shadow-2xs transition-all hover:border-blue-500/40">
+              <div className="relative rounded-2xl border border-amber-100 bg-amber-50/20 p-6 shadow-2xs transition-all hover:border-amber-300 hover:shadow-md">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-400/30 bg-blue-50 font-mono text-xs font-bold text-blue-600">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-300 bg-amber-100 font-mono text-xs font-bold text-amber-800">
                     01
                   </div>
-                  <FileCheck2 className="size-5 text-blue-600" />
+                  <FileCheck2 className="size-5 text-amber-600" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-ink">Submit Request</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
+                <h3 className="font-serif text-lg font-semibold text-slate-900">Submit Request</h3>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                   Employees initiate payment requests by selecting an approved vendor, specifying the
                   amount, and attaching invoice documents.
                 </p>
               </div>
 
               {/* Step 2 */}
-              <div className="relative rounded-2xl border border-line bg-canvas p-6 shadow-2xs transition-all hover:border-blue-500/40">
+              <div className="relative rounded-2xl border border-amber-100 bg-amber-50/20 p-6 shadow-2xs transition-all hover:border-amber-300 hover:shadow-md">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-400/30 bg-blue-50 font-mono text-xs font-bold text-blue-600">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-300 bg-amber-100 font-mono text-xs font-bold text-amber-800">
                     02
                   </div>
-                  <ShieldCheck className="size-5 text-blue-600" />
+                  <ShieldCheck className="size-5 text-amber-600" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-ink">Review & Authorize</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
+                <h3 className="font-serif text-lg font-semibold text-slate-900">Review & Authorize</h3>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                   Department managers review validity. Requests exceeding KES 50,000 route automatically
                   to Finance for secondary authorization.
                 </p>
               </div>
 
               {/* Step 3 */}
-              <div className="relative rounded-2xl border border-line bg-canvas p-6 shadow-2xs transition-all hover:border-blue-500/40">
+              <div className="relative rounded-2xl border border-amber-100 bg-amber-50/20 p-6 shadow-2xs transition-all hover:border-amber-300 hover:shadow-md">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-400/30 bg-blue-50 font-mono text-xs font-bold text-blue-600">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-300 bg-amber-100 font-mono text-xs font-bold text-amber-800">
                     03
                   </div>
-                  <Receipt className="size-5 text-blue-600" />
+                  <Receipt className="size-5 text-amber-600" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-ink">Disburse & Reconcile</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
+                <h3 className="font-serif text-lg font-semibold text-slate-900">Disburse & Reconcile</h3>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                   Finance executes payment, attaches transaction reference IDs, and updates the permanent,
                   immutable audit trail.
                 </p>
@@ -283,22 +283,22 @@ export function LandingPage() {
         </section>
 
         {/* =========================================================================
-            4. Role Portals Access
+            4. Role Portals Access (Warm Cream & White Theme)
             ========================================================================= */}
-        <section id="portals" className="border-t border-line bg-canvas py-20 sm:py-24">
+        <section id="portals" className="border-t border-amber-100/80 bg-amber-50/30 py-20 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
-                <span className="font-mono text-xs font-bold uppercase tracking-wider text-blue-600">
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-amber-600">
                   Role-Based Workspaces
                 </span>
-                <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
                   Dedicated portals for every team member
                 </h2>
               </div>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 hover:underline"
               >
                 <span>Go to general sign in</span>
                 <ArrowRight className="size-4" />
@@ -331,17 +331,17 @@ export function LandingPage() {
                 <Link
                   key={item.role}
                   href={item.url}
-                  className="group flex flex-col justify-between rounded-2xl border border-line bg-surface p-6 shadow-2xs transition-all hover:border-blue-500/50 hover:shadow-md"
+                  className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs transition-all hover:border-amber-400 hover:shadow-md"
                 >
                   <div>
-                    <h3 className="font-serif text-base font-semibold text-ink group-hover:text-blue-600 transition-colors">
+                    <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-amber-600 transition-colors">
                       {item.role}
                     </h3>
-                    <p className="mt-2 text-xs text-muted-ink leading-relaxed">
+                    <p className="mt-2 text-xs text-slate-600 leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
-                  <span className="mt-5 text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                  <span className="mt-5 text-xs font-bold text-amber-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
                     <span>Access Portal</span>
                     <ArrowRight className="size-3.5" />
                   </span>
@@ -352,36 +352,36 @@ export function LandingPage() {
         </section>
 
         {/* =========================================================================
-            5. Core Highlights Row
+            5. Core Highlights Row (White Cards with Yellowish Badges)
             ========================================================================= */}
-        <section id="features" className="border-t border-line bg-surface py-16">
+        <section id="features" className="border-t border-slate-200/80 bg-white py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <div className="flex items-start gap-4 rounded-xl border border-line bg-canvas p-5 shadow-2xs">
-                <CheckCircle2 className="size-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-amber-50/20 p-5 shadow-2xs">
+                <CheckCircle2 className="size-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-serif text-lg font-bold text-ink">KES 50,000 Threshold</div>
-                  <div className="text-xs text-muted-ink mt-1">
+                  <div className="font-serif text-lg font-bold text-slate-900">KES 50,000 Threshold</div>
+                  <div className="text-xs text-slate-600 mt-1">
                     Dual-level governance for high-value construction disbursements.
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 rounded-xl border border-line bg-canvas p-5 shadow-2xs">
-                <CheckCircle2 className="size-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-amber-50/20 p-5 shadow-2xs">
+                <CheckCircle2 className="size-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-serif text-lg font-bold text-ink">Duplicate Detection</div>
-                  <div className="text-xs text-muted-ink mt-1">
+                  <div className="font-serif text-lg font-bold text-slate-900">Duplicate Detection</div>
+                  <div className="text-xs text-slate-600 mt-1">
                     Automatic prevention of overlapping invoices and repeat payouts.
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 rounded-xl border border-line bg-canvas p-5 shadow-2xs">
-                <CheckCircle2 className="size-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-amber-50/20 p-5 shadow-2xs">
+                <CheckCircle2 className="size-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-serif text-lg font-bold text-ink">100% Audit Trail</div>
-                  <div className="text-xs text-muted-ink mt-1">
+                  <div className="font-serif text-lg font-bold text-slate-900">100% Audit Trail</div>
+                  <div className="text-xs text-slate-600 mt-1">
                     Immutable timestamps and user attributions for every state change.
                   </div>
                 </div>
@@ -392,16 +392,16 @@ export function LandingPage() {
       </main>
 
       {/* =========================================================================
-          6. Footer Inspired by Reclaim EU (with Interactive Location Maps)
+          6. Footer Inspired by Reclaim EU (with Interactive Location Maps & Warm Accents)
           ========================================================================= */}
       <footer id="contact" className="border-t border-slate-800 bg-slate-950 text-slate-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           {/* Main Footer Grid */}
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 mb-12">
-            {/* Column 1: Brand & Overview (4 cols) */}
+            {/* Column 1: Brand & Overview */}
             <div className="space-y-4 lg:col-span-4">
               <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-white p-1.5 shadow-sm inline-block">
+                <div className="rounded-xl bg-white p-2 shadow-sm inline-block">
                   <Image
                     src="/images/v4.png"
                     alt="PayWise Logo"
@@ -419,14 +419,14 @@ export function LandingPage() {
               {/* Contact Information Cards like Reclaim */}
               <div className="space-y-2.5 pt-2">
                 <div className="flex items-start gap-3 text-sm text-slate-300">
-                  <div className="rounded-lg border border-white/10 bg-slate-900 p-2 text-blue-400 shrink-0">
+                  <div className="rounded-lg border border-amber-500/30 bg-slate-900 p-2 text-amber-400 shrink-0">
                     <Mail className="size-4" />
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-white">Email Us</p>
                     <a
                       href="mailto:payments@imaraworks.com"
-                      className="text-xs text-slate-400 hover:text-blue-400 transition-colors"
+                      className="text-xs text-slate-400 hover:text-amber-400 transition-colors"
                     >
                       payments@imaraworks.com
                     </a>
@@ -434,7 +434,7 @@ export function LandingPage() {
                 </div>
 
                 <div className="flex items-start gap-3 text-sm text-slate-300">
-                  <div className="rounded-lg border border-white/10 bg-slate-900 p-2 text-blue-400 shrink-0">
+                  <div className="rounded-lg border border-amber-500/30 bg-slate-900 p-2 text-amber-400 shrink-0">
                     <Phone className="size-4" />
                   </div>
                   <div>
@@ -444,7 +444,7 @@ export function LandingPage() {
                 </div>
 
                 <div className="flex items-start gap-3 text-sm text-slate-300">
-                  <div className="rounded-lg border border-white/10 bg-slate-900 p-2 text-blue-400 shrink-0">
+                  <div className="rounded-lg border border-amber-500/30 bg-slate-900 p-2 text-amber-400 shrink-0">
                     <Clock className="size-4" />
                   </div>
                   <div>
@@ -455,77 +455,77 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Column 2: Quick Links (2 cols) */}
+            {/* Column 2: Quick Links */}
             <div className="lg:col-span-2 space-y-4">
-              <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-white">
+              <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-amber-400">
                 Platform
               </h4>
               <ul className="space-y-2.5 text-xs text-slate-400">
                 <li>
-                  <Link href="#hero" className="hover:text-white transition-colors">
+                  <Link href="#hero" className="hover:text-amber-300 transition-colors">
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link href="#how-it-works" className="hover:text-white transition-colors">
+                  <Link href="#how-it-works" className="hover:text-amber-300 transition-colors">
                     How It Works
                   </Link>
                 </li>
                 <li>
-                  <Link href="#portals" className="hover:text-white transition-colors">
+                  <Link href="#portals" className="hover:text-amber-300 transition-colors">
                     Role Portals
                   </Link>
                 </li>
                 <li>
-                  <Link href="#features" className="hover:text-white transition-colors">
+                  <Link href="#features" className="hover:text-amber-300 transition-colors">
                     Key Features
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+                  <Link href="/login" className="font-semibold text-amber-400 hover:text-amber-300 transition-colors">
                     Sign In
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Column 3: Portals (2 cols) */}
+            {/* Column 3: Portals */}
             <div className="lg:col-span-2 space-y-4">
-              <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-white">
+              <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-amber-400">
                 Portals
               </h4>
               <ul className="space-y-2.5 text-xs text-slate-400">
                 <li>
-                  <Link href="/login?role=employee" className="hover:text-white transition-colors">
+                  <Link href="/login?role=employee" className="hover:text-amber-300 transition-colors">
                     Employee Portal
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login?role=manager" className="hover:text-white transition-colors">
+                  <Link href="/login?role=manager" className="hover:text-amber-300 transition-colors">
                     Manager Portal
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login?role=finance" className="hover:text-white transition-colors">
+                  <Link href="/login?role=finance" className="hover:text-amber-300 transition-colors">
                     Finance Portal
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login?role=admin" className="hover:text-white transition-colors">
+                  <Link href="/login?role=admin" className="hover:text-amber-300 transition-colors">
                     Administrator
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Column 4: Interactive Location Map (4 cols) like Reclaim */}
+            {/* Column 4: Interactive Location Map (Reclaim Style) */}
             <div className="lg:col-span-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-                  <MapPin className="size-4 text-blue-400" />
+                  <MapPin className="size-4 text-amber-400" />
                   <span>Headquarters & Operations</span>
                 </h4>
-                <span className="rounded-full bg-blue-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-blue-300">
+                <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 font-mono text-[10px] font-bold text-amber-300 border border-amber-500/30">
                   Nairobi, Kenya
                 </span>
               </div>
@@ -544,7 +544,7 @@ export function LandingPage() {
                   allowFullScreen={false}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-full grayscale-[25%] contrast-110"
+                  className="w-full h-full grayscale-[20%] contrast-105"
                 />
               </div>
             </div>
@@ -554,8 +554,8 @@ export function LandingPage() {
           <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
             <p>© 2026 PayWise · ImaraWorks Ltd. All rights reserved.</p>
             <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>System Status: All services operational</span>
+              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-slate-400">System Status: All services operational</span>
             </div>
           </div>
         </div>
