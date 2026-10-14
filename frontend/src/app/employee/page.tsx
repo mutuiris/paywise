@@ -9,7 +9,6 @@ import {
   Eye,
   CheckCircle2,
   Clock,
-  RotateCcw
 } from 'lucide-react';
 
 const MOCK_EMPLOYEE_REQUESTS = [

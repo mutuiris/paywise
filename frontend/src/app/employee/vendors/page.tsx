@@ -133,7 +133,7 @@ function EmployeeVendorsContent() {
           ))
         ) : (
           <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
-            No approved vendors found matching "{query}".
+            No approved vendors found matching &quot;{query}&quot;.
           </div>
         )}
       </div>
