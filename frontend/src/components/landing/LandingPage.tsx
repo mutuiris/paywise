@@ -5,63 +5,71 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
-  ShieldCheck,
-  FileText,
-  CheckCircle2,
+  Sparkles,
+  ChevronDown,
   Menu,
   X,
-  Clock,
-  ArrowUpRight,
-  Sparkles,
+  ShieldCheck,
+  FileCheck2,
+  Receipt,
+  CheckCircle2,
 } from 'lucide-react';
 
 export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-canvas font-sans text-ink antialiased selection:bg-brand/15 selection:text-brand-deep">
+    <div className="min-h-screen bg-slate-950 font-sans text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
       {/* =========================================================================
-          1. Clean Header Navigation
+          1. Header Navigation (Clean Glassmorphism)
           ========================================================================= */}
-      <header className="sticky top-0 z-50 w-full border-b border-line bg-canvas/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-slate-950/80 backdrop-blur-md transition-all">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/images/logo.png"
-              alt="PayWise Logo"
-              width={34}
-              height={34}
-              className="h-8 w-auto object-contain"
-              priority
-            />
-            <span className="font-serif text-xl font-bold tracking-tight text-ink">
-              Pay<span className="text-brand">Wise</span>
-            </span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-500/20">
+              <Image
+                src="/images/logo.png"
+                alt="PayWise Logo"
+                width={28}
+                height={28}
+                className="h-6 w-auto object-contain brightness-0 invert"
+                priority
+              />
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-serif text-xl font-bold tracking-tight text-white">
+                Pay<span className="text-blue-400">Wise</span>
+              </span>
+              <span className="hidden text-[10px] font-mono tracking-wider text-slate-400 uppercase sm:inline-block">
+                · ImaraWorks
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav Links */}
           <div className="hidden items-center gap-8 md:flex">
             <Link
-              href="#features"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
-            >
-              Features
-            </Link>
-            <Link
-              href="#workflow"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
+              href="#how-it-works"
+              className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
             >
               How It Works
             </Link>
             <Link
               href="#portals"
-              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink"
+              className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
             >
               Portals
             </Link>
             <Link
+              href="#features"
+              className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
+            >
+              Features
+            </Link>
+            <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground shadow-xs transition-colors hover:bg-brand-deep"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-500 hover:shadow-md hover:shadow-blue-600/25 active:scale-95"
             >
               <span>Sign In</span>
               <ArrowRight className="size-4" />
@@ -71,7 +79,7 @@ export function LandingPage() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="grid size-9 place-items-center rounded-lg border border-line text-ink hover:bg-surface md:hidden"
+            className="grid size-9 place-items-center rounded-lg border border-white/10 text-slate-200 hover:bg-white/5 md:hidden"
             aria-label="Toggle navigation"
           >
             {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -80,35 +88,35 @@ export function LandingPage() {
 
         {/* Mobile Dropdown */}
         {mobileMenuOpen && (
-          <div className="border-b border-line bg-surface px-4 py-4 md:hidden">
+          <div className="border-b border-white/10 bg-slate-900/95 px-4 py-4 backdrop-blur-md md:hidden animate-in slide-in-from-top-2">
             <div className="flex flex-col space-y-3">
               <Link
-                href="#features"
+                href="#how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
-              >
-                Features
-              </Link>
-              <Link
-                href="#workflow"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
+                className="text-sm font-medium text-slate-300 hover:text-white"
               >
                 How It Works
               </Link>
               <Link
                 href="#portals"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-muted-ink hover:text-ink"
+                className="text-sm font-medium text-slate-300 hover:text-white"
               >
                 Portals
               </Link>
               <Link
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-sm font-medium text-slate-300 hover:text-white"
+              >
+                Features
+              </Link>
+              <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
               >
-                <span>Sign In</span>
+                <span>Sign In to Portal</span>
                 <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -118,13 +126,14 @@ export function LandingPage() {
 
       <main>
         {/* =========================================================================
-            2. Hero Section (Clear Sunrise Construction Planning Desk Image)
+            2. Hero Section (Minimal Information + Crystal Clear Sunrise Image)
+               Style modeled closely after mytravel-two.vercel.app
             ========================================================================= */}
         <section
           id="hero"
-          className="relative flex min-h-[88vh] items-center overflow-hidden py-12 lg:py-20"
+          className="relative flex min-h-[90vh] sm:min-h-screen items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 py-20"
         >
-          {/* Background image: Crystal clear, no heavy dark/gray fog */}
+          {/* Background Image: Construction Planning Desk at Sunrise */}
           <div className="absolute inset-0 z-0">
             <Image
               src="/images/construction-planning-hero.png"
@@ -135,178 +144,131 @@ export function LandingPage() {
               className="object-cover object-center"
               sizes="100vw"
             />
-            {/* Subtle soft gradient only at the top and base for seamless edges */}
-            <div className="absolute inset-0 bg-linear-to-b from-canvas/40 via-transparent to-canvas/70 pointer-events-none" />
+            {/* Directional Gradient: Dark on left for crisp contrast, completely clear on right */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(to right, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.72) 42%, rgba(15, 23, 42, 0.25) 80%, rgba(15, 23, 42, 0.1) 100%)',
+              }}
+            />
+            {/* Subtle bottom vignette to blend smoothly into the next section */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
           </div>
 
-          <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            {/* Frosted Glassmorphic Editorial Card ensuring 100% crisp text readability while keeping the entire image clear */}
-            <div className="max-w-xl rounded-3xl border border-white/80 bg-white/85 p-7 shadow-2xl backdrop-blur-md sm:p-10">
-              {/* Eyebrow badge */}
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-deep">
-                <Sparkles className="size-3 text-brand" />
+          {/* Hero Content — Very Less Information, Punchy & Clean */}
+          <div className="relative z-10 mx-auto w-full max-w-7xl">
+            <div className="max-w-2xl space-y-6 text-left">
+              {/* Eyebrow Pill */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/15 px-3.5 py-1.5 text-xs font-mono font-semibold uppercase tracking-wider text-blue-300 backdrop-blur-xs">
+                <Sparkles className="size-3.5 text-blue-400" />
                 <span>Vendor Payment & Approval System</span>
               </div>
 
-              {/* Main Headline with refined editorial serif font */}
-              <h1 className="mt-4 font-serif text-3xl font-bold tracking-tight text-ink sm:text-4xl lg:text-5xl leading-[1.15]">
-                Payments, built for construction and clarity.
-              </h1>
+              {/* Main Headline: Bold Serif with Elegant Italic Accent */}
+              <div className="space-y-2">
+                <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.12]">
+                  Manage Vendor Payouts, <br />
+                  <span className="font-light italic text-blue-300">
+                    Without the Chaos.
+                  </span>
+                </h1>
+              </div>
 
-              {/* Subheading */}
-              <p className="mt-4 text-base text-ink-secondary leading-relaxed sm:text-lg">
-                PayWise simplifies vendor payment requests, dual-level approvals, and disbursement
+              {/* Concise Subtitle (Short & Focused) */}
+              <p className="max-w-xl text-base sm:text-lg text-slate-200/90 leading-relaxed font-sans">
+                PayWise centralizes vendor payment requests, dual-level approvals, and disbursement
                 tracking into one clear, auditable workflow for ImaraWorks.
               </p>
 
               {/* Action Buttons */}
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3">
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3.5 text-sm font-semibold text-brand-foreground shadow-md transition-all hover:bg-brand-deep hover:shadow-lg active:scale-[0.99]"
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 hover:shadow-blue-600/40 active:scale-95"
                 >
                   <span>Sign In to Portal</span>
-                  <ArrowRight className="size-4" />
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
-                  href="#workflow"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-surface/90 px-6 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-surface"
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/30 active:scale-95"
                 >
-                  <span>How It Works</span>
+                  <span>See How It Works</span>
                 </Link>
               </div>
-
-              {/* Simple 3 Key Metrics */}
-              <div className="mt-8 grid grid-cols-3 gap-3 border-t border-line pt-6">
-                <div>
-                  <div className="font-serif text-xl font-bold text-brand sm:text-2xl">KES 50K</div>
-                  <div className="text-xs text-muted-ink">Dual-approval tier</div>
-                </div>
-                <div>
-                  <div className="font-serif text-xl font-bold text-brand sm:text-2xl">4 Roles</div>
-                  <div className="text-xs text-muted-ink">Segregated access</div>
-                </div>
-                <div>
-                  <div className="font-serif text-xl font-bold text-ok sm:text-2xl">100%</div>
-                  <div className="text-xs text-muted-ink">Traceable audit logs</div>
-                </div>
-              </div>
             </div>
+          </div>
+
+          {/* "Scroll to Explore" bouncing indicator like mytravel-two */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 cursor-pointer text-slate-400 hover:text-white transition-colors duration-300">
+            <span className="text-[11px] font-mono font-medium tracking-wider uppercase text-slate-400">
+              Scroll to Explore
+            </span>
+            <ChevronDown className="size-4 animate-bounce text-slate-400" />
           </div>
         </section>
 
         {/* =========================================================================
-            3. Core Features (3 Clean Cards)
+            3. How It Works (Clean 3-Step Timeline with Number Badges)
             ========================================================================= */}
-        <section id="features" className="border-t border-line bg-surface py-16 sm:py-20">
+        <section id="how-it-works" className="relative border-t border-white/10 bg-slate-900/50 py-20 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl">
-              <h2 className="font-serif text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-                Everything you need to manage vendor payouts.
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-blue-400">
+                How PayWise Works
+              </span>
+              <h2 className="font-serif text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                A simple path from request to reconciled payment
               </h2>
-              <p className="mt-2 text-sm text-ink-secondary sm:text-base">
-                Eliminate lost invoices, delayed approvals, and duplicate payments with a single
-                connected workflow.
+              <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
+                Clear governance that keeps project teams, managers, and finance perfectly aligned.
               </p>
             </div>
 
-            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Card 1 */}
-              <div className="rounded-2xl border border-line bg-canvas p-6 shadow-2xs transition-shadow hover:shadow-sm">
-                <div className="grid size-10 place-items-center rounded-xl bg-brand/10 text-brand">
-                  <FileText className="size-5" />
-                </div>
-                <h3 className="mt-4 font-serif text-lg font-bold text-ink">Structured Requests</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
-                  Submit requests directly against registered vendors with automated invoice validation
-                  and built-in duplicate detection.
-                </p>
-              </div>
-
-              {/* Card 2 */}
-              <div className="rounded-2xl border border-line bg-canvas p-6 shadow-2xs transition-shadow hover:shadow-sm">
-                <div className="grid size-10 place-items-center rounded-xl bg-brand/10 text-brand">
-                  <ShieldCheck className="size-5" />
-                </div>
-                <h3 className="mt-4 font-serif text-lg font-bold text-ink">Tiered Approvals</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
-                  Manager approvals for everyday operational expenses, plus mandatory Finance review
-                  for high-value payments exceeding KES 50,000.
-                </p>
-              </div>
-
-              {/* Card 3 */}
-              <div className="rounded-2xl border border-line bg-canvas p-6 shadow-2xs transition-shadow hover:shadow-sm">
-                <div className="grid size-10 place-items-center rounded-xl bg-brand/10 text-brand">
-                  <Clock className="size-5" />
-                </div>
-                <h3 className="mt-4 font-serif text-lg font-bold text-ink">Disbursement & Audit</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
-                  Track payment states from initiation to settlement with provider reference codes and
-                  an immutable event audit log.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            4. Simple Workflow (3 Clear Steps)
-            ========================================================================= */}
-        <section id="workflow" className="border-t border-line bg-canvas py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-xl mx-auto">
-              <h2 className="font-serif text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-                How It Works
-              </h2>
-              <p className="mt-2 text-sm text-ink-secondary">
-                A streamlined three-step path from request to reconciled payment.
-              </p>
-            </div>
-
-            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Step 1 */}
-              <div className="relative rounded-2xl border border-line bg-surface p-6 shadow-2xs">
+              <div className="relative rounded-2xl border border-white/10 bg-slate-950/60 p-6 backdrop-blur-sm transition-all hover:border-blue-500/40">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-brand">
-                    Step 01
-                  </span>
-                  <CheckCircle2 className="size-4 text-brand" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-400/30 bg-blue-600/20 font-mono text-xs font-bold text-blue-300">
+                    01
+                  </div>
+                  <FileCheck2 className="size-5 text-blue-400" />
                 </div>
-                <h3 className="font-serif text-lg font-bold text-ink">Submit Request</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
+                <h3 className="font-serif text-lg font-semibold text-white">Submit Request</h3>
+                <p className="mt-2 text-sm text-slate-400 leading-relaxed">
                   Employees initiate payment requests by selecting an approved vendor, specifying the
                   amount, and attaching invoice documents.
                 </p>
               </div>
 
               {/* Step 2 */}
-              <div className="relative rounded-2xl border border-line bg-surface p-6 shadow-2xs">
+              <div className="relative rounded-2xl border border-white/10 bg-slate-950/60 p-6 backdrop-blur-sm transition-all hover:border-blue-500/40">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-brand">
-                    Step 02
-                  </span>
-                  <CheckCircle2 className="size-4 text-brand" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-400/30 bg-blue-600/20 font-mono text-xs font-bold text-blue-300">
+                    02
+                  </div>
+                  <ShieldCheck className="size-5 text-blue-400" />
                 </div>
-                <h3 className="font-serif text-lg font-bold text-ink">Review & Authorize</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
-                  Managers review project validity. Requests exceeding KES 50,000 route automatically to
-                  Finance for secondary review.
+                <h3 className="font-serif text-lg font-semibold text-white">Review & Authorize</h3>
+                <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+                  Department managers review validity. Requests exceeding KES 50,000 route automatically
+                  to Finance for secondary authorization.
                 </p>
               </div>
 
               {/* Step 3 */}
-              <div className="relative rounded-2xl border border-line bg-surface p-6 shadow-2xs">
+              <div className="relative rounded-2xl border border-white/10 bg-slate-950/60 p-6 backdrop-blur-sm transition-all hover:border-blue-500/40">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-brand">
-                    Step 03
-                  </span>
-                  <CheckCircle2 className="size-4 text-brand" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-400/30 bg-blue-600/20 font-mono text-xs font-bold text-blue-300">
+                    03
+                  </div>
+                  <Receipt className="size-5 text-blue-400" />
                 </div>
-                <h3 className="font-serif text-lg font-bold text-ink">Disburse & Reconcile</h3>
-                <p className="mt-2 text-sm text-muted-ink leading-relaxed">
-                  Finance processes the disbursement, updates provider transaction references, and logs
-                  the completion to the audit trail.
+                <h3 className="font-serif text-lg font-semibold text-white">Disburse & Reconcile</h3>
+                <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+                  Finance executes payment, attaches transaction reference IDs, and updates the permanent,
+                  immutable audit trail.
                 </p>
               </div>
             </div>
@@ -314,33 +276,33 @@ export function LandingPage() {
         </section>
 
         {/* =========================================================================
-            5. Role Portals Access
+            4. Role Portals Access (4 Clean Cards)
             ========================================================================= */}
-        <section id="portals" className="border-t border-line bg-surface py-16 sm:py-20">
+        <section id="portals" className="border-t border-white/10 bg-slate-950 py-20 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
-                <h2 className="font-serif text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-                  Role-Based Portals
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-blue-400">
+                  Role-Based Workspaces
+                </span>
+                <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  Dedicated portals for every team member
                 </h2>
-                <p className="mt-1 text-sm text-ink-secondary">
-                  Choose your role to sign in to your dedicated workspace.
-                </p>
               </div>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-400 hover:text-blue-300"
               >
                 <span>Go to general sign in</span>
                 <ArrowRight className="size-4" />
               </Link>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 {
                   role: 'Employee Portal',
-                  desc: 'Submit requests, track approvals, and view approved vendors.',
+                  desc: 'Submit requests, track approval status, and browse approved vendors.',
                   url: '/login?role=employee',
                 },
                 {
@@ -350,30 +312,73 @@ export function LandingPage() {
                 },
                 {
                   role: 'Finance Portal',
-                  desc: 'Disburse funds, manage payment batches, and reconcile accounts.',
+                  desc: 'Authorize dual-level payments, disburse funds, and reconcile accounts.',
                   url: '/login?role=finance',
                 },
                 {
                   role: 'Admin Portal',
-                  desc: 'Manage users, set system configurations, and inspect audit logs.',
+                  desc: 'Manage user roles, configure system settings, and inspect audit logs.',
                   url: '/login?role=admin',
                 },
               ].map((item) => (
                 <Link
                   key={item.role}
                   href={item.url}
-                  className="group flex flex-col justify-between rounded-2xl border border-line bg-canvas p-5 transition-all hover:border-brand/40 hover:shadow-xs"
+                  className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-slate-900/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-900 hover:shadow-lg"
                 >
                   <div>
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-serif font-bold text-ink group-hover:text-brand">{item.role}</h3>
-                      <ArrowUpRight className="size-4 text-muted-ink transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand" />
-                    </div>
-                    <p className="mt-2 text-xs text-muted-ink leading-relaxed">{item.desc}</p>
+                    <h3 className="font-serif text-base font-semibold text-white group-hover:text-blue-400 transition-colors">
+                      {item.role}
+                    </h3>
+                    <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                      {item.desc}
+                    </p>
                   </div>
-                  <span className="mt-4 text-xs font-semibold text-brand">Sign In &rarr;</span>
+                  <span className="mt-5 text-xs font-semibold text-blue-400 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                    <span>Access Portal</span>
+                    <ArrowRight className="size-3.5" />
+                  </span>
                 </Link>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            5. Core Highlights / Assurance Row
+            ========================================================================= */}
+        <section id="features" className="border-t border-white/10 bg-slate-900/30 py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <div className="flex items-start gap-4 rounded-xl border border-white/5 bg-slate-950/40 p-5">
+                <CheckCircle2 className="size-5 text-blue-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-serif text-lg font-bold text-white">KES 50,000 Threshold</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Dual-level governance for high-value construction disbursements.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 rounded-xl border border-white/5 bg-slate-950/40 p-5">
+                <CheckCircle2 className="size-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-serif text-lg font-bold text-white">Duplicate Detection</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Automatic prevention of overlapping invoices and repeat payouts.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 rounded-xl border border-white/5 bg-slate-950/40 p-5">
+                <CheckCircle2 className="size-5 text-blue-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-serif text-lg font-bold text-white">100% Audit Trail</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Immutable timestamps and user attributions for every state change.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -382,24 +387,24 @@ export function LandingPage() {
       {/* =========================================================================
           6. Minimal Footer
           ========================================================================= */}
-      <footer className="border-t border-line bg-canvas py-8">
+      <footer className="border-t border-white/10 bg-slate-950 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <span className="font-serif text-sm font-semibold text-ink">PayWise</span>
-            <span className="text-xs text-muted-ink">· ImaraWorks Ltd © 2026</span>
+            <span className="font-serif text-sm font-semibold text-white">PayWise</span>
+            <span className="text-xs text-slate-500">· ImaraWorks Ltd © 2026. All rights reserved.</span>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-muted-ink">
-            <Link href="#features" className="hover:text-ink">
-              Features
+          <div className="flex items-center gap-6 text-xs text-slate-400">
+            <Link href="#how-it-works" className="hover:text-white transition-colors">
+              How It Works
             </Link>
-            <Link href="#workflow" className="hover:text-ink">
-              Workflow
-            </Link>
-            <Link href="#portals" className="hover:text-ink">
+            <Link href="#portals" className="hover:text-white transition-colors">
               Portals
             </Link>
-            <Link href="/login" className="font-semibold text-brand hover:underline">
+            <Link href="#features" className="hover:text-white transition-colors">
+              Features
+            </Link>
+            <Link href="/login" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors">
               Sign In
             </Link>
           </div>
