@@ -1,5 +1,11 @@
+<<<<<<< HEAD
+import { redirect } from 'next/navigation';
+
+export default function ManagerPage() {
+  redirect('/manager/dashboard');
+=======
 import { Metadata } from 'next';
-import { ManagerSidebar, ManagerHeader } from '@/components/manager';
+import { ManagerDashboard } from '@/components/manager/dashboard';
 
 export const metadata: Metadata = {
   title: 'Manager — ImaraPay',
@@ -7,19 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function ManagerPage() {
-  return (
-    <div className="flex min-h-screen bg-canvas">
-      {/* Manager Sidebar */}
-      <ManagerSidebar />
-
-      {/* Main Content Area */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Manager Header */}
-        <ManagerHeader />
-
-        {/* Page Container */}
-        <main className="flex-1 p-6" />
-      </div>
-    </div>
-  );
+  return <ManagerDashboard />;
+>>>>>>> origin/feature/manager-requests-vendors
 }
+
