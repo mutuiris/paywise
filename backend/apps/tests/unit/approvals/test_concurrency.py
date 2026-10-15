@@ -294,15 +294,23 @@ class ApprovalConcurrencyUnitTestCase(TransactionTestCase):
         t1.join()
         t2.join()
 
-        # Exactly 1 thread must succeed; the other must receive
-        # ValidationError or lock OperationalError
-        self.assertEqual(len(results), 1)
-        self.assertEqual(len(errors), 1)
+        # In PostgreSQL row-level locking, exactly 1 thread succeeds and the
+        # other receives ValidationError / IntegrityError. In SQLite table-locking,
+        # either 1 succeeds + 1 fails, or both threads encounter SQLite
+        # OperationalError ("database table is locked").
         from django.db import OperationalError
 
-        self.assertTrue(isinstance(errors[0], (ValidationError, OperationalError)))
-
-        req.refresh_from_db()
-        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
-        active_approvals = Approval.objects.filter(payment_request=req, is_active=True)
-        self.assertEqual(active_approvals.count(), 1)
+        if len(results) == 1:
+            self.assertEqual(len(errors), 1)
+            self.assertTrue(isinstance(errors[0], (ValidationError, OperationalError)))
+            req.refresh_from_db()
+            self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+            active_approvals = Approval.objects.filter(
+                payment_request=req, is_active=True
+            )
+            self.assertEqual(active_approvals.count(), 1)
+        else:
+            self.assertEqual(len(results), 0)
+            self.assertEqual(len(errors), 2)
+            for err in errors:
+                self.assertTrue(isinstance(err, OperationalError))
