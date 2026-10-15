@@ -28,4 +28,9 @@ urlpatterns = [
         views.reject_payment_request_view,
         name="approval-reject",
     ),
+    path(
+        "<uuid:payment_request_id>/update-amount/",
+        views.update_payment_request_amount_view,
+        name="approval-update-amount",
+    ),
 ]

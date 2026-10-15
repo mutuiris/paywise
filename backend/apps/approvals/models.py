@@ -57,7 +57,13 @@ class Approval(OwnerAbstract):
         constraints = [
             models.UniqueConstraint(
                 fields=["payment_request", "approver", "tier"],
-                name="unique_payment_request_approver_tier",
+                condition=models.Q(is_active=True),
+                name="unique_active_payment_request_approver_tier",
+            ),
+            models.UniqueConstraint(
+                fields=["payment_request", "tier"],
+                condition=models.Q(decision="APPROVED", is_active=True),
+                name="unique_active_approved_tier_per_request",
             ),
         ]
         indexes = [

@@ -1,4 +1,4 @@
-"""Application services orchestrating approval policies and decisions."""
+"""Application services orchestrating approval policies, concurrency, and decisions."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q, QuerySet
 
 from apps.accounts.models import UserRole
@@ -82,13 +82,23 @@ def record_approval(
     """Record an approval or rejection decision and transition request state.
 
     Enforces:
-    1. Requesters cannot approve their own requests (self-approval ban).
-    2. Threshold policy: <= 50k requires Manager; > 50k requires Mgr + Finance.
-    3. Mandatory non-empty reason on rejection.
-    4. State transitions: full approval moves to APPROVED; rejection to REJECTED.
+    1. Row-level locking to eliminate concurrent approval race conditions.
+    2. Prevention of duplicate logical approvals for the same tier.
+    3. Stale state protection (rejecting decisions on already decided requests).
+    4. Requesters cannot approve their own requests (self-approval ban).
+    5. Threshold policy: <= 50k requires Manager; > 50k requires Mgr + Finance.
+    6. Mandatory non-empty reason on rejection.
     """
-    # Reject modifications to completed or already rejected requests
-    if payment_request.status == PaymentRequestStatus.REJECTED:
+    # Acquire row-level lock on the target payment request to serialize decisions
+    try:
+        locked_request = PaymentRequest.objects.select_for_update().get(
+            id=payment_request.id
+        )
+    except PaymentRequest.DoesNotExist:
+        raise ValidationError({"payment_request": "Payment request not found."})
+
+    # Reject modifications to completed, processing, or rejected requests
+    if locked_request.status == PaymentRequestStatus.REJECTED:
         raise ValidationError(
             {
                 "payment_request": (
@@ -96,41 +106,46 @@ def record_approval(
                 )
             }
         )
-    if (
-        payment_request.status == PaymentRequestStatus.APPROVED
-        and decision == ApprovalDecision.APPROVED
-    ):
-        raise ValidationError(
-            {"payment_request": "Payment request has already been fully approved."}
-        )
-    if payment_request.status not in (
+    if locked_request.status == PaymentRequestStatus.APPROVED:
+        if decision == ApprovalDecision.APPROVED:
+            raise ValidationError(
+                {"payment_request": "Payment request has already been fully approved."}
+            )
+        else:
+            raise ValidationError(
+                {
+                    "payment_request": (
+                        "Cannot reject an already approved payment request."
+                    )
+                }
+            )
+    if locked_request.status not in (
         PaymentRequestStatus.PENDING_APPROVAL,
         PaymentRequestStatus.SUBMITTED,
-        PaymentRequestStatus.APPROVED,
     ):
         raise ValidationError(
             {
                 "payment_request": (
                     f"Cannot decide on payment request in "
-                    f"'{payment_request.status}' state."
+                    f"'{locked_request.status}' state."
                 )
             }
         )
 
     # Verify authorization guards first
     if decision == ApprovalDecision.REJECTED:
-        check_can_reject_request(approver, payment_request)
+        check_can_reject_request(approver, locked_request)
         if not reason or not reason.strip():
             raise ValidationError(
                 {"reason": "A reason is mandatory when rejecting a payment request."}
             )
     else:
-        check_can_approve_request(approver, payment_request, tier=tier)
+        check_can_approve_request(approver, locked_request, tier=tier)
 
     # Infer tier from approver role if not explicitly provided
     if tier is None:
         role = getattr(approver, "role", None)
-        pending = get_pending_tiers(payment_request)
+        pending = get_pending_tiers(locked_request)
         if role == UserRole.MANAGER and ApprovalTier.MANAGER in pending:
             tier = ApprovalTier.MANAGER
         elif role == UserRole.FINANCE_OFFICER and ApprovalTier.FINANCE in pending:
@@ -148,22 +163,28 @@ def record_approval(
 
     # Re-verify specific tier permission once resolved
     if decision != ApprovalDecision.REJECTED:
-        check_can_approve_request(approver, payment_request, tier=tier)
+        check_can_approve_request(approver, locked_request, tier=tier)
 
-    required_tiers = get_required_tiers(payment_request)
+    required_tiers = get_required_tiers(locked_request)
     if tier not in required_tiers:
         raise ValidationError(
             {
                 "tier": (
                     f"Tier '{tier}' is not required for request amount of "
-                    f"{payment_request.amount} {payment_request.currency}."
+                    f"{locked_request.amount} {locked_request.currency}."
                 )
             }
         )
 
-    # Check whether this tier was already approved
-    if decision == ApprovalDecision.APPROVED and tier in get_approved_tiers(
-        payment_request
+    # Check whether this tier was already approved (prevent duplicate approvals)
+    if decision == ApprovalDecision.APPROVED and (
+        tier in get_approved_tiers(locked_request)
+        or Approval.objects.filter(
+            payment_request=locked_request,
+            tier=tier,
+            decision=ApprovalDecision.APPROVED,
+            is_active=True,
+        ).exists()
     ):
         raise ValidationError(
             {
@@ -173,41 +194,120 @@ def record_approval(
             }
         )
 
-    # Create and validate domain model instance
-    approval = Approval(
-        payment_request=payment_request,
-        approver=approver,
-        tier=tier,
-        decision=decision,
-        reason=reason.strip(),
-        created_by=approver.id,
-        updated_by=approver.id,
-    )
-    approval.save()
+    # Create and validate domain model instance with duplicate protection
+    try:
+        approval = Approval(
+            payment_request=locked_request,
+            approver=approver,
+            tier=tier,
+            decision=decision,
+            reason=reason.strip(),
+            created_by=approver.id,
+            updated_by=approver.id,
+        )
+        approval.save()
+    except IntegrityError as exc:
+        raise ValidationError(
+            {"detail": "Duplicate or conflicting approval decision recorded."}
+        ) from exc
 
     # Synchronize PaymentRequest lifecycle state
     if decision == ApprovalDecision.REJECTED:
-        payment_request.status = PaymentRequestStatus.REJECTED
-        payment_request.rejection_reason = reason.strip()
-        payment_request.updated_by = approver.id
-        payment_request.save(
+        locked_request.status = PaymentRequestStatus.REJECTED
+        locked_request.rejection_reason = reason.strip()
+        locked_request.updated_by = approver.id
+        locked_request.save(
             update_fields=["status", "rejection_reason", "updated_by", "updated_at"]
         )
     elif decision == ApprovalDecision.APPROVED:
-        if is_fully_approved(payment_request):
-            payment_request.status = PaymentRequestStatus.APPROVED
-            payment_request.updated_by = approver.id
-            payment_request.save(update_fields=["status", "updated_by", "updated_at"])
+        if is_fully_approved(locked_request):
+            locked_request.status = PaymentRequestStatus.APPROVED
+            locked_request.updated_by = approver.id
+            locked_request.save(update_fields=["status", "updated_by", "updated_at"])
         else:
             # Multi-tier workflow: stay PENDING_APPROVAL until all tiers approve
-            if payment_request.status != PaymentRequestStatus.PENDING_APPROVAL:
-                payment_request.status = PaymentRequestStatus.PENDING_APPROVAL
-                payment_request.updated_by = approver.id
-                payment_request.save(
+            if locked_request.status != PaymentRequestStatus.PENDING_APPROVAL:
+                locked_request.status = PaymentRequestStatus.PENDING_APPROVAL
+                locked_request.updated_by = approver.id
+                locked_request.save(
                     update_fields=["status", "updated_by", "updated_at"]
                 )
 
     return approval
+
+
+@transaction.atomic
+def re_evaluate_approval_state(
+    payment_request: PaymentRequest,
+    *,
+    actor_id: Any | None = None,
+) -> bool:
+    """Invalidate recorded approvals and reset status when request changes."""
+    locked_request = PaymentRequest.objects.select_for_update().get(
+        id=payment_request.id
+    )
+    active_approvals = Approval.objects.filter(
+        payment_request=locked_request,
+        is_active=True,
+    )
+    if active_approvals.exists():
+        active_approvals.update(is_active=False)
+        locked_request.status = PaymentRequestStatus.PENDING_APPROVAL
+        if actor_id:
+            locked_request.updated_by = actor_id
+        locked_request.save(update_fields=["status", "updated_by", "updated_at"])
+        return True
+    return False
+
+
+@transaction.atomic
+def update_payment_request_amount(
+    *,
+    payment_request: PaymentRequest,
+    new_amount: Decimal,
+    actor: UserAccount | None = None,
+) -> PaymentRequest:
+    """Update payment request amount and invalidate prior approval decisions.
+
+    Enforces that material changes to amount require full approval re-evaluation.
+    """
+    if new_amount <= Decimal("0.00"):
+        raise ValidationError({"amount": "Amount must be greater than zero."})
+
+    locked_request = PaymentRequest.objects.select_for_update().get(
+        id=payment_request.id
+    )
+    if locked_request.status in (
+        PaymentRequestStatus.PROCESSING,
+        PaymentRequestStatus.PAID,
+    ):
+        raise ValidationError(
+            {
+                "amount": (
+                    f"Cannot alter amount for request in "
+                    f"'{locked_request.status}' state."
+                )
+            }
+        )
+
+    if locked_request.amount == new_amount:
+        return locked_request
+
+    locked_request.amount = new_amount
+    if actor:
+        locked_request.updated_by = actor.id
+
+    # Invalidate existing active approvals due to material amount modification
+    active_approvals = Approval.objects.filter(
+        payment_request=locked_request,
+        is_active=True,
+    )
+    if active_approvals.exists():
+        active_approvals.update(is_active=False)
+        locked_request.status = PaymentRequestStatus.PENDING_APPROVAL
+
+    locked_request.save()
+    return locked_request
 
 
 def get_approval_queue(

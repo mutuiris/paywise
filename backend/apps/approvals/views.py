@@ -1,9 +1,10 @@
-"""HTTP JSON API views for approval queue and decision recording."""
+"""HTTP JSON API views for approval queue, decisions, and amount updates."""
 
 from __future__ import annotations
 
 import json
 import uuid
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -56,19 +57,21 @@ def payment_request_summary(payment_request: PaymentRequest) -> dict[str, Any]:
         "description": payment_request.description,
         "vendor_id": str(payment_request.vendor_id),
         "vendor_name": payment_request.vendor.name if payment_request.vendor else None,
-        "requester_id": str(payment_request.requester_id)
-        if payment_request.requester_id
-        else None,
-        "requester_name": payment_request.requester.username
-        if payment_request.requester
-        else None,
+        "requester_id": (
+            str(payment_request.requester_id) if payment_request.requester_id else None
+        ),
+        "requester_name": (
+            payment_request.requester.username if payment_request.requester else None
+        ),
         "required_tiers": services.get_required_tiers(payment_request),
         "approved_tiers": services.get_approved_tiers(payment_request),
         "pending_tiers": services.get_pending_tiers(payment_request),
         "is_fully_approved": services.is_fully_approved(payment_request),
-        "created_at": payment_request.created_at.isoformat()
-        if payment_request.created_at
-        else None,
+        "created_at": (
+            payment_request.created_at.isoformat()
+            if payment_request.created_at
+            else None
+        ),
     }
 
 
@@ -257,4 +260,56 @@ def reject_payment_request_view(
             "rejection_reason": payment_request.rejection_reason,
         },
         status=201,
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_payment_request_amount_view(
+    request: HttpRequest, payment_request_id: uuid.UUID
+) -> JsonResponse:
+    """Update payment request amount, re-evaluating and invalidating prior approvals."""
+    if not is_active_authenticated_user(request.user):
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=401
+        )
+
+    try:
+        payload = _parse_json_body(request)
+    except ValidationError as err:
+        return JsonResponse({"detail": err.message}, status=400)
+
+    amount_val = payload.get("amount")
+    if amount_val is None:
+        return JsonResponse({"detail": "Amount field is required."}, status=400)
+
+    try:
+        new_amount = Decimal(str(amount_val))
+    except InvalidOperation, ValueError:
+        return JsonResponse({"detail": "Invalid decimal amount."}, status=400)
+
+    try:
+        payment_request = PaymentRequest.objects.get(id=payment_request_id)
+    except PaymentRequest.DoesNotExist, ValueError:
+        return JsonResponse({"detail": "Payment request not found."}, status=404)
+
+    try:
+        updated_req = services.update_payment_request_amount(
+            payment_request=payment_request,
+            new_amount=new_amount,
+            actor=request.user,
+        )
+    except ValidationError as err:
+        message = err.message_dict if hasattr(err, "message_dict") else err.messages
+        return JsonResponse({"detail": message}, status=400)
+
+    return JsonResponse(
+        {
+            "id": str(updated_req.id),
+            "amount": str(updated_req.amount),
+            "status": updated_req.status,
+            "is_fully_approved": services.is_fully_approved(updated_req),
+            "pending_tiers": services.get_pending_tiers(updated_req),
+        },
+        status=200,
     )
