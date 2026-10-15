@@ -2,6 +2,10 @@
 
 from django.urls import path
 
+from apps.audit import views
+
 app_name = "audit"
 
-urlpatterns: list[path] = []
+urlpatterns = [
+    path("", views.audit_event_list_view, name="audit-list"),
+]

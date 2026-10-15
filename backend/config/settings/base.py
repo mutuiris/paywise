@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -12,6 +13,16 @@ ALLOWED_HOSTS = [
     for host in (os.environ.get("DJANGO_ALLOWED_HOSTS") or "").split(",")
     if host.strip()
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in (os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS") or "").split(",")
+    if origin.strip()
+]
+
+PAYMENT_APPROVAL_THRESHOLD = Decimal(
+    os.environ.get("PAYMENT_APPROVAL_THRESHOLD", "50000.00")
+)
 
 # Application definition
 
@@ -115,6 +126,32 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+OTEL_EXPORTER_OTLP_ENDPOINT = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+OTEL_SERVICE_NAME = os.environ.get("OTEL_SERVICE_NAME", "paywise-backend")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "paywise": {
+            "handlers": ["console"],
+            "level": os.environ.get("PAYWISE_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+    },
+}
 
 # Email
 

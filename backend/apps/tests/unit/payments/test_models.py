@@ -36,7 +36,7 @@ class PaymentRequestModelTestCase(TestCase):
         self.assertIsInstance(payment.id, uuid.UUID)
         self.assertEqual(payment.status, PaymentRequestStatus.DRAFT)
         self.assertEqual(payment.currency, "KES")
-        self.assertEqual(payment.history.count(), 1)
+        self.assertEqual(getattr(payment, "history").count(), 1)
         self.assertIn("INV-2043", str(payment))
 
     def test_unique_vendor_invoice_number_constraint(self) -> None:
@@ -122,7 +122,7 @@ class PaymentAttemptModelTestCase(TestCase):
         self.assertIsInstance(attempt.id, uuid.UUID)
         self.assertEqual(attempt.status, PaymentAttemptStatus.PROCESSING)
         self.assertEqual(attempt.provider_reference, "MOCK-REF-1001")
-        self.assertEqual(attempt.history.count(), 1)
+        self.assertEqual(getattr(attempt, "history").count(), 1)
 
     def test_idempotency_key_uniqueness(self) -> None:
         PaymentAttempt.objects.create(

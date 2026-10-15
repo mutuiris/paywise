@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -25,6 +27,8 @@ class AuditAction(models.TextChoices):
 
 
 class AuditEvent(OwnerlessAbstract):
+    actor_id: UUID | None
+
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -54,7 +58,7 @@ class AuditEvent(OwnerlessAbstract):
             )
         super().save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs) -> None:
+    def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
         raise ValidationError("AuditEvent records are immutable and cannot be deleted.")
 
     def __str__(self) -> str:

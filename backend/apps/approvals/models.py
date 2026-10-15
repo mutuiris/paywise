@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -18,6 +20,9 @@ class ApprovalTier(models.TextChoices):
 
 
 class Approval(OwnerAbstract):
+    payment_request_id: UUID
+    approver_id: UUID
+
     payment_request = models.ForeignKey(
         "payments.PaymentRequest",
         on_delete=models.PROTECT,
