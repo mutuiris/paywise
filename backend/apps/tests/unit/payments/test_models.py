@@ -98,6 +98,28 @@ class PaymentRequestModelTestCase(TestCase):
                 description="Zero amount invalid",
             )
 
+    def test_inactive_vendor_and_project_rejected_on_create(self) -> None:
+        inactive_vendor = Vendor.objects.create(name="Inactive Vendor", is_active=False)
+        with self.assertRaises(ValidationError):
+            PaymentRequest.objects.create(
+                vendor=inactive_vendor,
+                requester=self.user,
+                amount=Decimal("1000.00"),
+                invoice_number="INV-INACT-01",
+                description="Should fail",
+            )
+
+        inactive_proj = Project.objects.create(name="Inactive Project", is_active=False)
+        with self.assertRaises(ValidationError):
+            PaymentRequest.objects.create(
+                vendor=self.vendor,
+                project=inactive_proj,
+                requester=self.user,
+                amount=Decimal("1000.00"),
+                invoice_number="INV-INACT-02",
+                description="Should fail",
+            )
+
 
 class PaymentAttemptModelTestCase(TestCase):
     def setUp(self) -> None:
@@ -123,6 +145,7 @@ class PaymentAttemptModelTestCase(TestCase):
         self.assertEqual(attempt.status, PaymentAttemptStatus.PROCESSING)
         self.assertEqual(attempt.provider_reference, "MOCK-REF-1001")
         self.assertEqual(attempt.history.count(), 1)
+        self.assertIn("Attempt idemp-key-001", str(attempt))
 
     def test_idempotency_key_uniqueness(self) -> None:
         PaymentAttempt.objects.create(
@@ -135,4 +158,12 @@ class PaymentAttemptModelTestCase(TestCase):
                 payment_request=self.payment,
                 idempotency_key="duplicate-idemp-key",
                 amount=self.payment.amount,
+            )
+
+    def test_payment_attempt_amount_positive_validation(self) -> None:
+        with self.assertRaises(ValidationError):
+            PaymentAttempt.objects.create(
+                payment_request=self.payment,
+                idempotency_key="idemp-neg",
+                amount=Decimal("-10.00"),
             )

@@ -109,3 +109,45 @@ class ApprovalPermissionsTestCase(TestCase):
 
         with self.assertRaises(PermissionDenied):
             check_can_reject_request(self.employee, self.payment_req)
+
+    def test_can_view_approvals_guard(self) -> None:
+        from apps.approvals.permissions import (
+            can_view_approvals,
+            check_can_view_approvals,
+        )
+
+        self.assertTrue(can_view_approvals(self.employee))
+        check_can_view_approvals(self.employee)
+
+        anon = AnonymousUser()
+        self.assertFalse(can_view_approvals(anon))
+        with self.assertRaises(PermissionDenied):
+            check_can_view_approvals(anon)
+
+    def test_tier_none_and_specific_tier_guards(self) -> None:
+        # tier=None allows manager or finance
+        self.assertTrue(can_approve_request(self.manager, self.payment_req, tier=None))
+        self.assertTrue(can_approve_request(self.finance, self.payment_req, tier=None))
+        self.assertFalse(
+            can_approve_request(self.employee, self.payment_req, tier=None)
+        )
+
+        check_can_approve_request(self.manager, self.payment_req, tier=None)
+        with self.assertRaises(PermissionDenied):
+            check_can_approve_request(self.employee, self.payment_req, tier=None)
+
+        # Manager attempting finance tier
+        with self.assertRaises(PermissionDenied):
+            check_can_approve_request(
+                self.manager, self.payment_req, tier=ApprovalTier.FINANCE
+            )
+
+        # Finance attempting manager tier
+        with self.assertRaises(PermissionDenied):
+            check_can_approve_request(
+                self.finance, self.payment_req, tier=ApprovalTier.MANAGER
+            )
+
+    def test_superuser_can_reject(self) -> None:
+        self.assertTrue(can_reject_request(self.superuser, self.payment_req))
+        check_can_reject_request(self.superuser, self.payment_req)

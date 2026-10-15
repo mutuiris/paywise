@@ -62,3 +62,13 @@ class ReportingPermissionsUnitTests(TestCase):
             self.assertTrue(can_view_reports(user))
             # Should not raise exception
             check_can_view_reports(user)
+
+    def test_superuser_can_view_reports(self) -> None:
+        """Superusers possess reporting view privileges."""
+        super_user = UserAccount.objects.create_superuser(
+            username="rep_super",
+            email="super@paywise.co.ke",
+            password="pass",
+        )
+        self.assertTrue(can_view_reports(super_user))
+        check_can_view_reports(super_user)

@@ -177,3 +177,14 @@ class ReportingServicesUnitTests(TestCase):
         self.assertEqual(proj_b["paid_amount"], "0.00")
         self.assertEqual(proj_b["pending_amount"], "30000.00")
         self.assertEqual(proj_b["total_count"], 2)
+
+    def test_failed_payments_report_vendor_filter_and_invalid_uuid(self) -> None:
+        """Verifies vendor filter and invalid UUID handling in failed report."""
+        report = get_failed_payments_report(vendor_id=self.vendor.id)
+        self.assertEqual(report["total_failed_count"], 1)
+
+        with self.assertRaises(ValueError):
+            get_failed_payments_report(project_id="invalid-project-uuid")
+
+        with self.assertRaises(ValueError):
+            get_failed_payments_report(vendor_id="invalid-vendor-uuid")

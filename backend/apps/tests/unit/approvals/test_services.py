@@ -240,3 +240,93 @@ class ApprovalServicesTestCase(TestCase):
         # Employee view: empty queue
         emp_queue = get_approval_queue(self.employee)
         self.assertEqual(emp_queue.count(), 0)
+
+    def test_finance_approves_first_then_manager_workflow(self) -> None:
+        """Verifies multi-tier approvals can be fulfilled in any order."""
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("85000.00"),
+            invoice_number="INV-SRV-ORDER",
+            description="High value server rack",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+
+        # Finance approves first
+        record_approval(
+            payment_request=req,
+            approver=self.finance,
+            decision=ApprovalDecision.APPROVED,
+            tier=ApprovalTier.FINANCE,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.PENDING_APPROVAL)
+        self.assertFalse(is_fully_approved(req))
+        self.assertEqual(get_pending_tiers(req), [ApprovalTier.MANAGER])
+
+        # Manager approves second
+        record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.APPROVED,
+            tier=ApprovalTier.MANAGER,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+        self.assertTrue(is_fully_approved(req))
+
+    def test_admin_can_approve_both_tiers(self) -> None:
+        """Administrators possess permissions across all tiers."""
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("70000.00"),
+            invoice_number="INV-SRV-ADMIN",
+            description="Admin approved request",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        record_approval(
+            payment_request=req,
+            approver=self.admin,
+            decision=ApprovalDecision.APPROVED,
+            tier=ApprovalTier.MANAGER,
+        )
+        req.refresh_from_db()
+        self.assertEqual(get_approved_tiers(req), [ApprovalTier.MANAGER])
+
+    def test_get_approval_history_and_re_evaluate_state(self) -> None:
+        """Verifies approval history serialization and re-evaluation."""
+        from apps.approvals.services import (
+            get_approval_history,
+            re_evaluate_approval_state,
+        )
+
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("20000.00"),
+            invoice_number="INV-SRV-HIST",
+            description="History test",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.APPROVED,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+
+        history = get_approval_history(req)
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["decision"], ApprovalDecision.APPROVED)
+        self.assertEqual(history[0]["approver_name"], self.manager.username)
+
+        # Re-evaluate
+        re_evaluate_approval_state(req)
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.PENDING_APPROVAL)
+        self.assertFalse(is_fully_approved(req))

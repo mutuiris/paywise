@@ -289,5 +289,34 @@ class FilterPaymentRequestsServiceTests(TestCase):
 
         with self.assertRaises(ValueError):
             filter_payment_requests(
+                user=self.finance_user, requester_id="invalid-requester-uuid"
+            )
+
+        with self.assertRaises(ValueError):
+            filter_payment_requests(
+                user=self.finance_user, project_id="invalid-project-uuid"
+            )
+
+        with self.assertRaises(ValueError):
+            filter_payment_requests(
                 user=self.finance_user, min_amount="invalid-decimal"
             )
+
+        with self.assertRaises(ValueError):
+            filter_payment_requests(
+                user=self.finance_user, max_amount="invalid-decimal"
+            )
+
+    def test_list_parameters_for_status_and_payment_methods(self) -> None:
+        """Filters with list inputs for status and payment methods."""
+        qs_status = filter_payment_requests(
+            user=self.finance_user,
+            status=[PaymentRequestStatus.PAID, PaymentRequestStatus.APPROVED],
+        )
+        self.assertEqual(qs_status.count(), 2)
+
+        qs_methods = filter_payment_requests(
+            user=self.finance_user,
+            payment_method=[PaymentMethod.MPESA, PaymentMethod.BANK_TRANSFER],
+        )
+        self.assertEqual(qs_methods.count(), 3)

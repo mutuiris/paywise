@@ -127,6 +127,7 @@ class ReportingViewsIntegrationTests(TestCase):
     def test_invalid_date_returns_400(self) -> None:
         """Invalid date query parameter returns 400 Bad Request."""
         self.client.force_login(self.finance)
-        res = self.client.get(self.summary_url, {"date_from": "bad-date"})
-        self.assertEqual(res.status_code, 400)
-        self.assertIn("detail", res.json())
+        for url in (self.summary_url, self.failed_url, self.by_project_url):
+            res = self.client.get(url, {"date_from": "bad-date"})
+            self.assertEqual(res.status_code, 400)
+            self.assertIn("detail", res.json())

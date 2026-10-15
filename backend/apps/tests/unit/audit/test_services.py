@@ -166,3 +166,44 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertIn(e3, filtered)
         self.assertNotIn(e1, filtered)
         self.assertNotIn(e2, filtered)
+
+    def test_vendor_and_project_audit_logging(self) -> None:
+        from apps.audit.services import log_project_created, log_vendor_created
+        from apps.vendors.models import Project, Vendor
+
+        vendor = Vendor.objects.create(name="New Audit Vendor")
+        ev_v = log_vendor_created(vendor, actor=self.manager)
+        self.assertEqual(ev_v.action, AuditAction.VENDOR_CREATED)
+        self.assertEqual(ev_v.entity_id, vendor.id)
+
+        project = Project.objects.create(name="Audit Project", code="PRJ-AUDIT")
+        ev_p = log_project_created(project, actor=self.manager)
+        self.assertEqual(ev_p.action, AuditAction.PROJECT_CREATED)
+        self.assertEqual(ev_p.entity_id, project.id)
+
+    def test_query_audit_events_by_actor_and_entity(self) -> None:
+        log_payment_request_created(self.payment_req, actor=self.employee)
+        log_payment_request_approved(
+            self.payment_req, approver=self.manager, tier="MANAGER"
+        )
+
+        by_actor = query_audit_events(actor_id=self.employee.id)
+        for ev in by_actor:
+            self.assertEqual(ev.actor_id, self.employee.id)
+
+        by_entity = query_audit_events(
+            entity_type="PaymentRequest", entity_id=self.payment_req.id
+        )
+        self.assertTrue(by_entity.count() >= 2)
+
+    def test_record_audit_event_without_actor(self) -> None:
+        ev = record_audit_event(
+            action=AuditAction.PAYMENT_PROCESSING_STARTED,
+            entity_type="PaymentRequest",
+            entity_id=self.payment_req.id,
+            actor=None,
+            description="System-triggered background retry",
+        )
+        self.assertIsNone(ev.actor)
+        self.assertEqual(ev.actor_email, "")
+        self.assertIn("System-triggered", ev.description)
