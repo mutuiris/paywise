@@ -211,13 +211,21 @@ def record_approval(
             {"detail": "Duplicate or conflicting approval decision recorded."}
         ) from exc
 
-    # Synchronize PaymentRequest lifecycle state
+    # Synchronize PaymentRequest lifecycle state and log audit events
+    from apps.audit import services as audit_services
+
     if decision == ApprovalDecision.REJECTED:
         locked_request.status = PaymentRequestStatus.REJECTED
         locked_request.rejection_reason = reason.strip()
         locked_request.updated_by = approver.id
         locked_request.save(
             update_fields=["status", "rejection_reason", "updated_by", "updated_at"]
+        )
+        audit_services.log_payment_request_rejected(
+            locked_request,
+            rejecter=approver,
+            reason=reason.strip(),
+            tier=tier,
         )
     elif decision == ApprovalDecision.APPROVED:
         if is_fully_approved(locked_request):
@@ -232,6 +240,12 @@ def record_approval(
                 locked_request.save(
                     update_fields=["status", "updated_by", "updated_at"]
                 )
+        audit_services.log_payment_request_approved(
+            locked_request,
+            approver=approver,
+            tier=tier,
+            reason=reason.strip(),
+        )
 
     return approval
 
@@ -305,6 +319,13 @@ def update_payment_request_amount(
     if active_approvals.exists():
         active_approvals.update(is_active=False)
         locked_request.status = PaymentRequestStatus.PENDING_APPROVAL
+        from apps.audit import services as audit_services
+
+        audit_services.log_approval_invalidated(
+            locked_request,
+            actor=actor,
+            reason="Material payment amount change.",
+        )
 
     locked_request.save()
     return locked_request
