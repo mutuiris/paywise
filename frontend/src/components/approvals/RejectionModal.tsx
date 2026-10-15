@@ -20,33 +20,25 @@ export function RejectionModal({ requestId, vendorName, onClose, onSubmit }: Rej
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
-        <h2 className="text-lg font-bold text-gray-900">Reject Request {requestId}</h2>
-        <p className="text-sm text-gray-600">
-          Please provide a mandatory reason for rejecting the request for{' '}
-          <span className="font-semibold">{vendorName}</span>.
+      <div className="bg-surface rounded-xl border border-line shadow-lg max-w-md w-full p-6 space-y-4">
+        <h2 className="text-base font-bold text-ink">Reject Request {requestId}</h2>
+        <p className="text-xs text-muted-ink">
+          Provide a mandatory reason for rejecting requisition for <span className="font-semibold text-ink">{vendorName}</span>.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
             required
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Enter detailed reason for rejection..."
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none text-gray-900"
+            placeholder="Enter reason for rejection…"
+            className="w-full border border-line rounded-md p-2.5 text-xs focus:border-brand focus:outline-none bg-surface text-ink placeholder:text-muted-ink/70"
             rows={3}
           />
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-            >
+            <button type="button" onClick={onClose} className="px-3.5 py-1.5 text-xs font-semibold text-ink bg-canvas border border-line hover:bg-surface rounded-md transition cursor-pointer">
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
-            >
+            <button type="submit" className="px-3.5 py-1.5 text-xs font-semibold text-white bg-err hover:bg-err/90 rounded-md transition cursor-pointer">
               Confirm Rejection
             </button>
           </div>

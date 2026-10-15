@@ -12,6 +12,8 @@ export function SignInHero() {
         className="object-cover object-center"
         sizes="(max-width: 1024px) 100vw, 70vw"
       />
+      {/* Whitish opaque layer on top */}
+      <div className="absolute inset-0 bg-white/35 pointer-events-none" />
     </div>
   );
 }
