@@ -6,7 +6,7 @@ import { formatCurrency } from '@/data/mock-manager-data';
 
 export function FinanceDepartmentSpendTable() {
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-2xs font-serif overflow-hidden">
+    <div className="rounded-xl border border-line bg-surface shadow-2xs  overflow-hidden">
       <div className="border-b border-line p-5 bg-surface-subtle">
         <h2 className="text-base font-bold text-ink">Cost Center Vendor Disbursements</h2>
         <p className="text-xs text-muted-ink">Reconciled monthly totals across company project operations.</p>
@@ -25,7 +25,7 @@ export function FinanceDepartmentSpendTable() {
             {DEPARTMENT_SPEND.map((dept) => (
               <tr key={dept.department} className="transition hover:bg-canvas/50">
                 <td className="whitespace-nowrap px-5 py-4 font-medium text-ink">{dept.department}</td>
-                <td className="whitespace-nowrap px-5 py-4 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(dept.spent)}</td>
+                <td className="whitespace-nowrap px-5 py-4 text-right  font-semibold tabular-nums text-ink">{formatCurrency(dept.spent)}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-xs text-muted-ink">{dept.requestCount} transactions</td>
                 <td className="whitespace-nowrap px-5 py-4 text-xs font-medium text-brand-deep">{dept.topVendor}</td>
               </tr>

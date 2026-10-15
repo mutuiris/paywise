@@ -15,7 +15,7 @@ export function AuditView() {
   } = useAudit();
 
   return (
-    <div className="space-y-4 font-serif">
+    <div className="space-y-4">
       <AuditHeader />
       <AuditFilters
         search={search}

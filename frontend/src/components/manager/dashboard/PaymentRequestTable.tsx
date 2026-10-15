@@ -48,7 +48,7 @@ export function PaymentRequestTable({
   });
 
   return (
-    <section className="rounded-xl border border-line bg-surface overflow-hidden shadow-xs font-serif">
+    <section className="rounded-xl border border-line bg-surface overflow-hidden shadow-xs">
       {/* Table Header / Action Bar */}
       <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between bg-surface-subtle">
         <div>
@@ -154,10 +154,10 @@ export function PaymentRequestTable({
                     >
                       {/* Reference */}
                       <td className="whitespace-nowrap px-5 py-3.5">
-                        <span className="font-serif text-[13px] font-semibold text-brand group-hover:underline">
+                        <span className="text-[13px] font-semibold text-brand group-hover:underline">
                           {req.reference}
                         </span>
-                        <span className="block font-serif text-[11px] text-muted-ink">
+                        <span className="block  text-[11px] text-muted-ink">
                           {req.invoiceNumber}
                         </span>
                       </td>
@@ -173,7 +173,7 @@ export function PaymentRequestTable({
                       </td>
 
                       {/* Amount */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">
                         {formatCurrency(req.amount)}
                       </td>
 
@@ -237,7 +237,7 @@ export function PaymentRequestTable({
                 onClick={() => onReview(req)}
               >
                 <div className="min-w-0 pr-3">
-                  <span className="font-serif text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
+                  <span className="text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
                     {req.reference}
                   </span>
                   <p className="mt-0.5 font-semibold text-ink text-sm truncate group-hover:text-brand-deep transition-colors">

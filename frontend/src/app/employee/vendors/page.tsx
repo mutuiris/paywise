@@ -143,7 +143,7 @@ function EmployeeVendorsContent() {
 
 export default function EmployeeVendorsPage() {
   return (
-    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500 font-serif">Loading vendors…</div>}>
+    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500">Loading vendors…</div>}>
       <EmployeeVendorsContent />
     </React.Suspense>
   );

@@ -12,7 +12,7 @@ export function FailedAttemptsTable({ items }: { items: FailedItem[] }) {
   }
 
   return (
-    <table className="w-full text-left text-sm font-serif">
+    <table className="w-full text-left text-sm">
       <thead className="bg-canvas text-[11px] font-semibold uppercase tracking-wider text-muted-ink border-b border-line">
         <tr>
           <th className="px-5 py-3">Reference</th>
@@ -27,12 +27,12 @@ export function FailedAttemptsTable({ items }: { items: FailedItem[] }) {
         {items.map((f) => (
           <tr key={f.id} className="transition hover:bg-canvas/50">
             <td className="whitespace-nowrap px-5 py-3.5">
-              <Link href={`/finance/requests/${f.id}`} className="font-serif text-[13px] font-semibold text-err hover:underline">
+              <Link href={`/finance/requests/${f.id}`} className="text-[13px] font-semibold text-err hover:underline">
                 {f.reference}
               </Link>
             </td>
             <td className="whitespace-nowrap px-5 py-3.5 font-medium text-ink">{f.vendorName}</td>
-            <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(f.amount)}</td>
+            <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">{formatCurrency(f.amount)}</td>
             <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{f.paymentMethod === 'MPESA' ? 'M-Pesa' : 'Bank Transfer'}</td>
             <td className="whitespace-nowrap px-5 py-3.5 text-xs text-err font-medium">{f.failureReason}</td>
             <td className="whitespace-nowrap px-5 py-3.5 text-right">

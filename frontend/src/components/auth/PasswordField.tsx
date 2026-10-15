@@ -30,7 +30,7 @@ export function PasswordField({ value, onChange, onForgotPassword }: PasswordFie
           autoComplete="current-password"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="input-field pl-11 pr-11 py-2.5 text-sm font-serif bg-surface border-line text-ink placeholder:text-muted-ink/60 focus:border-brand"
+          className="input-field pl-11 pr-11 py-2.5 text-sm  bg-surface border-line text-ink placeholder:text-muted-ink/60 focus:border-brand"
           placeholder="Enter your password"
         />
         <button

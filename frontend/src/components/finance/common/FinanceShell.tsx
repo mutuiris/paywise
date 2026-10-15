@@ -12,7 +12,7 @@ export function FinanceShell({ children }: FinanceShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-canvas font-serif">
+    <div className="flex min-h-screen bg-canvas">
       {/* Finance Sidebar (Desktop + Mobile Drawer) */}
       <FinanceSidebar
         mobileOpen={mobileOpen}
@@ -20,12 +20,12 @@ export function FinanceShell({ children }: FinanceShellProps) {
       />
 
       {/* Main Content Area */}
-      <div className="flex min-w-0 flex-1 flex-col font-serif">
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* Finance Header */}
         <FinanceHeader onMenuClick={() => setMobileOpen(true)} />
 
         {/* Page Container */}
-        <main className="flex-1 p-6 font-serif">
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>

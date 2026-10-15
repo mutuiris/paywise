@@ -15,7 +15,7 @@ export function UserRow({ user, onRoleChange, onRequestToggleStatus }: UserRowPr
   const initials = user.name.split(' ').map((n) => n[0]).join('');
 
   return (
-    <tr className="hover:bg-canvas/50 transition-colors font-serif">
+    <tr className="hover:bg-canvas/50 transition-colors">
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="grid size-7 place-items-center rounded-full bg-brand/10 text-[11px] font-semibold text-brand-deep">{initials}</span>

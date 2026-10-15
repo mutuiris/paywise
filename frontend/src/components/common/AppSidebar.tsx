@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { UserProfile, UserRole } from '@/types/auth';
@@ -42,16 +43,21 @@ export function AppSidebar({
   }, [mobileOpen, onClose]);
 
   const navContent = (
-    <div className="flex h-full flex-col font-serif">
+    <div className="flex h-full flex-col">
       {/* Brand Logo & Header */}
-      <div className="flex h-14 items-center justify-between border-b border-line px-4">
+      <div className="flex h-16 items-center justify-between border-b border-line px-4">
         <Link
           href={`${basePath}/dashboard`}
-          className="flex items-center transition-opacity hover:opacity-90"
+          className="flex items-center py-1 transition-transform hover:scale-[1.02]"
         >
-          <span className="font-serif text-lg font-bold tracking-tight text-brand">
-            PayWise
-          </span>
+          <Image
+            src="/images/logo.png"
+            alt="PayWise Logo"
+            width={160}
+            height={50}
+            className="h-9 w-auto object-contain"
+            priority
+          />
         </Link>
 
         {/* Mobile Close Button */}
@@ -113,19 +119,19 @@ export function AppSidebar({
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line bg-surface lg:flex lg:flex-col font-serif">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line bg-surface lg:flex lg:flex-col">
         {navContent}
       </aside>
 
       {/* Mobile Drawer Backdrop & Container */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs lg:hidden font-serif"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         >
           <div
-            className="h-full w-72 bg-surface shadow-xl font-serif"
+            className="h-full w-72 bg-surface shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {navContent}

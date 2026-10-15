@@ -25,7 +25,7 @@ export function FinanceApprovalsView() {
   };
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       {toast && <div className="fixed bottom-6 right-6 z-50 rounded-lg bg-ink px-4 py-3 text-xs font-semibold text-surface shadow-lg">{toast}</div>}
       <FinanceApprovalsHeader />
       <FinanceApprovalsStats pendingCount={items.length} totalPendingAmount={items.reduce((s, i) => s + i.amount, 0)} />

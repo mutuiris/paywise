@@ -13,7 +13,7 @@ export function ActivityItem({ event }: ActivityItemProps) {
   const dotColor = isErr ? 'bg-err' : isWarn ? 'bg-warn' : 'bg-brand';
 
   return (
-    <li className="relative pb-5 pl-5 last:pb-0 font-serif">
+    <li className="relative pb-5 pl-5 last:pb-0">
       <span
         aria-hidden="true"
         className={`absolute -left-[5px] top-1.5 size-2.5 rounded-full border-2 border-surface ${dotColor}`}

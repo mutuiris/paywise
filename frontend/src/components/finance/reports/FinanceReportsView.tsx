@@ -7,7 +7,7 @@ import { FinanceDepartmentSpendTable } from './FinanceDepartmentSpendTable';
 
 export function FinanceReportsView() {
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <FinanceReportsHeader />
       <FinanceReportsStats />
       <FinanceDepartmentSpendTable />

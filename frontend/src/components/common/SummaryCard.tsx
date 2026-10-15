@@ -29,21 +29,21 @@ export function SummaryCard({
     >
       <div>
         <div className="flex items-center justify-between gap-1.5">
-          <p className="text-xs sm:text-sm font-semibold text-ink font-serif truncate">{displayLabel}</p>
+          <p className="text-xs sm:text-sm font-semibold text-ink  truncate">{displayLabel}</p>
           {displayBadge && (
-            <span className="shrink-0 rounded bg-canvas border border-line px-1.5 py-0.5 text-[10px] font-semibold text-muted-ink uppercase font-serif">
+            <span className="shrink-0 rounded bg-canvas border border-line px-1.5 py-0.5 text-[10px] font-semibold text-muted-ink uppercase">
               {displayBadge}
             </span>
           )}
         </div>
         <div className="mt-2 flex items-baseline gap-1.5 flex-wrap">
-          {isCurrency && <span className="text-xs font-semibold text-muted-ink font-serif uppercase">KES</span>}
-          <span className={`font-serif font-bold tabular-nums text-ink ${isLong ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
+          {isCurrency && <span className="text-xs font-semibold text-muted-ink  uppercase">KES</span>}
+          <span className={`font-bold tabular-nums text-ink ${isLong ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
             {rawNumber}
           </span>
         </div>
       </div>
-      {hint && <p className={`mt-2 text-[11px] font-serif ${getCardToneClasses(tone)}`}>{hint}</p>}
+      {hint && <p className={`mt-2 text-[11px]  ${getCardToneClasses(tone)}`}>{hint}</p>}
     </div>
   );
 }

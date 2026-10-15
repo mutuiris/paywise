@@ -8,7 +8,7 @@ export function ManagerDepartmentSpendTable() {
   const rows = DEPARTMENT_SUMMARY.filter((r) => filter === 'compliant' ? r.status === 'Compliant' : filter === 'review' ? r.status === 'Review Needed' : true);
 
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-2xs overflow-hidden font-serif">
+    <div className="rounded-xl border border-line bg-surface shadow-2xs overflow-hidden">
       <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-surface-subtle">
         <div>
           <h2 className="text-base font-bold text-ink">Department Spend Summary</h2>
@@ -29,9 +29,9 @@ export function ManagerDepartmentSpendTable() {
           <tbody className="divide-y divide-line text-ink">
             {rows.map((row) => (
               <tr key={row.id} className="transition hover:bg-canvas/50">
-                <td className="whitespace-nowrap px-5 py-3.5 font-serif text-xs text-muted-ink font-medium">{row.id}</td>
+                <td className="whitespace-nowrap px-5 py-3.5  text-xs text-muted-ink font-medium">{row.id}</td>
                 <td className="whitespace-nowrap px-5 py-3.5 font-medium text-ink">{row.department}</td>
-                <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">KES {row.totalSpent.toLocaleString()}</td>
+                <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">KES {row.totalSpent.toLocaleString()}</td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{row.approvedCount} requisitions</td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-xs">{row.flaggedCount > 0 ? <span className="font-semibold text-warn">{row.flaggedCount} flagged</span> : <span className="text-muted-ink">0</span>}</td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-right">

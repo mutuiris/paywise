@@ -10,7 +10,7 @@ export interface ActivityTimelineProps {
 
 export function ActivityTimeline({ events }: ActivityTimelineProps) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-2xs font-serif">
+    <div className="rounded-xl border border-line bg-surface p-5 shadow-2xs">
       <div className="flex items-center justify-between border-b border-line pb-3">
         <div>
           <h2 className="text-base font-bold text-ink">Recent System Activity</h2>

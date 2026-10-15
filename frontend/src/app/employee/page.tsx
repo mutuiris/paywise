@@ -62,7 +62,7 @@ function EmployeeDashboardContent() {
       {/* Title Header with Serif Font */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900 tracking-tight">
+          <h1 className="text-3xl  font-bold text-gray-900 tracking-tight">
             Welcome back, Bernadette
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -196,7 +196,7 @@ function EmployeeDashboardContent() {
 
 export default function EmployeeDashboard() {
   return (
-    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500 font-serif">Loading dashboard…</div>}>
+    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500">Loading dashboard…</div>}>
       <EmployeeDashboardContent />
     </React.Suspense>
   );

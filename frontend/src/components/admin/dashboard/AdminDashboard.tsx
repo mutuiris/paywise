@@ -12,7 +12,7 @@ export function AdminDashboard() {
   const stats = getAdminOverviewStats();
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <PageHeader
         title="Welcome back, Grace"
         description="Administrator dashboard · System governance and access management"

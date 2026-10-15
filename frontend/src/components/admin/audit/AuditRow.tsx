@@ -9,7 +9,7 @@ export function AuditRow({ event }: { event: AuditEvent }) {
   const actionColor = isErr ? 'text-err font-semibold' : isWarn ? 'text-warn font-semibold' : 'text-ink font-semibold';
 
   return (
-    <tr className="hover:bg-canvas/50 transition-colors font-serif">
+    <tr className="hover:bg-canvas/50 transition-colors">
       <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-ink">
         {formatAuditDate(event.at)}
       </td>

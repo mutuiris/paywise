@@ -8,7 +8,7 @@ import { QUEUE_ITEMS, ATTEMPT_ITEMS, FAILED_ITEMS } from './mockData';
 
 export function FinanceDashboard() {
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <FinanceDashboardHeader />
       <FinanceDashboardStats
         queueCount={QUEUE_ITEMS.length}

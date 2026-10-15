@@ -19,7 +19,7 @@ export function RejectionModal({ requestId, vendorName, onClose, onSubmit }: Rej
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 font-serif">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-xl border border-line shadow-lg max-w-md w-full p-6 space-y-4">
         <h2 className="text-base font-bold text-ink">Reject Request {requestId}</h2>
         <p className="text-xs text-muted-ink">

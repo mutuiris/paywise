@@ -61,7 +61,7 @@ export function ApprovalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 font-serif">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
@@ -79,7 +79,7 @@ export function ApprovalModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-line px-6 py-4 bg-surface-subtle">
           <div className="flex items-center gap-3">
-            <span className="font-serif text-sm font-semibold text-brand">
+            <span className="text-sm font-semibold text-brand">
               {request.reference}
             </span>
             <StatusBadge status={request.status} />
@@ -102,7 +102,7 @@ export function ApprovalModal({
               <p className="text-xs font-medium text-muted-ink uppercase tracking-wider">
                 Total Payable Amount
               </p>
-              <p className="mt-1 font-serif text-3xl font-bold tracking-tight text-ink">
+              <p className="mt-1  text-3xl font-bold tracking-tight text-ink">
                 {formatCurrency(request.amount)}
               </p>
             </div>
@@ -128,7 +128,7 @@ export function ApprovalModal({
               <FileText className="size-4.5 text-muted-ink shrink-0 mt-0.5" />
               <div>
                 <span className="block text-xs text-muted-ink font-medium">Invoice Number</span>
-                <span className="font-serif font-semibold text-ink">{request.invoiceNumber}</span>
+                <span className="font-semibold text-ink">{request.invoiceNumber}</span>
               </div>
             </div>
 

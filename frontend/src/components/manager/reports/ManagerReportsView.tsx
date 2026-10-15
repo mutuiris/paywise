@@ -7,7 +7,7 @@ import { ManagerDepartmentSpendTable } from './ManagerDepartmentSpendTable';
 
 export function ManagerReportsView() {
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <ManagerReportsHeader />
       <ManagerReportsStats />
       <ManagerDepartmentSpendTable />

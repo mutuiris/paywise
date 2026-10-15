@@ -15,16 +15,16 @@ interface ManagerApprovalsRowProps {
 export function ManagerApprovalsRow({ req, onApprove, onReject }: ManagerApprovalsRowProps) {
   const isDual = req.amount > CURRENT_MANAGER.approvalLimit;
   return (
-    <tr className="transition hover:bg-canvas/50 font-serif">
+    <tr className="transition hover:bg-canvas/50">
       <td className="whitespace-nowrap px-5 py-3.5">
-        <Link href={`/manager/requests/${req.id}`} className="font-serif text-[13px] font-semibold text-brand hover:underline block">{req.reference}</Link>
+        <Link href={`/manager/requests/${req.id}`} className="text-[13px] font-semibold text-brand hover:underline block">{req.reference}</Link>
         <span className="text-[11px] text-muted-ink block">{req.invoiceNumber}</span>
       </td>
       <td className="whitespace-nowrap px-5 py-3.5">
         <span className="font-semibold text-ink block">{req.vendorName}</span>
         <span className="text-[11px] text-muted-ink truncate max-w-[180px] block">{req.reason}</span>
       </td>
-      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(req.amount)}</td>
+      <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">{formatCurrency(req.amount)}</td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink font-medium">{req.requesterName}</td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{req.project}</td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{formatDate(req.createdAt)}</td>

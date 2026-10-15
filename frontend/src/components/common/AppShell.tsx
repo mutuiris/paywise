@@ -17,7 +17,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-canvas font-serif text-ink antialiased">
+    <div className="flex min-h-screen bg-canvas  text-ink antialiased">
       <AppSidebar
         role={role}
         basePath={basePath}
@@ -26,12 +26,12 @@ export function AppShell({
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
-      <div className="flex min-w-0 flex-1 flex-col font-serif">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
           user={user}
           onMenuClick={() => setMobileOpen(true)}
         />
-        <main className="flex-1 p-6 font-serif">
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>

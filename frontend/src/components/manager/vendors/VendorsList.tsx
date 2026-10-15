@@ -54,7 +54,7 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
   const totalCumulativePaid = vendorStats.reduce((acc, v) => acc + v.totalPaid, 0);
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -106,7 +106,7 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
               placeholder="Search vendors by name, service, contact person…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-md border border-line bg-canvas/60 py-2 pl-9 pr-3 text-sm text-ink placeholder:text-muted-ink focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all font-serif"
+              className="w-full rounded-md border border-line bg-canvas/60 py-2 pl-9 pr-3 text-sm text-ink placeholder:text-muted-ink focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </div>
         </div>
@@ -160,7 +160,7 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
                       </td>
 
                       {/* Settlement Channel */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink font-serif">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink">
                         {vendor.payoutMethod === 'MPESA' ? (
                           <span className="inline-flex items-center gap-1.5 text-emerald-700 font-medium">
                             <span className="size-1.5 rounded-full bg-emerald-600" />
@@ -190,17 +190,17 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
                       </td>
 
                       {/* Total Reqs */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-center font-serif font-medium text-ink text-xs">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-center  font-medium text-ink text-xs">
                         {vendor.requestCount}
                       </td>
 
                       {/* Pending */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-center font-serif font-semibold text-warn text-xs">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-center  font-semibold text-warn text-xs">
                         {vendor.pendingCount > 0 ? vendor.pendingCount : '—'}
                       </td>
 
                       {/* Total Paid */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">
                         {vendor.totalPaid > 0 ? formatCurrency(vendor.totalPaid) : '—'}
                       </td>
 

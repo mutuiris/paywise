@@ -22,7 +22,7 @@ export function AuditFilters({
       meta={`${totalCount} event${totalCount === 1 ? '' : 's'}`}
       onClear={search || actionFilter !== 'ALL' ? onClear : undefined}
     >
-      <div className="flex items-center gap-1.5 font-serif">
+      <div className="flex items-center gap-1.5">
         <label htmlFor="audit-action-select" className="text-xs text-muted-ink whitespace-nowrap">Action:</label>
         <select
           id="audit-action-select"

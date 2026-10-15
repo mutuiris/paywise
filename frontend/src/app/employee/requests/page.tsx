@@ -171,7 +171,7 @@ function EmployeeRequestsContent() {
 
 export default function EmployeeRequestsPage() {
   return (
-    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500 font-serif">Loading requests…</div>}>
+    <React.Suspense fallback={<div className="p-6 text-sm text-gray-500">Loading requests…</div>}>
       <EmployeeRequestsContent />
     </React.Suspense>
   );

@@ -24,7 +24,7 @@ export function AddUserModal({ open, onClose, onAdd }: AddUserModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 font-serif">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
       <div className="w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-xl animate-fade-up">
         <div className="flex items-center justify-between border-b border-line pb-3">
           <div className="flex items-center gap-2">

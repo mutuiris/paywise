@@ -23,7 +23,7 @@ export function PaymentProcessingView() {
   } = usePaymentProcessing();
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <PaymentHeader />
       <PaymentReadyTable items={readyItems} onExecute={handleExecute} />
       <PaymentFailedTable items={failedItems} onRetry={handleRetry} />

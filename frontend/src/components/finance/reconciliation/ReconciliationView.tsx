@@ -23,7 +23,7 @@ export function ReconciliationView() {
   } = useReconciliation();
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <ReconciliationHeader />
       <ReconciliationNotice />
       <ReconciliationStats

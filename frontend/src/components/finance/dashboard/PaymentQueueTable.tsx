@@ -12,7 +12,7 @@ export function PaymentQueueTable({ items }: { items: QueueItem[] }) {
   }
 
   return (
-    <table className="w-full text-left text-sm font-serif">
+    <table className="w-full text-left text-sm">
       <thead className="bg-canvas text-[11px] font-semibold uppercase tracking-wider text-muted-ink border-b border-line">
         <tr>
           <th className="px-5 py-3">Reference</th>
@@ -26,10 +26,10 @@ export function PaymentQueueTable({ items }: { items: QueueItem[] }) {
       <tbody className="divide-y divide-line text-ink">
         {items.map((row) => (
           <tr key={row.id} className="transition hover:bg-canvas/50">
-            <td className="whitespace-nowrap px-5 py-3.5"><Link href={`/finance/requests/${row.id}`} className="font-serif text-[13px] font-semibold text-brand hover:underline">{row.reference}</Link></td>
+            <td className="whitespace-nowrap px-5 py-3.5"><Link href={`/finance/requests/${row.id}`} className="text-[13px] font-semibold text-brand hover:underline">{row.reference}</Link></td>
             <td className="whitespace-nowrap px-5 py-3.5 font-medium text-ink">{row.vendorName}</td>
-            <td className="whitespace-nowrap px-5 py-3.5 font-serif text-xs text-muted-ink">{row.invoiceNumber}</td>
-            <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(row.amount)}</td>
+            <td className="whitespace-nowrap px-5 py-3.5  text-xs text-muted-ink">{row.invoiceNumber}</td>
+            <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">{formatCurrency(row.amount)}</td>
             <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">
               <span className="font-semibold text-ink">{row.paymentMethod === 'MPESA' ? 'M-Pesa B2C' : 'Bank Wire'}</span>
               <div className="text-[11px]">{row.accountDetails}</div>

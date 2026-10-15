@@ -21,7 +21,7 @@ export function UsersView() {
     : 'They will regain access with their current role.';
 
   return (
-    <div className="space-y-4 font-serif">
+    <div className="space-y-4">
       <UsersHeader onAddUserClick={() => setShowAddModal(true)} />
       <FilterBar
         searchValue={search} onSearchChange={setSearch} searchPlaceholder="Name, email, role…"

@@ -30,7 +30,7 @@ export function ManagerApprovalsView() {
   };
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       {toastMessage && <div className="fixed bottom-6 right-6 z-50 rounded-lg bg-ink px-4 py-3 text-xs font-semibold text-surface shadow-lg">{toastMessage}</div>}
       <ManagerApprovalsHeader />
       <ManagerApprovalsStats pendingCount={pending.length} pendingAmount={pendingAmount} dualCount={dualCount} />

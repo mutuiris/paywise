@@ -41,7 +41,7 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
   );
 
   return (
-    <div className="space-y-6 font-serif max-w-6xl mx-auto pb-12">
+    <div className="space-y-6  max-w-6xl mx-auto pb-12">
       {/* Breadcrumb & Top Page Header */}
       <div>
         <Link
@@ -170,14 +170,14 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
                     <span className="text-xs text-muted-ink">
                       {vendor.tillNumber ? 'Till Number' : 'Paybill Number'}
                     </span>
-                    <span className="font-serif font-bold text-brand text-sm sm:text-right">
+                    <span className="font-bold text-brand text-sm sm:text-right">
                       {vendor.tillNumber ? `Till ${vendor.tillNumber}` : `Paybill ${vendor.paybillNumber}`}
                     </span>
                   </div>
                   {vendor.accountNumber && (
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
                       <span className="text-xs text-muted-ink">Account Reference</span>
-                      <span className="font-serif font-medium text-ink sm:text-right">{vendor.accountNumber}</span>
+                      <span className="font-medium text-ink sm:text-right">{vendor.accountNumber}</span>
                     </div>
                   )}
                 </>
@@ -189,7 +189,7 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
                     <span className="text-xs text-muted-ink">Account Number</span>
-                    <span className="font-serif font-bold text-brand sm:text-right">{vendor.accountNumber}</span>
+                    <span className="font-bold text-brand sm:text-right">{vendor.accountNumber}</span>
                   </div>
                 </>
               )}
@@ -249,16 +249,16 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
                       <td className="whitespace-nowrap px-5 py-3.5">
                         <Link
                           href={`${basePath}/requests/${req.id}`}
-                          className="font-serif text-[13px] font-semibold text-brand group-hover:underline block"
+                          className="text-[13px] font-semibold text-brand group-hover:underline block"
                         >
                           {req.reference}
                         </Link>
-                        <span className="font-serif text-[11px] text-muted-ink block">
+                        <span className="text-[11px] text-muted-ink block">
                           {req.invoiceNumber}
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">
                         {formatCurrency(req.amount)}
                       </td>
 
@@ -298,7 +298,7 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
                     className="p-4 flex items-center justify-between hover:bg-slate-50/90 active:bg-slate-100 block transition-colors"
                   >
                     <div>
-                      <span className="font-serif text-[13px] font-semibold text-brand block">
+                      <span className="text-[13px] font-semibold text-brand block">
                         {req.reference}
                       </span>
                       <p className="text-xs text-muted-ink mt-0.5">
