@@ -76,13 +76,15 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
             </p>
           </div>
 
-          <Link
-            href={`${basePath}/requests/new`}
-            className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
-          >
-            <Plus className="size-4" />
-            <span>New Payment to Vendor</span>
-          </Link>
+          {basePath !== '/finance' && basePath !== '/admin' && (
+            <Link
+              href={`${basePath}/requests/new`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
+            >
+              <Plus className="size-4" />
+              <span>New Payment to Vendor</span>
+            </Link>
+          )}
         </div>
       </div>
 

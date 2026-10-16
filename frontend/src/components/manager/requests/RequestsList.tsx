@@ -87,13 +87,15 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
           </p>
         </div>
 
-        <Link
-          href={`${basePath}/requests/new`}
-          className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3.5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
-        >
-          <Plus className="size-4" />
-          <span>New Payment Request</span>
-        </Link>
+        {basePath !== '/finance' && basePath !== '/admin' && (
+          <Link
+            href={`${basePath}/requests/new`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3.5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
+          >
+            <Plus className="size-4" />
+            <span>New Payment Request</span>
+          </Link>
+        )}
       </div>
 
       {/* Filter Bar Card */}
