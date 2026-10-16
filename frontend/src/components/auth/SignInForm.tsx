@@ -7,6 +7,7 @@ import { PasswordField } from './PasswordField';
 import { RememberMeCheckbox } from './RememberMeCheckbox';
 import { SubmitButton } from './SubmitButton';
 import { ForgotNotice } from './ForgotNotice';
+import { DemoAccountPicker } from './DemoAccountPicker';
 
 export function SignInForm() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export function SignInForm() {
     const l = email.toLowerCase();
     if (l.includes('grace') || l.includes('admin')) router.push('/admin/dashboard');
     else if (l.includes('faith') || l.includes('finance')) router.push('/finance/dashboard');
-    else if (l.includes('employee') || l.includes('alice') || l.includes('bernadette')) router.push('/employee');
+    else if (l.includes('employee') || l.includes('alice') || l.includes('brian')) router.push('/employee');
     else router.push('/manager/dashboard');
   };
 
@@ -37,6 +38,7 @@ export function SignInForm() {
         <RememberMeCheckbox checked={rememberMe} onChange={setRememberMe} />
         <SubmitButton />
       </form>
+      <DemoAccountPicker onSelect={(selected) => { setEmail(selected); setPassword('••••••••'); }} />
     </div>
   );
 }
