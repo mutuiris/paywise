@@ -38,6 +38,12 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
 
   const request = requests.find((r) => r.id === requestId) || requests[0];
   const route = getApprovalRoute(request.amount);
+  const isSelfRequest = Boolean(
+    request && (
+      request.requesterId === CURRENT_MANAGER.id ||
+      (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
+    )
+  );
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -45,6 +51,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
   };
 
   const handleApprove = () => {
+    if (isSelfRequest) return;
     const nowIso = new Date().toISOString();
     setRequests((prev) =>
       prev.map((r) => {
@@ -257,7 +264,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
           </div>
 
           {/* Action Box for Manager (if decision pending) */}
-          {(request.status === 'PENDING_APPROVAL' || request.status === 'SUBMITTED') && (
+          {basePath === '/manager' && (request.status === 'PENDING_APPROVAL' || request.status === 'SUBMITTED') && (
             <div className="rounded-2xl border border-brand/30 bg-brand-light/30 p-6 shadow-xs space-y-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-5 text-brand" />
@@ -268,6 +275,19 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
               <p className="text-xs sm:text-sm text-muted-ink">
                 As the designated department manager, please review the attached invoice details and issue your approval decision.
               </p>
+
+              {/* Self-Approval Warning */}
+              {isSelfRequest && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
+                  <AlertTriangle className="size-4 shrink-0 text-amber-600 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-amber-900">Self-Approval Prohibited</p>
+                    <p className="mt-0.5 text-amber-800">
+                      You submitted this payment request. Corporate financial policy requires an independent manager to review and authorize it.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {rejecting ? (
                 <div className="rounded-xl border border-err/30 bg-err-light p-4 space-y-3">
@@ -309,8 +329,10 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <button
                     type="button"
+                    disabled={isSelfRequest}
                     onClick={handleApprove}
-                    className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-sm"
+                    title={isSelfRequest ? 'Cannot self-approve your own requisition' : undefined}
+                    className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <CheckCircle2 className="size-4" />
                     <span>Approve Payment Request</span>

@@ -14,6 +14,11 @@ interface ManagerApprovalsRowProps {
 
 export function ManagerApprovalsRow({ req, onApprove, onReject }: ManagerApprovalsRowProps) {
   const isDual = req.amount > CURRENT_MANAGER.approvalLimit;
+  const isSelf = Boolean(
+    req.requesterId === CURRENT_MANAGER.id ||
+    (req.requesterName && req.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
+  );
+
   return (
     <tr className="transition hover:bg-canvas/50 font-serif">
       <td className="whitespace-nowrap px-5 py-3.5">
@@ -25,7 +30,10 @@ export function ManagerApprovalsRow({ req, onApprove, onReject }: ManagerApprova
         <span className="text-[11px] text-muted-ink truncate max-w-[180px] block">{req.reason}</span>
       </td>
       <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(req.amount)}</td>
-      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink font-medium">{req.requesterName}</td>
+      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink font-medium">
+        {req.requesterName}
+        {isSelf && <span className="ml-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-1 rounded border border-amber-200">You</span>}
+      </td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{req.project}</td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{formatDate(req.createdAt)}</td>
       <td className="whitespace-nowrap px-5 py-3.5">
@@ -40,7 +48,16 @@ export function ManagerApprovalsRow({ req, onApprove, onReject }: ManagerApprova
       <td className="whitespace-nowrap px-5 py-3.5 text-right">
         <div className="inline-flex items-center gap-2">
           <button type="button" onClick={() => onReject(req)} className="inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1 text-xs font-semibold text-err hover:bg-err/5 cursor-pointer transition shadow-2xs"><X className="size-3" /><span>Reject</span></button>
-          <button type="button" onClick={() => onApprove(req)} className="inline-flex items-center gap-1 rounded-md bg-brand px-3 py-1 text-xs font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition shadow-2xs"><Check className="size-3" /><span>Approve</span></button>
+          <button
+            type="button"
+            disabled={isSelf}
+            onClick={() => onApprove(req)}
+            title={isSelf ? 'Cannot self-approve your own requisition' : undefined}
+            className={`inline-flex items-center gap-1 rounded-md bg-brand px-3 py-1 text-xs font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition shadow-2xs ${isSelf ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
+          >
+            <Check className="size-3" />
+            <span>Approve</span>
+          </button>
         </div>
       </td>
     </tr>

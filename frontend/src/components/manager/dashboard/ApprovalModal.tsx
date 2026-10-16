@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
 import {
+  CURRENT_MANAGER,
   formatCurrency,
   getApprovalRoute,
 } from '@/data/mock-manager-data';
@@ -42,8 +43,13 @@ export function ApprovalModal({
   if (!isOpen || !request) return null;
 
   const route = getApprovalRoute(request.amount);
+  const isSelfRequest = Boolean(
+    request.requesterId === CURRENT_MANAGER.id ||
+    (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
+  );
 
   const handleApprove = () => {
+    if (isSelfRequest) return;
     onApprove(request.id);
     onClose();
   };
@@ -189,6 +195,19 @@ export function ApprovalModal({
             </p>
           </div>
 
+          {/* Self-Approval Warning */}
+          {isSelfRequest && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
+              <AlertTriangle className="size-4 shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-900">Self-Approval Prohibited</p>
+                <p className="mt-0.5 text-amber-800">
+                  You created this payment requisition. Corporate financial governance requires an independent manager to review and approve it.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Rejection Input Box (if user clicked reject) */}
           {rejecting && (
             <div className="rounded-xl border border-err/30 bg-err-light p-4 space-y-3">
@@ -242,8 +261,10 @@ export function ApprovalModal({
             </button>
             <button
               type="button"
+              disabled={isSelfRequest}
               onClick={handleApprove}
-              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer shadow-sm transition-colors"
+              title={isSelfRequest ? 'Self-approval is prohibited' : undefined}
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="size-4" />
               <span>Approve Payment</span>
