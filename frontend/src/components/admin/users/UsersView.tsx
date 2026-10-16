@@ -6,6 +6,7 @@ import { FilterBar } from '../common/FilterBar';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { useUsers } from './useUsers';
 import { UsersHeader } from './UsersHeader';
+import { UsersNotice } from './UsersNotice';
 import { UsersTable } from './UsersTable';
 import { AddUserModal } from './AddUserModal';
 
@@ -23,6 +24,7 @@ export function UsersView() {
   return (
     <div className="space-y-4 font-serif">
       <UsersHeader onAddUserClick={() => setShowAddModal(true)} />
+      <UsersNotice />
       <FilterBar
         searchValue={search} onSearchChange={setSearch} searchPlaceholder="Name, email, role…"
         meta={`${filteredUsers.length} user${filteredUsers.length === 1 ? '' : 's'}`}

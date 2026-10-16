@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { INITIAL_AUDIT_EVENTS } from '@/data/mock-admin-audit';
+import { formatAuditAction } from '@/data/mock-admin-store';
 
 export function useAudit() {
   const [search, setSearch] = useState('');
@@ -19,6 +20,7 @@ export function useAudit() {
       return (
         e.actorName.toLowerCase().includes(q) ||
         e.action.toLowerCase().includes(q) ||
+        formatAuditAction(e.action).toLowerCase().includes(q) ||
         e.entity.toLowerCase().includes(q) ||
         e.description.toLowerCase().includes(q) ||
         (e.requestReference && e.requestReference.toLowerCase().includes(q))
