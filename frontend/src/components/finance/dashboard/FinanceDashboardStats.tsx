@@ -7,11 +7,17 @@ import { SummaryCard } from '@/components/common/SummaryCard';
 interface FinanceDashboardStatsProps {
   queueCount: number;
   failedCount: number;
+  awaitingApprovalCount?: number;
+  paidCount?: number;
+  processingCount?: number;
 }
 
 export function FinanceDashboardStats({
   queueCount,
   failedCount,
+  awaitingApprovalCount = 2,
+  paidCount = 14,
+  processingCount = 1,
 }: FinanceDashboardStatsProps) {
   const router = useRouter();
 
@@ -19,7 +25,7 @@ export function FinanceDashboardStats({
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <SummaryCard
         label="Awaiting Finance Approval"
-        value="2"
+        value={awaitingApprovalCount}
         tone="warn"
         onClick={() => router.push('/finance/approvals')}
       />
@@ -31,14 +37,14 @@ export function FinanceDashboardStats({
       />
       <SummaryCard
         label="Processing"
-        value="1"
+        value={processingCount}
         tone="warn"
         hint="Includes unconfirmed"
         onClick={() => router.push('/finance/reconciliation')}
       />
       <SummaryCard
         label="Paid"
-        value="14"
+        value={paidCount}
         tone="ok"
         onClick={() => router.push('/finance/requests')}
       />

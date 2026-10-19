@@ -42,32 +42,42 @@ export function SignInForm() {
         return;
       }
     } catch (err: unknown) {
-      // 2. Fallback check for local development demo accounts when backend is offline
-      const normalized = trimmedEmail.toLowerCase();
-      const matchedUser = Object.values(DEMO_USERS).find(
-        (u) =>
-          u.email.toLowerCase() === normalized ||
-          u.name.toLowerCase().includes(normalized) ||
-          normalized.includes(u.name.toLowerCase().split(' ')[0])
-      );
+      if (err instanceof Error) {
+        // If it was a network failure (backend server not reachable)
+        if (err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+          // Check for demo account fallback when backend is offline
+          const normalized = trimmedEmail.toLowerCase();
+          const matchedUser = Object.values(DEMO_USERS).find(
+            (u) =>
+              u.email.toLowerCase() === normalized ||
+              u.name.toLowerCase().includes(normalized) ||
+              normalized.includes(u.name.toLowerCase().split(' ')[0])
+          );
 
-      if (matchedUser && password.trim().length > 0) {
-        setClientSession({
-          id: matchedUser.id,
-          name: matchedUser.name,
-          email: matchedUser.email,
-          role: matchedUser.role,
-          isActive: true,
-          department: matchedUser.department,
-          approvalLimit: matchedUser.approvalLimit,
-        });
-        router.push(getRoleDashboardPath(matchedUser.role));
+          if (matchedUser && password.trim().length > 0) {
+            setClientSession({
+              id: matchedUser.id,
+              name: matchedUser.name,
+              email: matchedUser.email,
+              role: matchedUser.role,
+              isActive: true,
+              department: matchedUser.department,
+              approvalLimit: matchedUser.approvalLimit,
+            });
+            router.push(getRoleDashboardPath(matchedUser.role));
+            return;
+          }
+
+          setError('Unable to reach PayWise backend server. Please verify the Django server is running.');
+          return;
+        }
+
+        // Real backend rejection (e.g. 401 invalid credentials, 403 inactive account, 400 validation)
+        setError(err.message);
         return;
       }
 
-      const message =
-        err instanceof Error ? err.message : 'Invalid credentials. Please verify your login details.';
-      setError(message);
+      setError('An unexpected authentication error occurred. Please try again.');
     }
   };
 

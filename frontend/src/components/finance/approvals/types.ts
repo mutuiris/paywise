@@ -4,6 +4,7 @@ export interface PendingFinanceApproval {
   vendorName: string;
   amount: number;
   reason: string;
+  requesterId?: string;
   requesterName: string;
   project: string;
   managerApprovedBy: string;
