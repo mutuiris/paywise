@@ -104,6 +104,43 @@ class PaymentRequest(OwnerAbstract):
                 }
             )
 
+        # Inactive entity checks only apply upon initial creation, preserving
+        # mutability of historical records if a vendor or project is deactivated.
+        if self._state.adding:
+            if self.vendor_id and self.vendor and not self.vendor.is_active:
+                raise ValidationError(
+                    {"vendor": "Cannot create payment request for an inactive vendor."}
+                )
+            if self.project_id and self.project and not self.project.is_active:
+                raise ValidationError(
+                    {"project": "Cannot reference an inactive project."}
+                )
+
+    def save(self, *args, **kwargs) -> None:
+        """Save payment request, invalidating existing approvals on amount changes."""
+        if not self._state.adding and self.pk:
+            try:
+                original = (
+                    PaymentRequest.objects.filter(pk=self.pk)
+                    .values("amount", "status")
+                    .first()
+                )
+                if original and original["amount"] != self.amount:
+                    # Invalidate existing active approvals on material amount change
+                    from apps.approvals.models import Approval
+
+                    Approval.objects.filter(
+                        payment_request_id=self.pk, is_active=True
+                    ).update(is_active=False)
+                    if self.status in (
+                        PaymentRequestStatus.APPROVED,
+                        PaymentRequestStatus.PENDING_APPROVAL,
+                    ):
+                        self.status = PaymentRequestStatus.PENDING_APPROVAL
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
         return (
             f"{self.invoice_number} - {self.vendor.name} "
