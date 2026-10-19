@@ -32,7 +32,6 @@ export function ManagerApprovalsRow({ req, onApprove, onReject }: ManagerApprova
       <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(req.amount)}</td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink font-medium">
         {req.requesterName}
-        {isSelf && <span className="ml-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-1 rounded border border-amber-200">You</span>}
       </td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{req.project}</td>
       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{formatDate(req.createdAt)}</td>

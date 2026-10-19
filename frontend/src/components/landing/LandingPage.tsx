@@ -5,123 +5,133 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
-  Sparkles,
   ChevronDown,
   Menu,
   X,
   ShieldCheck,
   FileCheck2,
   Receipt,
-  CheckCircle2,
   Mail,
   Phone,
   Clock,
   MapPin,
+  CreditCard,
+  Activity,
+  CopyCheck,
+  History,
+  BarChart3,
 } from 'lucide-react';
 
 export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-white font-serif text-slate-900 antialiased selection:bg-[#004aad] selection:text-white">
       {/* =========================================================================
-          1. Header Navigation (Reclaim Style: Clean White & Primary Blue)
+          1. Header Navigation (Reclaim Style: Clean White & PayWise Logo Blue)
           ========================================================================= */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Brand Logo with new official transparent logo */}
-          <Link href="/" className="flex items-center py-1 group">
+        <nav className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Brand Logo (Left) */}
+          <Link href="/" className="flex items-center py-1 group shrink-0">
             <Image
               src="/images/logo.png"
               alt="PayWise Logo"
-              width={200}
-              height={60}
-              className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              width={160}
+              height={48}
+              className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-[1.02]"
               priority
             />
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden items-center gap-8 md:flex">
+          {/* Desktop Nav Links (Centered) */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2 font-serif">
             <Link
               href="#how-it-works"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-[#004aad]"
             >
               How It Works
             </Link>
             <Link
-              href="#portals"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600"
-            >
-              Portals
-            </Link>
-            <Link
               href="#features"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-[#004aad]"
             >
               Features
             </Link>
             <Link
-              href="#contact"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600"
+              href="#location"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-[#004aad]"
             >
               Location
             </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 hover:shadow-md hover:shadow-blue-600/30 active:scale-95"
-            >
-              <span>Sign In</span>
-              <ArrowRight className="size-4" />
-            </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="grid size-10 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 md:hidden"
-            aria-label="Toggle navigation"
-          >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+          {/* Desktop CTA / Mobile Menu Trigger (Right) */}
+          <div className="flex items-center gap-2.5 font-serif">
+            <Link
+              href="#contact"
+              className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/95 px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-2xs transition-all hover:border-[#004aad]/50 hover:text-[#004aad] hover:bg-[#eef5fc]/60 active:scale-95"
+            >
+              <Phone className="size-3.5 text-[#004aad]" />
+              <span>Contact</span>
+            </Link>
+            <Link
+              href="/login"
+              className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-[#004aad] px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-[#004aad]/20 transition-all hover:bg-[#003887] hover:shadow-md hover:shadow-[#004aad]/30 active:scale-95"
+            >
+              <span>Sign In</span>
+              <ArrowRight className="size-3.5" />
+            </Link>
+
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 md:hidden"
+              aria-label="Toggle navigation"
+            >
+              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </nav>
 
         {/* Mobile Dropdown */}
         {mobileMenuOpen && (
-          <div className="border-b border-slate-200 bg-white px-4 py-4 md:hidden animate-in slide-in-from-top-2">
+          <div className="border-b border-slate-200 bg-white px-4 py-4 md:hidden animate-in slide-in-from-top-2 font-serif">
             <div className="flex flex-col space-y-3">
               <Link
                 href="#how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-700 hover:text-blue-600"
+                className="text-sm font-medium text-slate-700 hover:text-[#004aad]"
               >
                 How It Works
               </Link>
               <Link
-                href="#portals"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-700 hover:text-blue-600"
-              >
-                Portals
-              </Link>
-              <Link
                 href="#features"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-700 hover:text-blue-600"
+                className="text-sm font-medium text-slate-700 hover:text-[#004aad]"
               >
                 Features
               </Link>
               <Link
-                href="#contact"
+                href="#location"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-700 hover:text-blue-600"
+                className="text-sm font-medium text-slate-700 hover:text-[#004aad]"
               >
                 Location
               </Link>
               <Link
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-sm font-medium text-slate-700 hover:text-[#004aad] flex items-center gap-1.5"
+              >
+                <Phone className="size-3.5 text-[#004aad]" />
+                <span>Contact</span>
+              </Link>
+              <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#004aad] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#003887]"
               >
                 <span>Sign In to Portal</span>
                 <ArrowRight className="size-4" />
@@ -133,154 +143,136 @@ export function LandingPage() {
 
       <main>
         {/* =========================================================================
-            2. Hero Section (Centered Content + Warm Yellowish Sunrise Layer)
+            2. Hero Section (Whitish Ambient Wash on Architectural Background, No Eyebrows)
             ========================================================================= */}
         <section
           id="hero"
-          className="relative flex min-h-[90vh] sm:min-h-screen items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 py-24"
+          className="relative flex min-h-[80vh] sm:min-h-[84vh] lg:min-h-[88vh] items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 border-b border-slate-200"
         >
-          {/* Background Image: Construction Planning Desk at Sunrise */}
+          {/* Background Image: Architectural Hero Background */}
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/construction-planning-hero.png"
-              alt="Construction Planning Desk at Sunrise"
+              src="/images/hero-bg.jpg"
+              alt="PayWise Architecture & Engineering Platform"
               fill
               priority
               quality={95}
               className="object-cover object-center"
               sizes="100vw"
             />
-            {/* Warm Yellowish / Amber Sunrise Layer (Replacing bluish tone) */}
+            {/* Ambient whitish wash */}
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(245, 158, 11, 0.4) 0%, rgba(180, 83, 9, 0.6) 45%, rgba(69, 26, 3, 0.88) 100%)',
+                  'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.68) 50%, rgba(255, 255, 255, 0.30) 85%, rgba(255, 255, 255, 0.15) 100%)',
               }}
             />
-            {/* Soft radial golden glow around center text */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  'radial-gradient(ellipse at center, rgba(254, 240, 138, 0.22) 0%, rgba(217, 119, 6, 0.35) 60%, rgba(30, 20, 10, 0.65) 100%)',
-              }}
-            />
-            {/* Smooth bottom transition to pure white canvas */}
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-95 pointer-events-none" />
           </div>
 
-          {/* Centered Hero Content */}
-          <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
-            <div className="flex flex-col items-center space-y-6">
-              {/* Eyebrow Pill */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-500/25 px-4 py-1.5 text-xs font-mono font-semibold uppercase tracking-wider text-amber-100 backdrop-blur-md shadow-sm">
-                <Sparkles className="size-3.5 text-amber-300" />
-                <span>Vendor Payment & Approval System</span>
+          {/* Hero Content — Perfectly Centered, Lora Typography Everywhere, No Eyebrow */}
+          <div className="relative z-10 mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-center text-center space-y-4 sm:space-y-5">
+              {/* Main Headline */}
+              <div className="space-y-2.5 sm:space-y-3 max-w-3xl mx-auto">
+                <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-slate-900 leading-[1.14]">
+                  Manage Vendor Payouts, <br />
+                  <span className="font-light italic bg-gradient-to-r from-[#004aad] via-[#005cd4] to-[#1d4ed8] bg-clip-text text-transparent">
+                    Without the Chaos.
+                  </span>
+                </h1>
+                <p className="mt-2.5 text-sm sm:text-base md:text-lg text-slate-700 leading-relaxed max-w-2xl mx-auto font-serif">
+                  PayWise centralizes vendor payment requests, dual-level approvals, and disbursement
+                  tracking into one clear, auditable workflow for ImaraWorks.
+                </p>
               </div>
 
-              {/* Main Headline (Centered with Refined Editorial Font) */}
-              <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.12] drop-shadow-md">
-                Manage Vendor Payouts, <br />
-                <span className="font-light italic text-amber-200">
-                  Without the Chaos.
-                </span>
-              </h1>
-
-              {/* Concise Subtitle (Centered) */}
-              <p className="max-w-2xl text-base sm:text-lg text-amber-50/95 leading-relaxed font-sans drop-shadow-xs">
-                PayWise centralizes vendor payment requests, dual-level approvals, and disbursement
-                tracking into one clear, auditable workflow for ImaraWorks.
-              </p>
-
-              {/* Centered Action Buttons (Primary Blue + Frosted White) */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2 w-full sm:w-auto">
+              {/* Centered Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1.5 w-full sm:w-auto font-serif">
                 <Link
                   href="/login"
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-blue-900/40 transition-all hover:bg-blue-700 hover:shadow-blue-900/60 active:scale-95 w-full sm:w-auto"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004aad] hover:bg-[#003887] text-white font-semibold text-sm shadow-md shadow-[#004aad]/25 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group whitespace-nowrap"
                 >
                   <span>Sign In to Portal</span>
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform text-white" />
                 </Link>
                 <Link
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/50 bg-white/20 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/30 hover:border-white/70 active:scale-95 w-full sm:w-auto"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white/95 hover:bg-white text-slate-800 border border-slate-200/90 text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-xs whitespace-nowrap group hover:border-[#004aad]/40 backdrop-blur-sm"
                 >
                   <span>See How It Works</span>
+                  <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform text-[#004aad]" />
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Bouncing Scroll Indicator */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 cursor-pointer text-amber-100/80 hover:text-white transition-colors duration-300">
-            <span className="text-[11px] font-mono font-medium tracking-wider uppercase text-amber-100/90">
-              Scroll to Explore
+          {/* Scroll Cue */}
+          <Link
+            href="#how-it-works"
+            className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-0.5 cursor-pointer text-[#004aad] hover:text-[#003887] transition-colors duration-300 font-serif"
+          >
+            <span className="text-[10px] font-serif font-bold tracking-wider text-[#004aad]">
+              Scroll
             </span>
-            <ChevronDown className="size-4 animate-bounce text-amber-200" />
-          </div>
+            <ChevronDown className="size-3.5 animate-bounce text-[#004aad]" />
+          </Link>
         </section>
 
         {/* =========================================================================
-            3. How It Works (White Background + Primary Blue Accents)
+            3. How It Works (Exact 3-Step Workflow, No Eyebrows, Lora Font)
             ========================================================================= */}
-        <section id="how-it-works" className="border-t border-slate-200/80 bg-white py-20 sm:py-24">
+        <section id="how-it-works" className="border-t border-slate-200/80 bg-white py-12 sm:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-blue-600">
-                How PayWise Works
-              </span>
-              <h2 className="font-serif text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                A simple path from request to reconciled payment
+            <div className="text-center max-w-3xl mx-auto space-y-2">
+              <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+                How It Works
               </h2>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                Clear governance that keeps project teams, managers, and finance perfectly aligned.
+              <p className="font-serif text-xs sm:text-sm text-slate-600 leading-relaxed">
+                From request to completion, every payment stays transparent, traceable, and aligned across teams.
               </p>
             </div>
 
-            <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
-              {/* Step 1 */}
-              <div className="relative rounded-2xl border border-slate-200 bg-slate-50/40 p-6 shadow-2xs transition-all hover:border-blue-300 hover:shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-200 bg-blue-50 font-mono text-xs font-bold text-blue-700">
+            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Step 1: Submit Request */}
+              <div className="relative rounded-2xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-all hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#004aad]/30 bg-[#eef5fc] font-serif text-xs font-bold text-[#004aad]">
                     01
                   </div>
-                  <FileCheck2 className="size-5 text-blue-600" />
+                  <FileCheck2 className="size-4.5 text-[#004aad]" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-slate-900">Submit Request</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                  Employees initiate payment requests by selecting an approved vendor, specifying the
-                  amount, and attaching invoice documents.
+                <h3 className="font-serif text-base font-semibold text-slate-900">Submit Request</h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Submit vendor payment details and invoices.
                 </p>
               </div>
 
-              {/* Step 2 */}
-              <div className="relative rounded-2xl border border-slate-200 bg-slate-50/40 p-6 shadow-2xs transition-all hover:border-blue-300 hover:shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-200 bg-blue-50 font-mono text-xs font-bold text-blue-700">
+              {/* Step 2: Review & Approve */}
+              <div className="relative rounded-2xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-all hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#004aad]/30 bg-[#eef5fc] font-serif text-xs font-bold text-[#004aad]">
                     02
                   </div>
-                  <ShieldCheck className="size-5 text-blue-600" />
+                  <ShieldCheck className="size-4.5 text-[#004aad]" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-slate-900">Review & Authorize</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                  Department managers review validity. Requests exceeding KES 50,000 route automatically
-                  to Finance for secondary authorization.
+                <h3 className="font-serif text-base font-semibold text-slate-900">Review & Approve</h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Managers and Finance approve requests based on payment limits.
                 </p>
               </div>
 
-              {/* Step 3 */}
-              <div className="relative rounded-2xl border border-slate-200 bg-slate-50/40 p-6 shadow-2xs transition-all hover:border-blue-300 hover:shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-200 bg-blue-50 font-mono text-xs font-bold text-blue-700">
+              {/* Step 3: Pay & Reconcile */}
+              <div className="relative rounded-2xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-all hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#004aad]/30 bg-[#eef5fc] font-serif text-xs font-bold text-[#004aad]">
                     03
                   </div>
-                  <Receipt className="size-5 text-blue-600" />
+                  <Receipt className="size-4.5 text-[#004aad]" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-slate-900">Disburse & Reconcile</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                  Finance executes payment, attaches transaction reference IDs, and updates the permanent,
-                  immutable audit trail.
+                <h3 className="font-serif text-base font-semibold text-slate-900">Pay & Reconcile</h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Finance processes payments and records transaction details.
                 </p>
               </div>
             </div>
@@ -288,107 +280,148 @@ export function LandingPage() {
         </section>
 
         {/* =========================================================================
-            4. Role Portals Access (White Canvas + Clean Blue Accent)
+            4. Features Section (Exact 6 Modules, No Eyebrows, Lora Font)
             ========================================================================= */}
-        <section id="portals" className="border-t border-slate-200 bg-slate-50/60 py-20 sm:py-24">
+        <section id="features" className="border-y border-slate-200 bg-[#f8fafc] py-12 sm:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div>
-                <span className="font-mono text-xs font-bold uppercase tracking-wider text-blue-600">
-                  Role-Based Workspaces
-                </span>
-                <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-                  Dedicated portals for every team member
-                </h2>
-              </div>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                <span>Go to general sign in</span>
-                <ArrowRight className="size-4" />
-              </Link>
+            <div className="text-center max-w-3xl mx-auto space-y-2 mb-8 sm:mb-10">
+              <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+                Features
+              </h2>
+              <p className="font-serif text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Six powerful modules for transparent, precise, and efficient payment management.
+              </p>
             </div>
 
-            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  role: 'Employee Portal',
-                  desc: 'Submit requests, track approval status, and browse approved vendors.',
-                  url: '/login?role=employee',
-                },
-                {
-                  role: 'Manager Portal',
-                  desc: 'Review team submissions, approve line items, or request revisions.',
-                  url: '/login?role=manager',
-                },
-                {
-                  role: 'Finance Portal',
-                  desc: 'Authorize dual-level payments, disburse funds, and reconcile accounts.',
-                  url: '/login?role=finance',
-                },
-                {
-                  role: 'Admin Portal',
-                  desc: 'Manage user roles, configure system settings, and inspect audit logs.',
-                  url: '/login?role=admin',
-                },
-              ].map((item) => (
-                <Link
-                  key={item.role}
-                  href={item.url}
-                  className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs transition-all hover:border-blue-400 hover:shadow-md"
-                >
-                  <div>
-                    <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-                      {item.role}
-                    </h3>
-                    <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-                      {item.desc}
-                    </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {/* Card 1: Payment Requests */}
+              <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004aad]/10 via-[#004aad]/5 to-teal-500/10 border border-[#004aad]/15 text-[#004aad] group-hover:scale-105 group-hover:border-teal-500/30 transition-all duration-300">
+                    <CreditCard className="size-4.5 text-[#004aad] group-hover:text-teal-600 transition-colors" />
                   </div>
-                  <span className="mt-5 text-xs font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
-                    <span>Access Portal</span>
-                    <ArrowRight className="size-3.5" />
-                  </span>
-                </Link>
-              ))}
+                </div>
+                <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-[#004aad] transition-colors">
+                  Payment Requests
+                </h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-normal">
+                  Submit vendor invoices quickly and easily.
+                </p>
+              </div>
+
+              {/* Card 2: Smart Approvals */}
+              <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004aad]/10 via-[#004aad]/5 to-teal-500/10 border border-[#004aad]/15 text-[#004aad] group-hover:scale-105 group-hover:border-teal-500/30 transition-all duration-300">
+                    <ShieldCheck className="size-4.5 text-[#004aad] group-hover:text-teal-600 transition-colors" />
+                  </div>
+                </div>
+                <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-[#004aad] transition-colors">
+                  Smart Approvals
+                </h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-normal">
+                  Automate approvals based on payment amounts.
+                </p>
+              </div>
+
+              {/* Card 3: Payment Tracking */}
+              <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#004aad]/40 hover:shadow-lg">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004aad]/10 via-[#004aad]/5 to-teal-500/10 border border-[#004aad]/15 text-[#004aad] group-hover:scale-105 group-hover:border-teal-500/30 transition-all duration-300">
+                    <Activity className="size-4.5 text-[#004aad] group-hover:text-teal-600 transition-colors" />
+                  </div>
+                </div>
+                <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-[#004aad] transition-colors">
+                  Payment Tracking
+                </h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-normal">
+                  Track every payment from request to completion.
+                </p>
+              </div>
+
+              {/* Card 4: Duplicate Protection */}
+              <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004aad]/10 via-[#004aad]/5 to-teal-500/10 border border-[#004aad]/15 text-[#004aad] group-hover:scale-105 group-hover:border-teal-500/30 transition-all duration-300">
+                    <CopyCheck className="size-4.5 text-[#004aad] group-hover:text-teal-600 transition-colors" />
+                  </div>
+                </div>
+                <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-[#004aad] transition-colors">
+                  Duplicate Protection
+                </h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-normal">
+                  Prevent duplicate invoices and payments.
+                </p>
+              </div>
+
+              {/* Card 5: Audit Trail */}
+              <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004aad]/10 via-[#004aad]/5 to-teal-500/10 border border-[#004aad]/15 text-[#004aad] group-hover:scale-105 group-hover:border-teal-500/30 transition-all duration-300">
+                    <History className="size-4.5 text-[#004aad] group-hover:text-teal-600 transition-colors" />
+                  </div>
+                </div>
+                <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-[#004aad] transition-colors">
+                  Audit Trail
+                </h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-normal">
+                  Record every action, approval and change.
+                </p>
+              </div>
+
+              {/* Card 6: Reports */}
+              <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#004aad]/40 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004aad]/10 via-[#004aad]/5 to-teal-500/10 border border-[#004aad]/15 text-[#004aad] group-hover:scale-105 group-hover:border-teal-500/30 transition-all duration-300">
+                    <BarChart3 className="size-4.5 text-[#004aad] group-hover:text-teal-600 transition-colors" />
+                  </div>
+                </div>
+                <h3 className="font-serif text-base font-semibold text-slate-900 group-hover:text-[#004aad] transition-colors">
+                  Reports
+                </h3>
+                <p className="font-serif mt-1.5 text-xs sm:text-sm text-slate-600 leading-normal">
+                  View payment activity and reconciliation reports.
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
         {/* =========================================================================
-            5. Core Highlights Row
+            5. Our Location Section (No Eyebrows, Lora Font)
             ========================================================================= */}
-        <section id="features" className="border-t border-slate-200 bg-white py-16">
+        <section id="location" className="border-t border-slate-200 bg-white py-12 sm:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-5 shadow-2xs">
-                <CheckCircle2 className="size-5 text-blue-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-serif text-lg font-bold text-slate-900">KES 50,000 Threshold</div>
-                  <div className="text-xs text-slate-600 mt-1">
-                    Dual-level governance for high-value construction disbursements.
-                  </div>
-                </div>
-              </div>
+            <div className="text-center max-w-3xl mx-auto space-y-2 mb-6 sm:mb-8">
+              <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+                Location
+              </h2>
+              <p className="font-serif text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Proudly built in Kenya to power fast, transparent payments for businesses across Kenya.
+              </p>
+            </div>
 
-              <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-5 shadow-2xs">
-                <CheckCircle2 className="size-5 text-blue-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-serif text-lg font-bold text-slate-900">Duplicate Detection</div>
-                  <div className="text-xs text-slate-600 mt-1">
-                    Automatic prevention of overlapping invoices and repeat payouts.
-                  </div>
+            {/* Clean Interactive Map Visual */}
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 shadow-md bg-slate-50 h-[280px] sm:h-[320px] lg:h-[340px] w-full max-w-5xl mx-auto group">
+              <iframe
+                title="PayWise ImaraWorks Headquarters Nairobi Kenya"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.814321956123!2d36.8155!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10dfb9e4a3b1%3A0x7d6b38c29b71e16a!2sUpper%20Hill%2C%20Nairobi!5e0!3m2!1sen!2ske!4v1700000000000!5m2!1sen!2ske"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+              />
+              {/* Floating Glassmorphic Location Badge (Top Right) */}
+              <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-slate-200/90 shadow-md flex items-center gap-2 sm:gap-2.5 pointer-events-none font-serif">
+                <div className="relative flex size-8 sm:size-9 items-center justify-center rounded-lg bg-teal-50 border border-teal-200/80 text-teal-700 shrink-0">
+                  <MapPin className="size-4 sm:size-4.5 text-teal-600" />
                 </div>
-              </div>
-
-              <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-5 shadow-2xs">
-                <CheckCircle2 className="size-5 text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-serif text-lg font-bold text-slate-900">100% Audit Trail</div>
-                  <div className="text-xs text-slate-600 mt-1">
-                    Immutable timestamps and user attributions for every state change.
-                  </div>
+                  <p className="text-xs font-semibold text-slate-900 font-serif">ImaraWorks Tower</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-serif">Upper Hill · Nairobi, Kenya</p>
                 </div>
               </div>
             </div>
@@ -397,168 +430,104 @@ export function LandingPage() {
       </main>
 
       {/* =========================================================================
-          6. Footer Resembling Reclaim EU Exactly (White Canvas, Blue Accents, Maps)
+          6. Footer with Reclaim EU World Map Background & Clean Styling
           ========================================================================= */}
-      <footer id="contact" className="w-full bg-[url('/images/footer.webp')] bg-cover bg-no-repeat bg-center border-t border-slate-200 bg-linear-to-b from-white/95 to-white/80">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-          {/* Main Footer Multi-column Grid (matching Reclaim EU 6-column layout) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-10 mb-12">
-            {/* Column 1 & 2: Large Logo & Official Organization Info (md:col-span-2) */}
-            <div className="md:col-span-2 space-y-4">
+      <footer
+        id="contact"
+        className="w-full bg-white bg-[url('/images/footer.webp')] bg-cover bg-no-repeat bg-center border-t border-slate-200 text-slate-800 font-serif"
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 mb-8">
+            {/* Column 1: Brand & Overview (lg:col-span-5) */}
+            <div className="lg:col-span-5 space-y-3">
               <Link href="/" className="inline-block">
                 <Image
                   src="/images/logo.png"
                   alt="PayWise Logo"
-                  width={240}
-                  height={65}
-                  className="h-14 sm:h-16 w-auto max-w-70 object-contain"
+                  width={180}
+                  height={50}
+                  className="h-9 sm:h-10 w-auto object-contain"
                 />
               </Link>
-              <p className="text-sm text-slate-600 leading-relaxed max-w-md">
-                PayWise by ImaraWorks Ltd is an enterprise payment request and tiered approval workflow
-                platform for construction and infrastructure engineering. Centralizing vendor governance,
-                dual-approval controls, and automated disbursement tracking.
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md font-serif">
+                PayWise is an enterprise payment request and tiered approval workflow
+                platform for construction and infrastructure engineering. Centralizing dual-level approvals,
+                audit governance, and automated disbursements.
               </p>
             </div>
 
-            {/* Column 3: Platform */}
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-4">Platform</h4>
-              <ul className="space-y-2.5">
+            {/* Column 2: Platform Links (lg:col-span-3 lg:col-start-7) */}
+            <div className="lg:col-span-3 lg:col-start-7">
+              <h4 className="font-semibold text-slate-900 mb-3 text-sm tracking-wide font-serif">Platform</h4>
+              <ul className="space-y-2 text-xs sm:text-sm font-serif">
                 <li>
-                  <Link href="#hero" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
+                  <Link href="#hero" className="text-slate-600 hover:text-[#004aad] transition-colors">
                     Overview
                   </Link>
                 </li>
                 <li>
-                  <Link href="#how-it-works" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
+                  <Link href="#how-it-works" className="text-slate-600 hover:text-[#004aad] transition-colors">
                     How It Works
                   </Link>
                 </li>
                 <li>
-                  <Link href="#features" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
+                  <Link href="#features" className="text-slate-600 hover:text-[#004aad] transition-colors">
                     Key Features
                   </Link>
                 </li>
                 <li>
-                  <Link href="#portals" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                    Portals
+                  <Link href="/login" className="text-[#004aad] font-medium hover:text-[#003887] transition-colors inline-flex items-center gap-1">
+                    <span>Sign In to Portal</span>
+                    <ArrowRight className="size-3" />
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Column 4: Portals */}
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-4">Portals</h4>
-              <ul className="space-y-2.5">
-                <li>
-                  <Link href="/login?role=employee" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                    Employee Portal
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login?role=manager" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                    Manager Portal
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login?role=finance" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                    Finance Portal
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login?role=admin" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                    Admin Console
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 5: Contact Stack (matching Reclaim rounded white icon boxes) */}
-            <div className="xl:col-span-1">
-              <h4 className="font-semibold text-slate-900 mb-4">Contact</h4>
-              <div className="space-y-3">
-                {/* Email Us */}
-                <div className="flex items-start gap-3 text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                  <div className="border border-blue-500/30 rounded-lg p-2 bg-white shadow-2xs shrink-0">
-                    <Mail className="size-3.5 text-blue-600" />
+            {/* Column 3: Contact & Hours (lg:col-span-3) */}
+            <div className="lg:col-span-3">
+              <h4 className="font-semibold text-slate-900 mb-3 text-sm tracking-wide font-serif">Contact</h4>
+              <div className="space-y-2.5 font-serif">
+                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600 hover:text-[#004aad] transition-colors">
+                  <div className="border border-[#004aad]/30 rounded-lg p-1.5 bg-white shadow-2xs shrink-0">
+                    <Mail className="size-3.5 text-[#004aad]" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-900">Email Us</p>
-                    <a
-                      className="text-xs text-blue-600 hover:underline break-all"
-                      href="mailto:payments@imaraworks.com"
-                    >
+                    <p className="text-xs font-semibold text-slate-900 font-serif">Email Us</p>
+                    <a className="text-xs text-[#004aad] hover:underline break-all font-serif" href="mailto:payments@imaraworks.com">
                       payments@imaraworks.com
                     </a>
                   </div>
                 </div>
 
-                {/* Call Us */}
-                <div className="flex items-start gap-3 text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                  <div className="border border-blue-500/30 rounded-lg p-2 bg-white shadow-2xs shrink-0">
-                    <Phone className="size-3.5 text-blue-600" />
+                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600 hover:text-[#004aad] transition-colors">
+                  <div className="border border-[#004aad]/30 rounded-lg p-1.5 bg-white shadow-2xs shrink-0">
+                    <Phone className="size-3.5 text-[#004aad]" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-900">Call Us</p>
-                    <a className="text-xs text-blue-600 hover:underline" href="tel:+254700123456">
+                    <p className="text-xs font-semibold text-slate-900 font-serif">Call Us</p>
+                    <a className="text-xs text-[#004aad] hover:underline font-serif" href="tel:+254700123456">
                       +254 700 123 456
                     </a>
                   </div>
                 </div>
 
-                {/* Operating Hours */}
-                <div className="flex items-start gap-3 text-sm text-slate-600">
-                  <div className="border border-blue-500/30 rounded-lg p-2 bg-white shadow-2xs shrink-0">
-                    <Clock className="size-3.5 text-blue-600" />
+                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600">
+                  <div className="border border-[#004aad]/30 rounded-lg p-1.5 bg-white shadow-2xs shrink-0">
+                    <Clock className="size-3.5 text-[#004aad]" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-900">Office Hours</p>
-                    <p className="text-xs text-slate-600">08:00 – 17:00 EAT</p>
+                    <p className="text-xs font-semibold text-slate-900 font-serif">Office Hours</p>
+                    <p className="text-xs text-slate-600 font-serif">Mon – Fri: 08:00 – 17:00 EAT</p>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Column 6: Location & Interactive Map (matching Reclaim) */}
-            <div className="xl:col-span-1">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-slate-900 flex items-center gap-1.5">
-                  <MapPin className="size-4 text-blue-600" />
-                  <span>Location</span>
-                </h4>
-                <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
-                  Nairobi
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 mb-2 leading-tight">
-                ImaraWorks Tower, Upper Hill, Nairobi, Kenya
-              </p>
-              {/* Google Map Embedded Card */}
-              <div className="overflow-hidden rounded-xl border border-slate-200/90 shadow-2xs h-36 w-full">
-                <iframe
-                  title="Headquarters Location Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.814321956123!2d36.8155!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10dfb9e4a3b1%3A0x7d6b38c29b71e16a!2sUpper%20Hill%2C%20Nairobi!5e0!3m2!1sen!2ske!4v1700000000000!5m2!1sen!2ske"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen={false}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-full"
-                />
-              </div>
-            </div>
           </div>
 
-          {/* Bottom Bar (Exact Reclaim structure) */}
-          <div className="border-t border-slate-200 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-            <p>© 2026 PayWise (ImaraWorks Ltd). All rights reserved.</p>
-            <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-blue-600 animate-pulse" />
-              <span>System Status: All services operational</span>
-            </div>
+          {/* Bottom Bar */}
+          <div className="border-t border-slate-200/90 pt-5 flex items-center justify-center text-xs text-slate-500 text-center font-serif">
+            <p>© 2026 PayWise. All rights reserved.</p>
           </div>
         </div>
       </footer>

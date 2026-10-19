@@ -195,19 +195,6 @@ export function ApprovalModal({
             </p>
           </div>
 
-          {/* Self-Approval Warning */}
-          {isSelfRequest && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
-              <AlertTriangle className="size-4 shrink-0 text-amber-600 mt-0.5" />
-              <div>
-                <p className="font-semibold text-amber-900">Self-Approval Prohibited</p>
-                <p className="mt-0.5 text-amber-800">
-                  You created this payment requisition. Corporate financial governance requires an independent manager to review and approve it.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Rejection Input Box (if user clicked reject) */}
           {rejecting && (
             <div className="rounded-xl border border-err/30 bg-err-light p-4 space-y-3">

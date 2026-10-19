@@ -276,19 +276,6 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
                 As the designated department manager, please review the attached invoice details and issue your approval decision.
               </p>
 
-              {/* Self-Approval Warning */}
-              {isSelfRequest && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
-                  <AlertTriangle className="size-4 shrink-0 text-amber-600 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-amber-900">Self-Approval Prohibited</p>
-                    <p className="mt-0.5 text-amber-800">
-                      You submitted this payment request. Corporate financial policy requires an independent manager to review and authorize it.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {rejecting ? (
                 <div className="rounded-xl border border-err/30 bg-err-light p-4 space-y-3">
                   <div className="flex items-center gap-2 text-err text-xs font-semibold">
