@@ -3,6 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useApiResource } from '@/hooks/useApiResource';
+import { listPaymentRequests } from '@/api/payments';
+import { DEMO_MODE } from '@/lib/config';
+import { demoPaymentRequests } from '@/data/demo-employee-data';
+import type { PaymentRequest } from '@/types/domain';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -13,13 +18,18 @@ import {
 
 const navItems = [
   { name: 'Dashboard', href: '/employee', icon: LayoutDashboard },
-  { name: 'Payment Requests', href: '/employee/requests', icon: FileText, badge: '2' },
+  { name: 'Payment Requests', href: '/employee/requests', icon: FileText },
   { name: 'Vendors', href: '/employee/vendors', icon: Store },
   { name: 'Reports', href: '/employee/reports', icon: BarChart3 },
 ];
 
 export default function EmployeeSidebar() {
   const pathname = usePathname();
+
+  const requestsResource = useApiResource<PaymentRequest[]>('employee-sidebar-requests', () =>
+    DEMO_MODE ? Promise.resolve(demoPaymentRequests) : listPaymentRequests(),
+  );
+  const requestCount = requestsResource.data?.length ?? 0;
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 text-gray-800 flex flex-col justify-between shrink-0">
@@ -68,11 +78,11 @@ export default function EmployeeSidebar() {
                   <Icon className="w-5 h-5" />
                   <span>{item.name}</span>
                 </div>
-                {item.badge && (
+                {item.href === '/employee/requests' && requestCount > 0 ? (
                   <span className="w-5 h-5 bg-blue-600 text-white text-[11px] font-semibold rounded-full flex items-center justify-center">
-                    {item.badge}
+                    {requestCount > 99 ? '99+' : requestCount}
                   </span>
-                )}
+                ) : null}
               </Link>
             );
           })}

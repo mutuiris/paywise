@@ -1,106 +1,168 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Send, 
-  Building2, 
-  FileText, 
-  DollarSign, 
-  CreditCard, 
-  FileUp,
+import {
+  ArrowLeft,
+  Send,
+  Building2,
+  FileText,
+  DollarSign,
+  CreditCard,
   CheckCircle,
   Paperclip,
-  X
 } from 'lucide-react';
+import { useApiResource } from '@/hooks/useApiResource';
+import { listProjects, listVendors } from '@/api/vendors';
+import { createPaymentRequest } from '@/api/payments';
+import {
+  DemoDataBanner,
+  ErrorState,
+  IntegrationBlockedState,
+} from '@/components/employee/AsyncState';
+import { PaymentStatusBadge } from '@/components/employee/StatusBadge';
+import { toApiError, type ApiError } from '@/lib/api-client';
+import { DEMO_MODE } from '@/lib/config';
+import {
+  approvalTierForAmount,
+  formatKes,
+  minorUnitsToDecimal,
+  parseMinorUnits,
+} from '@/lib/money';
+import { demoProjects, demoVendors } from '@/data/demo-employee-data';
+import type { PaymentMethod, PaymentRequest, Project, Vendor } from '@/types/domain';
 
-const MOCK_VENDORS = [
-  'Metro Hardware Ltd.',
-  'BuildMax Logistics',
-  'Apex Concrete Supplies',
-  'Safety First Kenya',
-  'Nairobi Timber & Hardware',
-  'TransCounty Haulers',
-];
+interface FormState {
+  vendorId: string;
+  projectId: string;
+  amount: string;
+  invoiceNumber: string;
+  paymentMethod: PaymentMethod;
+  reason: string;
+  supportingNotes: string;
+}
 
-const MOCK_PROJECTS = [
-  'Westlands Project',
-  'Kilimani Site B',
-  'Mombasa Port Terminal Phase 2',
-  'Eldoret Warehouse Expansion',
-  'Headquarters Renovation',
-];
+const INITIAL_FORM: FormState = {
+  vendorId: '',
+  projectId: '',
+  amount: '',
+  invoiceNumber: '',
+  paymentMethod: 'MPESA',
+  reason: '',
+  supportingNotes: '',
+};
+
+function FieldError({ messages }: { messages?: string[] }) {
+  if (!messages || messages.length === 0) return null;
+  return (
+    <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
+      {messages.join(' ')}
+    </p>
+  );
+}
 
 export default function NewPaymentRequestPage() {
-  const router = useRouter();
+  const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [submitError, setSubmitError] = useState<ApiError | null>(null);
+  const [created, setCreated] = useState<PaymentRequest | null>(null);
 
-  const [formData, setFormData] = useState({
-    vendorName: '',
-    amount: '',
-    projectOrDepartment: 'Westlands Project',
-    invoiceNumber: '',
-    paymentMethod: 'M-Pesa',
-    reason: '',
-  });
+  const options = useApiResource<{ vendors: Vendor[]; projects: Project[] }>(
+    'employee-request-options',
+    () =>
+      DEMO_MODE
+        ? Promise.resolve({ vendors: demoVendors, projects: demoProjects })
+        : Promise.all([listVendors(), listProjects()]).then(([vendors, projects]) => ({
+            vendors,
+            projects,
+          })),
+  );
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const vendors = options.data?.vendors ?? [];
+  const projects = options.data?.projects ?? [];
+
+  const fieldErrors = submitError?.fieldErrors ?? {};
+  const tier = useMemo(() => approvalTierForAmount(form.amount || '0'), [form.amount]);
+
+  const blocked = submitError?.kind === 'notfound' || submitError?.kind === 'unknown';
+  const formLevelError = submitError && !blocked ? submitError : null;
+
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm((previous) => ({ ...previous, [key]: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setAttachedFile(e.target.files[0]);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (DEMO_MODE || isSubmitting) return;
+
+    const amountMinor = parseMinorUnits(form.amount);
+    if (!form.vendorId || !form.invoiceNumber.trim() || !form.reason.trim() || amountMinor <= BigInt(0)) {
+      setSubmitError(
+        toApiError(new Error('Please complete all required fields with a valid amount.')),
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const request = await createPaymentRequest({
+        vendor_id: form.vendorId,
+        project_id: form.projectId || null,
+        amount: minorUnitsToDecimal(amountMinor),
+        invoice_number: form.invoiceNumber.trim(),
+        description: form.reason.trim(),
+        payment_method: form.paymentMethod,
+        supporting_notes: form.supportingNotes.trim(),
+      });
+      setCreated(request);
+    } catch (error) {
+      setSubmitError(toApiError(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleRemoveFile = () => {
-    setAttachedFile(null);
-  };
+  if (created) {
+    const vendorName =
+      created.vendor_name ??
+      vendors.find((vendor) => vendor.id === created.vendor_id)?.name ??
+      'the selected vendor';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      
-      setTimeout(() => {
-        router.push('/employee');
-      }, 2000);
-    }, 1200);
-  };
-
-  if (isSubmitted) {
     return (
       <div className="max-w-2xl mx-auto my-12 bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center space-y-4">
         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
           <CheckCircle className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Payment Request Submitted!</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Payment Request Saved</h2>
         <p className="text-sm text-gray-600 max-w-md mx-auto">
-          Your payment request for <span className="font-semibold text-gray-800">{formData.vendorName}</span> (KES {Number(formData.amount).toLocaleString()}) has been sent for manager approval.
+          Your request for <span className="font-semibold text-gray-800">{vendorName}</span> (
+          {formatKes(created.amount)}) with invoice {created.invoice_number} has been recorded by the
+          Paywise backend.
         </p>
-        {attachedFile && (
-          <p className="text-xs text-slate-800 bg-slate-100 py-1.5 px-3 rounded-full inline-block">
-            Attached document: {attachedFile.name}
-          </p>
-        )}
-        <p className="text-xs text-gray-400">Redirecting to your dashboard...</p>
+        <div className="flex justify-center">
+          <PaymentStatusBadge status={created.status} />
+        </div>
+        <p className="text-xs text-gray-400">
+          The request is now owned by your account. You cannot choose the requester.
+        </p>
+        <div className="flex justify-center">
+          <Link
+            href="/employee/requests"
+            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2 text-sm rounded-lg shadow-sm transition-colors"
+          >
+            View my requests
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      <DemoDataBanner />
+
       <div className="flex items-center gap-4">
         <Link
           href="/employee"
@@ -116,54 +178,89 @@ export default function NewPaymentRequestPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 shadow-sm space-y-6">
+      {blocked ? (
+        <IntegrationBlockedState
+          title="Request submission is not connected yet"
+          description="The Paywise backend does not expose POST /api/payments/ in this build, so nothing was saved. This is an integration status, not a success."
+        />
+      ) : null}
+
+      {formLevelError ? (
+        <ErrorState
+          error={formLevelError}
+          onRetry={submitError?.kind === 'network' ? () => setSubmitError(null) : undefined}
+          context="We could not submit your request."
+        />
+      ) : null}
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 shadow-sm space-y-6"
+      >
+        {options.error && !options.data ? (
+          <ErrorState
+            error={options.error}
+            onRetry={options.reload}
+            context="We could not load vendors and projects."
+          />
+        ) : null}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="vendorId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Select Vendor <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Building2 className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <select
-                name="vendorName"
+                id="vendorId"
+                name="vendorId"
                 required
-                value={formData.vendorName}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent"
+                disabled={options.loading}
+                value={form.vendorId}
+                onChange={(event) => update('vendorId', event.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent disabled:opacity-60"
               >
-                <option value="">-- Choose Vendor --</option>
-                {MOCK_VENDORS.map((vendor) => (
-                  <option key={vendor} value={vendor}>
-                    {vendor}
+                <option value="">
+                  {options.loading ? 'Loading vendors...' : '-- Choose Vendor --'}
+                </option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.name}
                   </option>
                 ))}
               </select>
             </div>
+            <FieldError messages={fieldErrors.vendor_id ?? fieldErrors.vendor} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Project / Department <span className="text-red-500">*</span>
             </label>
             <select
-              name="projectOrDepartment"
+              id="projectId"
+              name="projectId"
               required
-              value={formData.projectOrDepartment}
-              onChange={handleChange}
-              className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent"
+              disabled={options.loading}
+              value={form.projectId}
+              onChange={(event) => update('projectId', event.target.value)}
+              className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent disabled:opacity-60"
             >
-              {MOCK_PROJECTS.map((proj) => (
-                <option key={proj} value={proj}>
-                  {proj}
+              <option value="">{options.loading ? 'Loading projects...' : '-- Choose Project --'}</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
                 </option>
               ))}
             </select>
+            <FieldError messages={fieldErrors.project_id ?? fieldErrors.project} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1.5">
               Amount (KES) <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -171,35 +268,52 @@ export default function NewPaymentRequestPage() {
                 KES
               </span>
               <input
-                type="number"
+                id="amount"
                 name="amount"
+                type="text"
+                inputMode="decimal"
                 required
-                min="1"
                 placeholder="24500"
-                value={formData.amount}
-                onChange={handleChange}
+                value={form.amount}
+                onChange={(event) => update('amount', event.target.value)}
                 className="w-full pl-12 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent"
               />
             </div>
+            <FieldError messages={fieldErrors.amount} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="invoiceNumber"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Invoice / Reference Number <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <FileText className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
-                type="text"
+                id="invoiceNumber"
                 name="invoiceNumber"
+                type="text"
                 required
                 placeholder="e.g. INV-1032"
-                value={formData.invoiceNumber}
-                onChange={handleChange}
+                value={form.invoiceNumber}
+                onChange={(event) => update('invoiceNumber', event.target.value)}
                 className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent"
               />
             </div>
+            <FieldError messages={fieldErrors.invoice_number} />
           </div>
+        </div>
+
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
+          Requests of <strong>KES 50,000 or less</strong> need Manager approval. Requests{' '}
+          <strong>above KES 50,000</strong> need Manager and Finance Officer approval.
+          {form.amount
+            ? tier === 'MANAGER_AND_FINANCE'
+              ? ' This request will need Manager and Finance Officer approval.'
+              : ' This request will need Manager approval only.'
+            : ''}
         </div>
 
         <div>
@@ -209,7 +323,7 @@ export default function NewPaymentRequestPage() {
           <div className="grid grid-cols-2 gap-4">
             <label
               className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                formData.paymentMethod === 'M-Pesa'
+                form.paymentMethod === 'MPESA'
                   ? 'border-slate-900 bg-slate-50 text-slate-900 font-medium'
                   : 'border-gray-200 hover:bg-gray-50 text-gray-700'
               }`}
@@ -217,9 +331,9 @@ export default function NewPaymentRequestPage() {
               <input
                 type="radio"
                 name="paymentMethod"
-                value="M-Pesa"
-                checked={formData.paymentMethod === 'M-Pesa'}
-                onChange={handleChange}
+                value="MPESA"
+                checked={form.paymentMethod === 'MPESA'}
+                onChange={() => update('paymentMethod', 'MPESA')}
                 className="text-slate-900 focus:ring-slate-800"
               />
               <CreditCard className="w-5 h-5 text-emerald-600" />
@@ -228,7 +342,7 @@ export default function NewPaymentRequestPage() {
 
             <label
               className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                formData.paymentMethod === 'Bank Transfer'
+                form.paymentMethod === 'BANK_TRANSFER'
                   ? 'border-slate-900 bg-slate-50 text-slate-900 font-medium'
                   : 'border-gray-200 hover:bg-gray-50 text-gray-700'
               }`}
@@ -236,70 +350,62 @@ export default function NewPaymentRequestPage() {
               <input
                 type="radio"
                 name="paymentMethod"
-                value="Bank Transfer"
-                checked={formData.paymentMethod === 'Bank Transfer'}
-                onChange={handleChange}
+                value="BANK_TRANSFER"
+                checked={form.paymentMethod === 'BANK_TRANSFER'}
+                onChange={() => update('paymentMethod', 'BANK_TRANSFER')}
                 className="text-slate-900 focus:ring-slate-800"
               />
               <DollarSign className="w-5 h-5 text-slate-700" />
               <span>Bank Transfer</span>
             </label>
           </div>
+          <FieldError messages={fieldErrors.payment_method} />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Reason for Payment & Details <span className="text-red-500">*</span>
+          <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Reason for Payment &amp; Details <span className="text-red-500">*</span>
           </label>
           <textarea
+            id="reason"
             name="reason"
             required
             rows={3}
             placeholder="Describe the materials/services requested..."
-            value={formData.reason}
-            onChange={handleChange}
+            value={form.reason}
+            onChange={(event) => update('reason', event.target.value)}
             className="w-full p-3 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent"
           />
+          <FieldError messages={fieldErrors.description} />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Attach Invoice / Supporting Documents
+          <label htmlFor="supportingNotes" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Supporting Notes
           </label>
+          <textarea
+            id="supportingNotes"
+            name="supportingNotes"
+            rows={2}
+            placeholder="Any additional context for approvers (optional)"
+            value={form.supportingNotes}
+            onChange={(event) => update('supportingNotes', event.target.value)}
+            className="w-full p-3 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent"
+          />
+          <FieldError messages={fieldErrors.supporting_notes} />
+        </div>
 
-          {!attachedFile ? (
-            <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-slate-800 hover:bg-slate-50/30 transition-colors cursor-pointer bg-gray-50/50">
-              <input
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
-                onChange={handleFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-              <FileUp className="w-8 h-8 text-gray-400 mb-2" />
-              <p className="text-sm font-medium text-gray-700">Click to upload or drag & drop invoice document</p>
-              <p className="text-xs text-gray-400 mt-1">PNG, JPG, or PDF (Up to 10MB)</p>
-            </label>
-          ) : (
-            <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900">
-              <div className="flex items-center gap-3">
-                <Paperclip className="w-5 h-5 text-slate-700 shrink-0" />
-                <div className="truncate">
-                  <p className="font-medium truncate">{attachedFile.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {(attachedFile.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleRemoveFile}
-                className="p-1 hover:bg-slate-200 rounded text-slate-700 transition-colors"
-                title="Remove attachment"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+        <div>
+          <span className="block text-sm font-medium text-gray-700 mb-1.5">
+            Attach Invoice / Supporting Documents
+          </span>
+          <div className="flex items-center gap-3 p-6 text-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50/50 text-sm text-gray-500 justify-center">
+            <Paperclip className="w-5 h-5 shrink-0 text-gray-400" />
+            <span>
+              Document upload is not available yet: the Paywise payment request model has no
+              document field, so the request is recorded with the details and notes above.
+            </span>
+          </div>
         </div>
 
         <div className="pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
@@ -311,13 +417,20 @@ export default function NewPaymentRequestPage() {
           </Link>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || DEMO_MODE || options.loading}
+            title={DEMO_MODE ? 'Disabled in demo mode' : undefined}
             className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
           >
             <Send className="w-4 h-4" />
             <span>{isSubmitting ? 'Submitting...' : 'Submit Request'}</span>
           </button>
         </div>
+
+        {DEMO_MODE ? (
+          <p className="text-right text-xs text-gray-400">
+            Submission is disabled while demo mode is on.
+          </p>
+        ) : null}
       </form>
     </div>
   );

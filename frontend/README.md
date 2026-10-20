@@ -20,6 +20,31 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment
+
+Copy `.env.example` to `.env.local` and point it at the Paywise backend:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | Base origin of the Paywise Django backend, for example `http://127.0.0.1:8000`. No trailing slash. |
+| `NEXT_PUBLIC_DEMO_MODE` | When `true`, read views render clearly-labelled fixture data and write actions stay disabled. |
+
+If `NEXT_PUBLIC_API_URL` is not set, employee pages show an "API not configured" state instead of
+falling back to mock data.
+
+### Authentication, sessions and CORS
+
+The frontend calls the backend with `fetch(..., { credentials: 'include' })` and expects Django
+session (cookie) authentication. The API currently exposes no login or identity endpoint
+(`/api/accounts/` has no routes yet), and most views are `csrf_exempt`. Until the backend adds
+CORS support, the browser blocks cross-origin requests from this origin, so the frontend origin
+(`http://localhost:3000`) must be allowed by the backend or both apps must be served through the
+same origin via a reverse proxy. Do not disable CSRF in application code.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

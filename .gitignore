@@ -1,5 +1,6 @@
 # Environment / secrets
 backend/env.sh
+backend/.env
 
 # Python
 __pycache__/
@@ -14,6 +15,10 @@ staticfiles/
 
 # Virtual environments
 .venv/
+venv/
+
+# Next.js writes a stub root lockfile during builds
+/package-lock.json
 
 # macOS
 .DS_Store
