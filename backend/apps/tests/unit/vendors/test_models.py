@@ -35,6 +35,17 @@ class VendorModelTestCase(TestCase):
         with self.assertRaises((IntegrityError, ValidationError)):
             Vendor.objects.create(name="Prime Cement Supplies")
 
+    def test_vendor_empty_name_rejected(self) -> None:
+        with self.assertRaises(ValidationError):
+            Vendor.objects.create(name="   ")
+
+    def test_vendor_payment_details_dict_validation(self) -> None:
+        with self.assertRaises(ValidationError):
+            Vendor.objects.create(
+                name="Invalid Vendor",
+                payment_details="not-a-dict",  # type: ignore[arg-type]
+            )
+
 
 class ProjectModelTestCase(TestCase):
     def setUp(self) -> None:
@@ -58,3 +69,22 @@ class ProjectModelTestCase(TestCase):
         Project.objects.create(name="Upperhill Towers")
         with self.assertRaises((IntegrityError, ValidationError)):
             Project.objects.create(name="Upperhill Towers")
+
+    def test_project_empty_name_rejected(self) -> None:
+        with self.assertRaises(ValidationError):
+            Project.objects.create(name="")
+
+    def test_project_code_normalization_empty_string_to_none(self) -> None:
+        # Empty string codes normalize to None without unique constraint conflicts
+        p1 = Project.objects.create(name="Project Alpha", code="")
+        p2 = Project.objects.create(name="Project Beta", code="   ")
+        p3 = Project.objects.create(name="Project Gamma", code=None)
+
+        self.assertIsNone(p1.code)
+        self.assertIsNone(p2.code)
+        self.assertIsNone(p3.code)
+
+    def test_project_code_uniqueness_when_provided(self) -> None:
+        Project.objects.create(name="Project Delta", code="PRJ-DELTA")
+        with self.assertRaises((IntegrityError, ValidationError)):
+            Project.objects.create(name="Project Epsilon", code="PRJ-DELTA")

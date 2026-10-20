@@ -1,3 +1,5 @@
+"""Audit trail domain models and action representations."""
+
 from __future__ import annotations
 
 from django.conf import settings
@@ -8,10 +10,24 @@ from apps.core.models import OwnerlessAbstract
 
 
 class AuditAction(models.TextChoices):
-    PAYMENT_REQUEST_CREATED = "PAYMENT_REQUEST_CREATED", "Payment Request Created"
-    PAYMENT_REQUEST_SUBMITTED = "PAYMENT_REQUEST_SUBMITTED", "Payment Request Submitted"
-    PAYMENT_REQUEST_APPROVED = "PAYMENT_REQUEST_APPROVED", "Payment Request Approved"
-    PAYMENT_REQUEST_REJECTED = "PAYMENT_REQUEST_REJECTED", "Payment Request Rejected"
+    """Enumeration of system and business actions captured in audit logs."""
+
+    PAYMENT_REQUEST_CREATED = (
+        "PAYMENT_REQUEST_CREATED",
+        "Payment Request Created",
+    )
+    PAYMENT_REQUEST_SUBMITTED = (
+        "PAYMENT_REQUEST_SUBMITTED",
+        "Payment Request Submitted",
+    )
+    PAYMENT_REQUEST_APPROVED = (
+        "PAYMENT_REQUEST_APPROVED",
+        "Payment Request Approved",
+    )
+    PAYMENT_REQUEST_REJECTED = (
+        "PAYMENT_REQUEST_REJECTED",
+        "Payment Request Rejected",
+    )
     PAYMENT_PROCESSING_STARTED = (
         "PAYMENT_PROCESSING_STARTED",
         "Payment Processing Started",
@@ -25,6 +41,12 @@ class AuditAction(models.TextChoices):
 
 
 class AuditEvent(OwnerlessAbstract):
+    """Immutable audit record documenting actions, actors, and metadata.
+
+    Preserves chronological operational history. Overrides save() and delete()
+    to guarantee that once created, records cannot be altered or removed.
+    """
+
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -48,6 +70,7 @@ class AuditEvent(OwnerlessAbstract):
         ]
 
     def save(self, *args, **kwargs) -> None:
+        """Enforce append-only immutability; block updates to existing records."""
         if not self._state.adding and AuditEvent.objects.filter(pk=self.pk).exists():
             raise ValidationError(
                 "AuditEvent records are immutable and cannot be updated."
@@ -55,7 +78,9 @@ class AuditEvent(OwnerlessAbstract):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs) -> None:
+        """Enforce append-only immutability; block deletions of audit records."""
         raise ValidationError("AuditEvent records are immutable and cannot be deleted.")
 
     def __str__(self) -> str:
+        """Return readable representation of audit action and target entity."""
         return f"{self.action} on {self.entity_type} ({self.entity_id})"
