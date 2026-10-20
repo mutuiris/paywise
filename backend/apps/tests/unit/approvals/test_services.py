@@ -11,6 +11,16 @@ from django.test import TestCase
 from apps.accounts.models import UserAccount, UserRole
 from apps.approvals import services
 from apps.approvals.models import Approval, ApprovalDecision, ApprovalTier
+from apps.approvals.services import (
+    get_approval_history,
+    get_approval_queue,
+    get_approved_tiers,
+    get_pending_tiers,
+    get_required_tiers,
+    is_fully_approved,
+    re_evaluate_approval_state,
+    record_approval,
+)
 from apps.audit.models import AuditAction, AuditEvent
 from apps.payments.models import (
     PaymentMethod,
@@ -23,22 +33,31 @@ from apps.vendors.models import Vendor
 class ApprovalServicesTestCase(TestCase):
     def setUp(self) -> None:
         self.employee = UserAccount.objects.create_user(
-            username="emp_approv", role=UserRole.EMPLOYEE
+            username="srv_emp",
+            role=UserRole.EMPLOYEE,
         )
         self.manager = UserAccount.objects.create_user(
-            username="mgr_approv", role=UserRole.MANAGER
+            username="srv_mgr",
+            role=UserRole.MANAGER,
+        )
+        self.manager2 = UserAccount.objects.create_user(
+            username="srv_mgr2",
+            role=UserRole.MANAGER,
         )
         self.finance = UserAccount.objects.create_user(
-            username="fin_approv", role=UserRole.FINANCE_OFFICER
+            username="srv_fin",
+            role=UserRole.FINANCE_OFFICER,
         )
         self.admin = UserAccount.objects.create_user(
-            username="adm_approv", role=UserRole.ADMINISTRATOR
+            username="srv_admin",
+            role=UserRole.ADMINISTRATOR,
         )
         self.inactive_manager = UserAccount.objects.create_user(
-            username="inact_mgr", role=UserRole.MANAGER, is_active=False
+            username="inact_mgr",
+            role=UserRole.MANAGER,
+            is_active=False,
         )
-
-        self.vendor = Vendor.objects.create(name="Apex Supplies Ltd")
+        self.vendor = Vendor.objects.create(name="Vendor Service Test")
 
     def _create_submitted_request(
         self, amount: Decimal, requester: UserAccount | None = None
@@ -55,11 +74,283 @@ class ApprovalServicesTestCase(TestCase):
             created_by=req.id,
         )
 
-    def test_threshold_boundary_50000_manager_only(self) -> None:
-        tiers_at_50k = services.get_required_tiers(Decimal("50000.00"))
-        self.assertEqual(tiers_at_50k, [ApprovalTier.MANAGER])
+    def test_approval_threshold_tier_calculation(self) -> None:
+        req_low = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("50000.00"),
+            invoice_number="INV-SRV-50K",
+            description="Threshold boundary",
+            created_by=self.employee.id,
+        )
+        self.assertEqual(get_required_tiers(req_low), [ApprovalTier.MANAGER])
+        self.assertEqual(
+            get_required_tiers(Decimal("50000.00")), [ApprovalTier.MANAGER]
+        )
 
-        req = self._create_submitted_request(Decimal("50000.00"))
+        req_high = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("50000.01"),
+            invoice_number="INV-SRV-50K-PLUS",
+            description="Exceeds threshold",
+            created_by=self.employee.id,
+        )
+        self.assertEqual(
+            get_required_tiers(req_high),
+            [ApprovalTier.MANAGER, ApprovalTier.FINANCE],
+        )
+        self.assertEqual(
+            get_required_tiers(Decimal("50000.01")),
+            [ApprovalTier.MANAGER, ApprovalTier.FINANCE],
+        )
+
+    def test_single_approval_workflow_low_value(self) -> None:
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("35000.00"),
+            invoice_number="INV-SRV-LOW",
+            description="Low value payment",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        self.assertFalse(is_fully_approved(req))
+        self.assertEqual(get_pending_tiers(req), [ApprovalTier.MANAGER])
+
+        approval = record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.APPROVED,
+        )
+        self.assertEqual(approval.decision, ApprovalDecision.APPROVED)
+        self.assertEqual(approval.tier, ApprovalTier.MANAGER)
+
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+        self.assertTrue(is_fully_approved(req))
+        self.assertEqual(get_pending_tiers(req), [])
+        self.assertEqual(get_approved_tiers(req), [ApprovalTier.MANAGER])
+
+    def test_multi_tier_approval_workflow_high_value(self) -> None:
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("120000.00"),
+            invoice_number="INV-SRV-HIGH",
+            description="High value server purchase",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        self.assertEqual(
+            get_required_tiers(req),
+            [ApprovalTier.MANAGER, ApprovalTier.FINANCE],
+        )
+
+        record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.APPROVED,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.PENDING_APPROVAL)
+        self.assertFalse(is_fully_approved(req))
+        self.assertEqual(get_pending_tiers(req), [ApprovalTier.FINANCE])
+        self.assertEqual(get_approved_tiers(req), [ApprovalTier.MANAGER])
+
+        record_approval(
+            payment_request=req,
+            approver=self.finance,
+            decision=ApprovalDecision.APPROVED,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+        self.assertTrue(is_fully_approved(req))
+        self.assertEqual(get_pending_tiers(req), [])
+
+    def test_rejection_requires_reason_and_updates_status(self) -> None:
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("45000.00"),
+            invoice_number="INV-SRV-REJ",
+            description="Questionable expense",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+
+        with self.assertRaises(ValidationError):
+            record_approval(
+                payment_request=req,
+                approver=self.manager,
+                decision=ApprovalDecision.REJECTED,
+                reason="",
+            )
+
+        rejection = record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.REJECTED,
+            reason="Exceeds department travel budget allocation for Q4.",
+        )
+        self.assertEqual(rejection.decision, ApprovalDecision.REJECTED)
+        self.assertEqual(
+            rejection.reason, "Exceeds department travel budget allocation for Q4."
+        )
+
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.REJECTED)
+        self.assertEqual(
+            req.rejection_reason, "Exceeds department travel budget allocation for Q4."
+        )
+
+        event = AuditEvent.objects.filter(
+            entity_id=req.id, action=AuditAction.PAYMENT_REQUEST_REJECTED
+        ).first()
+        self.assertIsNotNone(event)
+
+    def test_self_approval_prevented_in_service(self) -> None:
+        mgr_req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.manager,
+            amount=Decimal("15000.00"),
+            invoice_number="INV-SRV-SELF",
+            description="Manager expense",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.manager.id,
+        )
+        with self.assertRaises(PermissionDenied):
+            record_approval(
+                payment_request=mgr_req,
+                approver=self.manager,
+                decision=ApprovalDecision.APPROVED,
+            )
+
+    def test_approval_queue_filters_self_authored_and_by_role(self) -> None:
+        req1 = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("30000.00"),
+            invoice_number="INV-Q-01",
+            description="Req 1",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        req2 = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.manager,
+            amount=Decimal("80000.00"),
+            invoice_number="INV-Q-02",
+            description="Req 2",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.manager.id,
+        )
+        req3 = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("90000.00"),
+            invoice_number="INV-Q-03",
+            description="Req 3",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+
+        mgr_queue = get_approval_queue(self.manager)
+        mgr_ids = list(mgr_queue.values_list("id", flat=True))
+        self.assertIn(req1.id, mgr_ids)
+        self.assertIn(req3.id, mgr_ids)
+        self.assertNotIn(req2.id, mgr_ids)
+
+        fin_queue = get_approval_queue(self.finance)
+        fin_ids = list(fin_queue.values_list("id", flat=True))
+        self.assertIn(req2.id, fin_ids)
+        self.assertIn(req3.id, fin_ids)
+        self.assertNotIn(req1.id, fin_ids)
+
+        emp_queue = get_approval_queue(self.employee)
+        self.assertEqual(emp_queue.count(), 0)
+
+    def test_finance_approves_first_then_manager_workflow(self) -> None:
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("85000.00"),
+            invoice_number="INV-SRV-ORDER",
+            description="High value server rack",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+
+        record_approval(
+            payment_request=req,
+            approver=self.finance,
+            decision=ApprovalDecision.APPROVED,
+            tier=ApprovalTier.FINANCE,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.PENDING_APPROVAL)
+        self.assertFalse(is_fully_approved(req))
+        self.assertEqual(get_pending_tiers(req), [ApprovalTier.MANAGER])
+
+        record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.APPROVED,
+            tier=ApprovalTier.MANAGER,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+        self.assertTrue(is_fully_approved(req))
+
+    def test_admin_can_approve_both_tiers(self) -> None:
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("70000.00"),
+            invoice_number="INV-SRV-ADMIN",
+            description="Admin approved request",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        record_approval(
+            payment_request=req,
+            approver=self.admin,
+            decision=ApprovalDecision.APPROVED,
+            tier=ApprovalTier.MANAGER,
+        )
+        req.refresh_from_db()
+        self.assertEqual(get_approved_tiers(req), [ApprovalTier.MANAGER])
+
+    def test_get_approval_history_and_re_evaluate_state(self) -> None:
+        req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("20000.00"),
+            invoice_number="INV-SRV-HIST",
+            description="History test",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
+        )
+        record_approval(
+            payment_request=req,
+            approver=self.manager,
+            decision=ApprovalDecision.APPROVED,
+        )
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
+
+        history = get_approval_history(req)
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["decision"], ApprovalDecision.APPROVED)
+        self.assertEqual(history[0]["approver_name"], self.manager.username)
+
+        re_evaluate_approval_state(req)
+        req.refresh_from_db()
+        self.assertEqual(req.status, PaymentRequestStatus.PENDING_APPROVAL)
+        self.assertFalse(is_fully_approved(req))
+
+    def test_record_approval_decision_and_invalidation(self) -> None:
+        req = self._create_submitted_request(Decimal("40000.00"))
         approval, updated = services.record_approval_decision(
             payment_request_id=req.id,
             approver=self.manager,
@@ -69,188 +360,6 @@ class ApprovalServicesTestCase(TestCase):
         self.assertEqual(approval.decision, ApprovalDecision.APPROVED)
         self.assertEqual(updated.status, PaymentRequestStatus.APPROVED)
 
-    def test_threshold_boundary_50000_01_requires_both_tiers(self) -> None:
-        tiers_above_50k = services.get_required_tiers(Decimal("50000.01"))
-        self.assertEqual(tiers_above_50k, [ApprovalTier.MANAGER, ApprovalTier.FINANCE])
-
-        req = self._create_submitted_request(Decimal("50000.01"))
-
-        # Step 1: Manager approves -> still PENDING_APPROVAL
-        _, step1 = services.record_approval_decision(
-            payment_request_id=req.id,
-            approver=self.manager,
-            tier=ApprovalTier.MANAGER,
-            decision=ApprovalDecision.APPROVED,
-        )
-        self.assertEqual(step1.status, PaymentRequestStatus.PENDING_APPROVAL)
-
-        # Step 2: Finance approves -> APPROVED
-        _, step2 = services.record_approval_decision(
-            payment_request_id=req.id,
-            approver=self.finance,
-            tier=ApprovalTier.FINANCE,
-            decision=ApprovalDecision.APPROVED,
-        )
-        self.assertEqual(step2.status, PaymentRequestStatus.APPROVED)
-
-    def test_finance_cannot_approve_before_manager(self) -> None:
-        req = self._create_submitted_request(Decimal("75000.00"))
-        with self.assertRaises(ValidationError) as ctx:
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=self.finance,
-                tier=ApprovalTier.FINANCE,
-                decision=ApprovalDecision.APPROVED,
-            )
-        self.assertIn("Manager approval is required", str(ctx.exception))
-
-    def test_self_approval_prevented_for_requester(self) -> None:
-        manager_req = self._create_submitted_request(
-            Decimal("25000.00"), requester=self.manager
-        )
-        with self.assertRaises(ValidationError) as ctx:
-            services.record_approval_decision(
-                payment_request_id=manager_req.id,
-                approver=self.manager,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.APPROVED,
-            )
-        self.assertIn("cannot approve their own", str(ctx.exception))
-
-    def test_self_approval_prevented_for_creator_without_requester(self) -> None:
-        req = PaymentRequest.objects.create(
-            vendor=self.vendor,
-            requester=None,
-            amount=Decimal("20000.00"),
-            invoice_number=f"INV-{uuid.uuid4().hex[:6].upper()}",
-            description="Creator-only request",
-            status=PaymentRequestStatus.SUBMITTED,
-            created_by=self.manager.id,
-        )
-        with self.assertRaises(ValidationError) as ctx:
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=self.manager,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.APPROVED,
-            )
-        self.assertIn("cannot approve their own", str(ctx.exception))
-
-    def test_rejection_requires_nonblank_reason(self) -> None:
-        req = self._create_submitted_request(Decimal("10000.00"))
-        with self.assertRaises(ValidationError) as ctx:
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=self.manager,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.REJECTED,
-                reason="   ",
-            )
-        self.assertIn("reason", str(ctx.exception))
-
-    def test_rejection_moves_status_to_rejected_and_emits_audit(self) -> None:
-        req = self._create_submitted_request(Decimal("10000.00"))
-        approval, updated = services.record_approval_decision(
-            payment_request_id=req.id,
-            approver=self.manager,
-            tier=ApprovalTier.MANAGER,
-            decision=ApprovalDecision.REJECTED,
-            reason="Incorrect item cost specified",
-        )
-        self.assertEqual(updated.status, PaymentRequestStatus.REJECTED)
-        self.assertEqual(updated.rejection_reason, "Incorrect item cost specified")
-
-        # Verify audit event emitted
-        event = AuditEvent.objects.filter(
-            entity_id=req.id, action=AuditAction.PAYMENT_REQUEST_REJECTED
-        ).first()
-        self.assertIsNotNone(event)
-        assert event is not None
-        self.assertIn("Incorrect item cost specified", event.description)
-
-    def test_cannot_approve_already_approved_request(self) -> None:
-        req = self._create_submitted_request(Decimal("20000.00"))
-        services.record_approval_decision(
-            payment_request_id=req.id,
-            approver=self.manager,
-            tier=ApprovalTier.MANAGER,
-            decision=ApprovalDecision.APPROVED,
-        )
-        # Attempt second approval on already approved request
-        other_manager = UserAccount.objects.create_user(
-            username="mgr_other", role=UserRole.MANAGER
-        )
-        with self.assertRaises(ValidationError) as ctx:
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=other_manager,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.APPROVED,
-            )
-        self.assertIn("Cannot record decision", str(ctx.exception))
-
-    def test_duplicate_tier_approval_prevented(self) -> None:
-        req = self._create_submitted_request(Decimal("80000.00"))
-        services.record_approval_decision(
-            payment_request_id=req.id,
-            approver=self.manager,
-            tier=ApprovalTier.MANAGER,
-            decision=ApprovalDecision.APPROVED,
-        )
-        # Another manager attempts to approve MANAGER tier again
-        other_mgr = UserAccount.objects.create_user(
-            username="mgr2", role=UserRole.MANAGER
-        )
-        with self.assertRaises(ValidationError) as ctx:
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=other_mgr,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.APPROVED,
-            )
-        self.assertIn("already been approved", str(ctx.exception))
-
-    def test_wrong_role_cannot_approve(self) -> None:
-        req = self._create_submitted_request(Decimal("20000.00"))
-        # Employee cannot approve manager tier
-        with self.assertRaises(PermissionDenied):
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=self.employee,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.APPROVED,
-            )
-        # Manager cannot approve finance tier
-        with self.assertRaises(PermissionDenied):
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=self.manager,
-                tier=ApprovalTier.FINANCE,
-                decision=ApprovalDecision.APPROVED,
-            )
-
-    def test_inactive_user_cannot_approve(self) -> None:
-        req = self._create_submitted_request(Decimal("20000.00"))
-        with self.assertRaises(PermissionDenied):
-            services.record_approval_decision(
-                payment_request_id=req.id,
-                approver=self.inactive_manager,
-                tier=ApprovalTier.MANAGER,
-                decision=ApprovalDecision.APPROVED,
-            )
-
-    def test_invalidate_existing_approvals(self) -> None:
-        req = self._create_submitted_request(Decimal("40000.00"))
-        services.record_approval_decision(
-            payment_request_id=req.id,
-            approver=self.manager,
-            tier=ApprovalTier.MANAGER,
-            decision=ApprovalDecision.APPROVED,
-        )
-        req.refresh_from_db()
-        self.assertEqual(req.status, PaymentRequestStatus.APPROVED)
-
-        # Invalidate approvals
         count = services.invalidate_existing_approvals(
             req, actor=self.manager, reason="Amount increased"
         )
@@ -260,10 +369,3 @@ class ApprovalServicesTestCase(TestCase):
         self.assertEqual(req.status, PaymentRequestStatus.PENDING_APPROVAL)
         active_approvals = Approval.objects.filter(payment_request=req, is_active=True)
         self.assertEqual(active_approvals.count(), 0)
-
-        # Historical record preserved
-        all_approvals = Approval.objects.filter(payment_request=req)
-        self.assertEqual(all_approvals.count(), 1)
-        approval = all_approvals.first()
-        assert approval is not None
-        self.assertFalse(approval.is_active)

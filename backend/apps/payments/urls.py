@@ -7,10 +7,21 @@ from apps.payments import views
 app_name = "payments"
 
 urlpatterns: list[URLPattern] = [
-    path("", views.payment_request_list_create_view, name="list-create"),
+    path("", views.payment_request_list_view, name="payment-request-list"),
+    path("", views.payment_request_list_view, name="list-create"),
+    path(
+        "search/",
+        views.payment_request_list_view,
+        name="payment-request-search",
+    ),
+    path(
+        "<uuid:pk>/",
+        views.payment_request_detail_view,
+        name="payment-request-detail",
+    ),
     path(
         "<uuid:payment_id>/",
-        views.payment_request_detail_update_view,
+        views.payment_request_detail_view,
         name="detail-update",
     ),
     path(

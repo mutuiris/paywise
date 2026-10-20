@@ -24,5 +24,8 @@ if not os.environ.get("POSTGRES_DB"):
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": ":memory:",
+            "OPTIONS": {
+                "timeout": 30,
+            },
         }
     }

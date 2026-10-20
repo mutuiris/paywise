@@ -1,3 +1,5 @@
+"""Approval domain models and state representations."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -6,20 +8,31 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from apps.accounts.models import UserRole
 from apps.core.models import OwnerAbstract
 
 
 class ApprovalDecision(models.TextChoices):
+    """Enumeration of approval decisions."""
+
     APPROVED = "APPROVED", "Approved"
     REJECTED = "REJECTED", "Rejected"
 
 
 class ApprovalTier(models.TextChoices):
+    """Enumeration of approval authority tiers."""
+
     MANAGER = "MANAGER", "Manager Approval"
     FINANCE = "FINANCE", "Finance Approval"
 
 
 class Approval(OwnerAbstract):
+    """Record of an explicit approval or rejection decision by an authorized actor.
+
+    Tracks the target payment request, the approving user, their authority tier,
+    the decision made, and any supporting rationale (mandatory on rejection).
+    """
+
     payment_request_id: UUID
     approver_id: UUID
 
@@ -49,7 +62,13 @@ class Approval(OwnerAbstract):
         constraints = [
             models.UniqueConstraint(
                 fields=["payment_request", "approver", "tier"],
-                name="unique_payment_request_approver_tier",
+                condition=models.Q(is_active=True),
+                name="unique_active_payment_request_approver_tier",
+            ),
+            models.UniqueConstraint(
+                fields=["payment_request", "tier"],
+                condition=models.Q(decision="APPROVED", is_active=True),
+                name="unique_active_approved_tier_per_request",
             ),
         ]
         indexes = [
@@ -58,11 +77,19 @@ class Approval(OwnerAbstract):
         ]
 
     def clean(self) -> None:
+        """Validate domain invariants for approval decisions.
+
+        Enforces:
+        1. Non-empty explanation when rejecting a request.
+        2. Prevention of self-approval (creators/requesters cannot approve).
+        3. Role-to-tier alignment (Manager for MANAGER, Finance for FINANCE).
+        """
         super().clean()
         if self.decision == ApprovalDecision.REJECTED and not self.reason.strip():
             raise ValidationError(
                 {"reason": "A reason is mandatory when rejecting a payment request."}
             )
+
         if self.payment_request_id and self.approver_id:
             is_requester = (
                 getattr(self.payment_request, "requester_id", None) == self.approver_id
@@ -79,7 +106,37 @@ class Approval(OwnerAbstract):
                     }
                 )
 
+        if self.approver_id and hasattr(self, "approver") and self.approver:
+            is_super = getattr(self.approver, "is_superuser", False)
+            if not is_super:
+                role = getattr(self.approver, "role", None)
+                if self.tier == ApprovalTier.MANAGER and role not in (
+                    UserRole.MANAGER,
+                    UserRole.ADMINISTRATOR,
+                ):
+                    raise ValidationError(
+                        {
+                            "approver": (
+                                "Only Managers and Administrators can grant "
+                                "Manager tier approval."
+                            )
+                        }
+                    )
+                if self.tier == ApprovalTier.FINANCE and role not in (
+                    UserRole.FINANCE_OFFICER,
+                    UserRole.ADMINISTRATOR,
+                ):
+                    raise ValidationError(
+                        {
+                            "approver": (
+                                "Only Finance Officers and Administrators can grant "
+                                "Finance tier approval."
+                            )
+                        }
+                    )
+
     def __str__(self) -> str:
+        """Return readable string representation of approval decision."""
         return (
             f"{self.tier} ({self.decision}) by {self.approver} "
             f"for {self.payment_request.invoice_number}"

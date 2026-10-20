@@ -7,7 +7,13 @@ from apps.reporting import views
 app_name = "reporting"
 
 urlpatterns: list[URLPattern] = [
-    path("", views.summary_report_view, name="summary"),
-    path("summary/", views.summary_report_view, name="summary-explicit"),
-    path("projects/", views.project_breakdown_view, name="projects"),
+    path("", views.activity_summary_view, name="summary"),
+    path("summary/", views.activity_summary_view, name="activity-summary"),
+    path("failed/", views.failed_payments_view, name="failed-payments"),
+    path(
+        "by-project/",
+        views.projects_breakdown_view,
+        name="projects-breakdown",
+    ),
+    path("projects/", views.projects_breakdown_view, name="projects"),
 ]

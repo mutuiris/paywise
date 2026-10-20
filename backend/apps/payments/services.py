@@ -1,13 +1,16 @@
-"""Application services for payment request lifecycle management."""
+"""Application services for payment request lifecycle, processing, and search."""
 
 from __future__ import annotations
 
 import uuid
+from datetime import date, datetime, time, tzinfo
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Q, QuerySet
+from django.utils import timezone
 
 from apps.accounts.models import UserRole
 from apps.approvals import services as approval_services
@@ -19,6 +22,7 @@ from apps.payments.models import (
     PaymentRequest,
     PaymentRequestStatus,
 )
+from apps.payments.permissions import can_view_all_payments
 from apps.payments.providers import (
     PaymentProvider,
     PaymentProviderError,
@@ -233,6 +237,7 @@ def update_payment_request(
     try:
         with transaction.atomic():
             old_amount = payment_request.amount
+            old_status = payment_request.status
             amount_changed = False
 
             for field, value in fields.items():
@@ -288,10 +293,7 @@ def update_payment_request(
                 elif field == "supporting_notes" and isinstance(value, str):
                     payment_request.supporting_notes = value.strip()
 
-            payment_request.updated_by = actor.id
-            payment_request.save()
-
-            if amount_changed and payment_request.status in (
+            if amount_changed and old_status in (
                 PaymentRequestStatus.PENDING_APPROVAL,
                 PaymentRequestStatus.APPROVED,
             ):
@@ -302,6 +304,10 @@ def update_payment_request(
                         f"Amount changed from {old_amount} to {payment_request.amount}"
                     ),
                 )
+                payment_request.status = PaymentRequestStatus.PENDING_APPROVAL
+
+            payment_request.updated_by = actor.id
+            payment_request.save()
 
             return payment_request
     except IntegrityError as exc:
@@ -328,10 +334,7 @@ def process_payment_request(
 
     Enforces that only Finance Officers and Administrators can initiate processing,
     and only for requests in APPROVED status. Prevents duplicate provider executions
-    via the unique idempotency key. If an attempt with the same idempotency key already
-    exists for this request, returns the existing attempt outcome without
-    calling the provider again. Reusing a key for a different payment request
-    raises a ValidationError.
+    via the unique idempotency key.
     """
     if not getattr(actor, "is_active", False):
         raise PermissionDenied("Inactive users cannot process payments.")
@@ -372,7 +375,6 @@ def process_payment_request(
         if payment_request is None:
             raise ValidationError({"payment_request": "Payment request not found."})
 
-        # Re-check attempt inside locked block to protect against race conditions
         attempt_race = PaymentAttempt.objects.filter(idempotency_key=clean_key).first()
         if attempt_race is not None:
             if attempt_race.payment_request_id != payment_request_id:
@@ -421,7 +423,6 @@ def process_payment_request(
             },
         )
 
-    # Provider call outside initial reservation transaction
     payment_provider = provider or get_payment_provider()
     try:
         result = payment_provider.process_payment(
@@ -476,7 +477,6 @@ def process_payment_request(
             )
 
         elif result.status == PaymentAttemptStatus.AMBIGUOUS:
-            # Remains in PROCESSING until reconciliation
             payment_request.status = PaymentRequestStatus.PROCESSING
             payment_request.updated_by = actor.id
             payment_request.save()
@@ -583,3 +583,210 @@ def reconcile_payment_attempt(
             )
 
         return attempt, payment_request
+
+
+def parse_datetime_boundary(
+    value: str | datetime | date | None,
+    *,
+    is_end_of_day: bool = False,
+    tz: tzinfo | None = None,
+) -> datetime | None:
+    """Parse a date or ISO datetime string into a timezone-aware datetime."""
+    if value is None:
+        return None
+
+    active_tz = tz or timezone.get_current_timezone()
+
+    if isinstance(value, datetime):
+        if timezone.is_naive(value):
+            return timezone.make_aware(value, active_tz)
+        return value
+
+    if isinstance(value, date):
+        boundary_time = time(23, 59, 59, 999999) if is_end_of_day else time.min
+        combined = datetime.combine(value, boundary_time)
+        return timezone.make_aware(combined, active_tz)
+
+    str_val = str(value).strip()
+    if not str_val:
+        return None
+
+    if len(str_val) == 10 and str_val.count("-") == 2:
+        try:
+            parsed_date = date.fromisoformat(str_val)
+            boundary_time = time(23, 59, 59, 999999) if is_end_of_day else time.min
+            combined = datetime.combine(parsed_date, boundary_time)
+            return timezone.make_aware(combined, active_tz)
+        except ValueError:
+            pass
+
+    try:
+        dt = datetime.fromisoformat(str_val)
+        if timezone.is_naive(dt):
+            return timezone.make_aware(dt, active_tz)
+        return dt
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid date/time format '{str_val}'. Expected YYYY-MM-DD or ISO-8601."
+        ) from exc
+
+
+def filter_payment_requests(
+    queryset: QuerySet[PaymentRequest] | None = None,
+    *,
+    user: UserAccount | Any | None = None,
+    vendor_id: uuid.UUID | str | None = None,
+    vendor: str | None = None,
+    status: str | list[str] | None = None,
+    requester_id: uuid.UUID | str | None = None,
+    requester: str | None = None,
+    project_id: uuid.UUID | str | None = None,
+    project: str | None = None,
+    date_from: str | datetime | date | None = None,
+    date_to: str | datetime | date | None = None,
+    payment_method: str | list[str] | None = None,
+    min_amount: Decimal | str | float | int | None = None,
+    max_amount: Decimal | str | float | int | None = None,
+    search_query: str | None = None,
+) -> QuerySet[PaymentRequest]:
+    """Filter payment requests using composable criteria and deterministic dates.
+
+    Enforces permission scoping: Finance Officers, Managers, and Administrators
+    can query all payment requests across the organization. Regular employees
+    are strictly scoped to their own payment requests.
+    """
+    if queryset is None:
+        queryset = PaymentRequest.objects.select_related(
+            "vendor", "project", "requester"
+        ).all()
+
+    if user is not None and not can_view_all_payments(user):
+        user_id = getattr(user, "id", None)
+        if user_id:
+            queryset = queryset.filter(Q(requester=user) | Q(created_by=user_id))
+        else:
+            queryset = queryset.filter(requester=user)
+
+    if vendor_id:
+        if isinstance(vendor_id, str):
+            try:
+                vendor_id = uuid.UUID(vendor_id.strip())
+            except ValueError as exc:
+                raise ValueError("Invalid vendor_id UUID format.") from exc
+        queryset = queryset.filter(vendor_id=vendor_id)
+
+    if vendor and str(vendor).strip():
+        vendor_str = str(vendor).strip()
+        try:
+            vendor_uuid = uuid.UUID(vendor_str)
+            queryset = queryset.filter(vendor_id=vendor_uuid)
+        except ValueError:
+            queryset = queryset.filter(vendor__name__icontains=vendor_str)
+
+    if status:
+        if isinstance(status, str):
+            if "," in status:
+                statuses = [s.strip().upper() for s in status.split(",") if s.strip()]
+                queryset = queryset.filter(status__in=statuses)
+            elif status.strip():
+                queryset = queryset.filter(status=status.strip().upper())
+        elif isinstance(status, (list, tuple, set)):
+            statuses = [str(s).strip().upper() for s in status if str(s).strip()]
+            if statuses:
+                queryset = queryset.filter(status__in=statuses)
+
+    if requester_id:
+        if isinstance(requester_id, str):
+            try:
+                requester_id = uuid.UUID(requester_id.strip())
+            except ValueError as exc:
+                raise ValueError("Invalid requester_id UUID format.") from exc
+        queryset = queryset.filter(requester_id=requester_id)
+
+    if requester and str(requester).strip():
+        req_pattern = str(requester).strip()
+        try:
+            req_uuid = uuid.UUID(req_pattern)
+            queryset = queryset.filter(requester_id=req_uuid)
+        except ValueError:
+            queryset = queryset.filter(
+                Q(requester__username__icontains=req_pattern)
+                | Q(requester__first_name__icontains=req_pattern)
+                | Q(requester__last_name__icontains=req_pattern)
+                | Q(requester__email__icontains=req_pattern)
+            )
+
+    if project_id:
+        if isinstance(project_id, str):
+            try:
+                project_id = uuid.UUID(project_id.strip())
+            except ValueError as exc:
+                raise ValueError("Invalid project_id UUID format.") from exc
+        queryset = queryset.filter(project_id=project_id)
+
+    if project and str(project).strip():
+        proj_pattern = str(project).strip()
+        try:
+            proj_uuid = uuid.UUID(proj_pattern)
+            queryset = queryset.filter(project_id=proj_uuid)
+        except ValueError:
+            queryset = queryset.filter(
+                Q(project__name__icontains=proj_pattern)
+                | Q(project__code__iexact=proj_pattern)
+            )
+
+    if date_from:
+        start_boundary = parse_datetime_boundary(date_from, is_end_of_day=False)
+        if start_boundary:
+            queryset = queryset.filter(created_at__gte=start_boundary)
+
+    if date_to:
+        end_boundary = parse_datetime_boundary(date_to, is_end_of_day=True)
+        if end_boundary:
+            queryset = queryset.filter(created_at__lte=end_boundary)
+
+    if payment_method:
+        if isinstance(payment_method, str):
+            if "," in payment_method:
+                methods = [
+                    m.strip().upper() for m in payment_method.split(",") if m.strip()
+                ]
+                queryset = queryset.filter(payment_method__in=methods)
+            elif payment_method.strip():
+                queryset = queryset.filter(
+                    payment_method=payment_method.strip().upper()
+                )
+        elif isinstance(payment_method, (list, tuple, set)):
+            methods = [str(m).strip().upper() for m in payment_method if str(m).strip()]
+            if methods:
+                queryset = queryset.filter(payment_method__in=methods)
+
+    if min_amount is not None and str(min_amount).strip():
+        try:
+            min_dec = Decimal(str(min_amount).strip())
+            queryset = queryset.filter(amount__gte=min_dec)
+        except Exception as exc:
+            raise ValueError(
+                f"Invalid min_amount decimal value '{min_amount}'."
+            ) from exc
+
+    if max_amount is not None and str(max_amount).strip():
+        try:
+            max_dec = Decimal(str(max_amount).strip())
+            queryset = queryset.filter(amount__lte=max_dec)
+        except Exception as exc:
+            raise ValueError(
+                f"Invalid max_amount decimal value '{max_amount}'."
+            ) from exc
+
+    if search_query and str(search_query).strip():
+        query_pattern = str(search_query).strip()
+        queryset = queryset.filter(
+            Q(invoice_number__icontains=query_pattern)
+            | Q(description__icontains=query_pattern)
+            | Q(vendor__name__icontains=query_pattern)
+            | Q(project__name__icontains=query_pattern)
+            | Q(project__code__icontains=query_pattern)
+        )
+
+    return queryset

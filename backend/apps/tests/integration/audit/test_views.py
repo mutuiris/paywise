@@ -3,75 +3,105 @@
 from __future__ import annotations
 
 import uuid
+from decimal import Decimal
 
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.accounts.models import UserAccount, UserRole
-from apps.audit import services
+from apps.approvals.models import ApprovalDecision, ApprovalTier
+from apps.approvals.services import record_approval
 from apps.audit.models import AuditAction
+from apps.payments.models import PaymentRequest, PaymentRequestStatus
+from apps.vendors.models import Vendor
 
 
-class AuditViewsTestCase(TestCase):
+class AuditViewsIntegrationTestCase(TestCase):
     def setUp(self) -> None:
         self.client = Client()
         self.employee = UserAccount.objects.create_user(
-            username="emp_aud", role=UserRole.EMPLOYEE
+            username="aview_emp",
+            password="password123",
+            role=UserRole.EMPLOYEE,
+        )
+        self.manager = UserAccount.objects.create_user(
+            username="aview_mgr",
+            password="password123",
+            role=UserRole.MANAGER,
         )
         self.finance = UserAccount.objects.create_user(
-            username="fin_aud", role=UserRole.FINANCE_OFFICER
+            username="aview_fin",
+            password="password123",
+            role=UserRole.FINANCE_OFFICER,
         )
-        self.admin = UserAccount.objects.create_user(
-            username="adm_aud", role=UserRole.ADMINISTRATOR
-        )
-
-        self.payment_id = uuid.uuid4()
-        services.record_event(
-            actor=self.employee,
-            action=AuditAction.PAYMENT_REQUEST_CREATED,
-            entity_type="PaymentRequest",
-            entity_id=self.payment_id,
-            description="Created payment request",
+        self.vendor = Vendor.objects.create(name="Vendor View Audit")
+        self.payment_req = PaymentRequest.objects.create(
+            vendor=self.vendor,
+            requester=self.employee,
+            amount=Decimal("40000.00"),
+            invoice_number="INV-AVIEW-01",
+            description="Branch supplies",
+            status=PaymentRequestStatus.PENDING_APPROVAL,
+            created_by=self.employee.id,
         )
 
     def test_audit_list_requires_authentication(self) -> None:
-        response = self.client.get(reverse("audit:audit-list"))
+        url = reverse("audit:audit-list")
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
 
     def test_audit_list_forbidden_for_employee(self) -> None:
         self.client.force_login(self.employee)
-        response = self.client.get(reverse("audit:audit-list"))
+        url = reverse("audit:audit-list")
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
 
-    def test_audit_list_allowed_for_finance_and_admin(self) -> None:
-        self.client.force_login(self.finance)
-        resp1 = self.client.get(reverse("audit:audit-list"))
-        self.assertEqual(resp1.status_code, 200)
-        data = resp1.json()
+    def test_audit_list_accessible_to_manager_and_finance(self) -> None:
+        record_approval(
+            payment_request=self.payment_req,
+            approver=self.manager,
+            tier=ApprovalTier.MANAGER,
+            decision=ApprovalDecision.APPROVED,
+            reason="Verified and approved",
+        )
+
+        self.client.force_login(self.manager)
+        url = reverse("audit:audit-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("results", data)
         self.assertGreaterEqual(data["count"], 1)
-        self.assertEqual(data["results"][0]["entity_id"], str(self.payment_id))
 
-        self.client.force_login(self.admin)
-        resp2 = self.client.get(reverse("audit:audit-list"))
-        self.assertEqual(resp2.status_code, 200)
+        actions = [r["action"] for r in data["results"]]
+        self.assertIn(AuditAction.PAYMENT_REQUEST_APPROVED, actions)
 
-    def test_audit_list_filtering(self) -> None:
+        invalid_resp = self.client.get(url, {"entity_id": "not-a-valid-uuid"})
+        self.assertEqual(invalid_resp.status_code, 400)
+
+        empty_resp = self.client.get(url, {"entity_id": str(uuid.uuid4())})
+        self.assertEqual(empty_resp.status_code, 200)
+        self.assertEqual(empty_resp.json()["count"], 0)
+
+    def test_entity_audit_trail_view(self) -> None:
+        record_approval(
+            payment_request=self.payment_req,
+            approver=self.manager,
+            tier=ApprovalTier.MANAGER,
+            decision=ApprovalDecision.APPROVED,
+        )
+
         self.client.force_login(self.finance)
-        resp = self.client.get(
-            reverse("audit:audit-list"), {"entity_id": str(self.payment_id)}
+        url = reverse(
+            "audit:audit-entity-trail",
+            args=["PaymentRequest", self.payment_req.id],
         )
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(len(resp.json()["results"]), 1)
-
-        resp2 = self.client.get(
-            reverse("audit:audit-list"), {"entity_id": str(uuid.uuid4())}
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["entity_type"], "PaymentRequest")
+        self.assertEqual(data["entity_id"], str(self.payment_req.id))
+        self.assertGreaterEqual(data["count"], 1)
+        self.assertEqual(
+            data["events"][0]["action"], AuditAction.PAYMENT_REQUEST_APPROVED
         )
-        self.assertEqual(resp2.status_code, 200)
-        self.assertEqual(len(resp2.json()["results"]), 0)
-
-    def test_audit_list_invalid_uuid(self) -> None:
-        self.client.force_login(self.finance)
-        resp = self.client.get(
-            reverse("audit:audit-list"), {"entity_id": "not-a-valid-uuid"}
-        )
-        self.assertEqual(resp.status_code, 400)

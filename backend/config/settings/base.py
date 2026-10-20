@@ -1,6 +1,7 @@
 import os
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -79,7 +80,7 @@ AUTH_USER_MODEL = "accounts.UserAccount"
 
 # Database
 
-DATABASES = {
+DATABASES: dict[str, dict[str, Any]] = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB"),
