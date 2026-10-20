@@ -36,10 +36,10 @@ export interface CreatePaymentRequestInput {
 export function createPaymentRequest(
   input: CreatePaymentRequestInput,
 ): Promise<PaymentRequest> {
-  return apiFetch<PaymentRequest>('/api/payments/', {
+  return apiFetch<PaymentRequest & { payment_request?: PaymentRequest }>('/api/payments/', {
     method: 'POST',
     body: { ...input },
-  });
+  }).then((data) => data.payment_request ?? data);
 }
 
 export function submitPaymentRequest(id: string): Promise<PaymentRequest> {

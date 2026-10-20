@@ -28,22 +28,30 @@ Copy `.env.example` to `.env.local` and point it at the Paywise backend:
 cp .env.example .env.local
 ```
 
-| Variable | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_API_URL` | Base origin of the Paywise Django backend, for example `http://127.0.0.1:8000`. No trailing slash. |
-| `NEXT_PUBLIC_DEMO_MODE` | When `true`, read views render clearly-labelled fixture data and write actions stay disabled. |
+| Variable | Where it runs | Purpose |
+| --- | --- | --- |
+| `PAYWISE_API_ORIGIN` | server only | Backend origin that the Next.js server proxies `/api/*` to. Recommended for local development. |
+| `NEXT_PUBLIC_API_URL` | browser | Backend origin called directly by the browser. Only use this when the backend allows this origin via CORS. |
+| `NEXT_PUBLIC_DEMO_MODE` | browser | When `true`, read views render clearly-labelled fixture data and write actions stay disabled. |
 
-If `NEXT_PUBLIC_API_URL` is not set, employee pages show an "API not configured" state instead of
-falling back to mock data.
+If neither `PAYWISE_API_ORIGIN` nor `NEXT_PUBLIC_API_URL` is set, employee pages show an
+"API not configured" state instead of falling back to mock data.
 
-### Authentication, sessions and CORS
+### Why the proxy is the default
 
-The frontend calls the backend with `fetch(..., { credentials: 'include' })` and expects Django
-session (cookie) authentication. The API currently exposes no login or identity endpoint
-(`/api/accounts/` has no routes yet), and most views are `csrf_exempt`. Until the backend adds
-CORS support, the browser blocks cross-origin requests from this origin, so the frontend origin
-(`http://localhost:3000`) must be allowed by the backend or both apps must be served through the
-same origin via a reverse proxy. Do not disable CSRF in application code.
+The Paywise backend has no CORS middleware, so a browser on `http://localhost:3000` cannot call
+it on `http://127.0.0.1:8000` directly. Proxying `/api/*` through Next.js keeps every request
+same-origin, which means the Django session cookie and the CSRF cookie work without weakening
+security on the backend. In production, serve the app and the API behind the same origin.
+
+### Authentication, sessions and CSRF
+
+Authentication is Django session based. The frontend signs in with `POST /api/accounts/login/`
+(`{ "username", "password" }`), reads the current user with `GET /api/accounts/me/` and signs out
+with `POST /api/accounts/logout/`. Because Django protects unsafe methods, the client first calls
+`GET /api/accounts/csrf/` to obtain the CSRF cookie and then sends it in the `X-CSRFToken` header.
+The password is never stored in the browser beyond the form field, and no token is kept in
+`localStorage`.
 
 ## Learn More
 

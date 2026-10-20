@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Search, Bell, ArrowRightLeft } from 'lucide-react';
 import { useApiResource } from '@/hooks/useApiResource';
-import { getCurrentUser } from '@/api/accounts';
+import { getCurrentUser, signOut } from '@/api/accounts';
 import { DEMO_MODE } from '@/lib/config';
 import type { User, UserRole } from '@/types/domain';
 
@@ -31,13 +31,26 @@ function initialsFor(name: string): string {
 export default function EmployeeHeader() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { replace } = useRouter();
+  const { replace, push } = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const userResource = useApiResource<User | null>('employee-header-user', () =>
     DEMO_MODE ? Promise.resolve(null) : getCurrentUser(),
   );
 
   const user = userResource.data;
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch {
+      // The session may already be gone; continue to the sign-in page either way.
+    } finally {
+      setIsSigningOut(false);
+      push('/login');
+    }
+  };
   const displayName = user
     ? `${user.first_name} ${user.last_name}`.trim() || user.username
     : DEMO_MODE
@@ -91,6 +104,17 @@ export default function EmployeeHeader() {
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full" />
         </button>
+
+        {user ? (
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
+          >
+            {isSigningOut ? 'Signing out...' : 'Sign out'}
+          </button>
+        ) : null}
 
         <div className="h-6 w-px bg-gray-200 mx-1" />
 

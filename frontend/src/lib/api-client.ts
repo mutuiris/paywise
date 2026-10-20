@@ -53,6 +53,23 @@ function readCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+let csrfBootstrap: Promise<void> | null = null;
+
+/**
+ * The backend issues the CSRF cookie from GET /api/accounts/csrf/. Unsafe
+ * requests (sign-in, sign-out, writes) need that cookie plus the matching
+ * X-CSRFToken header, so fetch it once before the first unsafe call.
+ */
+async function ensureCsrfCookie(): Promise<void> {
+  if (readCookie('csrftoken')) return;
+  if (!csrfBootstrap) {
+    csrfBootstrap = apiFetch<{ csrfToken: string }>('/api/accounts/csrf/')
+      .then(() => undefined)
+      .catch(() => undefined);
+  }
+  await csrfBootstrap;
+}
+
 function extractErrors(payload: unknown): { fieldErrors: FieldErrors; detail: string } {
   const fieldErrors: FieldErrors = {};
   let detail = '';
@@ -148,11 +165,17 @@ export async function apiFetch<T>(path: string, options: ApiRequestOptions = {})
   if (!API_CONFIGURED) {
     throw new ApiError('config', 'The Paywise API base URL is not configured.', {
       detail:
-        'Set NEXT_PUBLIC_API_URL in your environment (see frontend/.env.example) to reach the backend.',
+        'Set NEXT_PUBLIC_API_URL (or PAYWISE_API_ORIGIN for the same-origin proxy) in your environment (see frontend/.env.example) to reach the backend.',
     });
   }
 
-  const url = `${API_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  // With no public API URL the request stays same-origin and is forwarded by
+  // the Next.js rewrite, which keeps session cookies and CSRF working.
+  const url = API_URL
+    ? `${API_URL}${path.startsWith('/') ? path : `/${path}`}`
+    : path.startsWith('/')
+      ? path
+      : `/${path}`;
   const method = (options.method ?? 'GET').toUpperCase();
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
@@ -165,6 +188,7 @@ export async function apiFetch<T>(path: string, options: ApiRequestOptions = {})
   }
 
   if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    await ensureCsrfCookie();
     const csrf = readCookie('csrftoken');
     if (csrf) headers.set('X-CSRFToken', csrf);
   }
