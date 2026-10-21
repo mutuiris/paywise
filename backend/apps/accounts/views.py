@@ -26,7 +26,7 @@ def _parse_json_body(request: HttpRequest) -> dict[str, Any]:
 
 
 def user_to_dict(user: UserAccount) -> dict[str, Any]:
-    """Serialize a UserAccount instance into a JSON-compatible dictionary for the frontend."""
+    """Serialize a UserAccount instance into a JSON dictionary for the frontend."""
     role_map = {
         UserRole.EMPLOYEE: "EMPLOYEE",
         UserRole.MANAGER: "MANAGER",
@@ -77,7 +77,10 @@ def login_view(request: HttpRequest) -> JsonResponse:
     if user is None:
         return JsonResponse(
             {
-                "detail": "Invalid credentials. Please verify your username/email and password."
+                "detail": (
+                    "Invalid credentials. Please verify your "
+                    "username/email and password."
+                )
             },
             status=401,
         )
