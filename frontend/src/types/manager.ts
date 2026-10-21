@@ -43,6 +43,12 @@ export interface PaymentRequestItem {
   submittedAt?: string;
   updatedAt: string;
   approvals?: ApprovalStep[];
+  /** Approval tiers the backend requires for this request. */
+  requiredTiers?: ApprovalStepType[];
+  /** Approval tiers still awaiting a decision. */
+  pendingTiers?: ApprovalStepType[];
+  /** The exact decimal amount the backend returned, for money maths. */
+  amountExact?: string;
 }
 
 export interface VendorItem {

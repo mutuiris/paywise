@@ -12,7 +12,12 @@ export class ApiClientError extends Error {
   }
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+/**
+ * Empty by default so requests stay same-origin and are forwarded by the
+ * Next.js rewrite in next.config.ts. Setting NEXT_PUBLIC_API_BASE_URL calls
+ * the backend directly, which requires the backend to allow this origin.
+ */
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/+$/, '');
 
 function getCsrfToken(): string | null {
   if (typeof document === 'undefined') return null;
@@ -20,10 +25,51 @@ function getCsrfToken(): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+let csrfBootstrap: Promise<void> | null = null;
+
+/**
+ * Django protects unsafe methods, so the CSRF cookie has to exist before the
+ * first POST. The backend issues it from GET /api/accounts/csrf/.
+ */
+async function ensureCsrfCookie(): Promise<void> {
+  if (getCsrfToken()) return;
+  if (!csrfBootstrap) {
+    csrfBootstrap = apiClient<{ csrfToken: string }>('/api/accounts/csrf/')
+      .then(() => undefined)
+      .catch(() => undefined);
+  }
+  await csrfBootstrap;
+}
+
+/** The backend reports errors as {"detail": "..."} or {"error": "..."}. */
+function readErrorMessage(data: ApiErrorEnvelope | undefined, endpoint: string, status: number): string {
+  const detail = data?.detail;
+  if (typeof detail === 'string' && detail) return detail;
+
+  const error = data?.error;
+  if (typeof error === 'string' && error) return error;
+  if (error && typeof error === 'object') {
+    const messages = Object.values(error).flatMap((value) =>
+      Array.isArray(value) ? value.map(String) : [String(value)]
+    );
+    if (messages.length > 0) return messages.join(' ');
+  }
+
+  if (typeof data?.message === 'string' && data.message) return data.message;
+  return `API Request to ${endpoint} failed with status ${status}`;
+}
+
 export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const method = (options.method || 'GET').toUpperCase();
+  const isSafe = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+
+  if (!isSafe) {
+    await ensureCsrfCookie();
+  }
+
   const url = `${BASE_URL}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -32,7 +78,7 @@ export async function apiClient<T>(
   };
 
   const csrf = getCsrfToken();
-  if (csrf && !['GET', 'HEAD', 'OPTIONS'].includes(options.method || 'GET')) {
+  if (csrf && !isSafe) {
     headers['X-CSRFToken'] = csrf;
   }
 
@@ -49,11 +95,15 @@ export async function apiClient<T>(
     } catch {
       // Body is not JSON
     }
-    const message =
-      errorData?.detail ||
-      errorData?.message ||
-      `API Request to ${endpoint} failed with status ${res.status}`;
-    throw new ApiClientError(message, res.status, errorData);
+    throw new ApiClientError(
+      readErrorMessage(errorData, endpoint, res.status),
+      res.status,
+      errorData
+    );
+  }
+
+  if (res.status === 204) {
+    return undefined as T;
   }
 
   return res.json() as Promise<T>;
