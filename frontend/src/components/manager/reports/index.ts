@@ -1,2 +1,1 @@
-// Reports & analytics components for Manager portal
-export {};
+export { ManagerReportsView } from './ManagerReportsView';

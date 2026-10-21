@@ -112,7 +112,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
   const financeApproval = request.approvals?.find((a) => a.type === 'FINANCE');
 
   return (
-    <div className="space-y-6 font-serif max-w-5xl mx-auto pb-12">
+    <div className="space-y-6  max-w-5xl mx-auto pb-12">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-ok/30 bg-ok-light px-4 py-3 text-sm font-medium text-ok shadow-lg transition-all animate-in fade-in">
@@ -134,7 +134,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
         {/* Page Title & Status */}
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <h1 className="font-serif text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
               {request.reference}
             </h1>
             <StatusBadge status={request.status} />
@@ -151,50 +151,50 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
       {/* Top Highlight Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-line bg-surface p-4 shadow-2xs hover:bg-slate-50/80 hover:border-slate-300 transition-all cursor-pointer">
-          <span className="text-sm font-semibold text-ink font-serif tracking-tight block">
+          <span className="text-sm font-semibold text-ink  tracking-tight block">
             Payable Amount
           </span>
-          <span className="font-serif text-lg sm:text-xl font-bold tabular-nums text-ink mt-1 block">
+          <span className="text-lg sm:text-xl font-bold tabular-nums text-ink mt-1 block">
             {formatCurrency(request.amount)}
           </span>
-          <span className="text-[11px] text-muted-ink font-serif mt-0.5 block">
+          <span className="text-[11px] text-muted-ink  mt-0.5 block">
             {request.currency} Currency
           </span>
         </div>
 
         <div className="rounded-xl border border-line bg-surface p-4 shadow-2xs hover:bg-slate-50/80 hover:border-slate-300 transition-all cursor-pointer">
-          <span className="text-sm font-semibold text-ink font-serif tracking-tight block">
+          <span className="text-sm font-semibold text-ink  tracking-tight block">
             Vendor / Payee
           </span>
           <span className="text-base font-semibold text-ink mt-1 truncate block">
             {request.vendorName}
           </span>
-          <span className="text-[11px] font-serif text-muted-ink mt-0.5 block">
+          <span className="text-[11px]  text-muted-ink mt-0.5 block">
             INV: {request.invoiceNumber}
           </span>
         </div>
 
         <div className="rounded-xl border border-line bg-surface p-4 shadow-2xs hover:bg-slate-50/80 hover:border-slate-300 transition-all cursor-pointer">
-          <span className="text-sm font-semibold text-ink font-serif tracking-tight block">
+          <span className="text-sm font-semibold text-ink  tracking-tight block">
             Disbursement Channel
           </span>
           <span className="text-base font-semibold text-ink mt-1 flex items-center gap-1.5">
             <CreditCard className="size-4 text-brand" />
             <span>{request.paymentMethod === 'MPESA' ? 'M-Pesa Payout' : 'Bank'}</span>
           </span>
-          <span className="text-[11px] text-muted-ink font-serif mt-0.5 block">
+          <span className="text-[11px] text-muted-ink  mt-0.5 block">
             Direct settlement
           </span>
         </div>
 
         <div className="rounded-xl border border-line bg-surface p-4 shadow-2xs hover:bg-slate-50/80 hover:border-slate-300 transition-all cursor-pointer">
-          <span className="text-sm font-semibold text-ink font-serif tracking-tight block">
+          <span className="text-sm font-semibold text-ink  tracking-tight block">
             Approval Routing
           </span>
           <span className="text-xs font-semibold text-brand mt-1 block">
             {route.label}
           </span>
-          <span className="text-[11px] text-muted-ink font-serif mt-0.5 block">
+          <span className="text-[11px] text-muted-ink  mt-0.5 block">
             {route.isDual ? 'Threshold > 50,000' : 'Threshold ≤ 50,000'}
           </span>
         </div>
@@ -224,7 +224,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
 
               <div className="rounded-lg bg-surface-subtle border border-line p-3">
                 <span className="text-xs text-muted-ink block">Invoice Reference</span>
-                <span className="font-serif font-semibold text-ink mt-0.5 block">{request.invoiceNumber}</span>
+                <span className="font-semibold text-ink mt-0.5 block">{request.invoiceNumber}</span>
               </div>
 
               <div className="rounded-lg bg-surface-subtle border border-line p-3">
@@ -349,7 +349,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
                   <p className="text-[11px] text-muted-ink">
                     By {request.requesterName}
                   </p>
-                  <time className="text-[10px] text-muted-ink font-serif block mt-0.5">
+                  <time className="text-[10px] text-muted-ink  block mt-0.5">
                     {formatDateTime(request.createdAt)}
                   </time>
                 </div>
@@ -378,7 +378,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
                       : 'Awaiting your review'}
                   </p>
                   {managerApproval?.decidedAt && (
-                    <time className="text-[10px] text-muted-ink font-serif block mt-0.5">
+                    <time className="text-[10px] text-muted-ink  block mt-0.5">
                       {formatDateTime(managerApproval.decidedAt)}
                     </time>
                   )}

@@ -139,7 +139,7 @@ export function ManagerDashboard() {
   };
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-ok/30 bg-ok-light px-4 py-3 text-sm font-medium text-ok shadow-lg transition-all animate-in fade-in slide-in-from-top-2">

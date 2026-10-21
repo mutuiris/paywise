@@ -69,7 +69,7 @@ export function NewRequestForm() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6 font-serif mx-auto pb-12">
+    <div className="max-w-4xl space-y-6  mx-auto pb-12">
       {/* Breadcrumb / Back Navigation */}
       <div>
         <Link
@@ -122,7 +122,7 @@ export function NewRequestForm() {
                 id="vendor-select"
                 value={vendorId}
                 onChange={(e) => handleVendorChange(e.target.value)}
-                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 font-serif ${
+                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2  ${
                   errors.vendorId
                     ? 'border-err focus:border-err focus:ring-err/20'
                     : 'border-line focus:border-brand focus:ring-brand/20'
@@ -143,7 +143,7 @@ export function NewRequestForm() {
                 <div className="mt-2 rounded-lg bg-surface-subtle border border-line p-2.5 text-xs text-muted-ink space-y-0.5">
                   <p className="font-semibold text-ink">{selectedVendor.contactName} · {selectedVendor.contactPhone}</p>
                   <p>{selectedVendor.contactEmail}</p>
-                  <p className="font-serif text-[11px] text-brand">
+                  <p className="text-[11px] text-brand">
                     {selectedVendor.payoutMethod === 'MPESA'
                       ? `M-Pesa: ${selectedVendor.tillNumber ? `Till ${selectedVendor.tillNumber}` : `Paybill ${selectedVendor.paybillNumber}`}`
                       : `${selectedVendor.bankName}: A/C ${selectedVendor.accountNumber}`}
@@ -163,7 +163,7 @@ export function NewRequestForm() {
                 placeholder="e.g. INV-2026-882"
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
-                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted-ink font-serif focus:outline-none focus:ring-2 ${
+                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted-ink  focus:outline-none focus:ring-2 ${
                   errors.invoiceNumber
                     ? 'border-err focus:border-err focus:ring-err/20'
                     : 'border-line focus:border-brand focus:ring-brand/20'
@@ -172,7 +172,7 @@ export function NewRequestForm() {
               {errors.invoiceNumber && (
                 <p className="mt-1 text-xs text-err font-medium">{errors.invoiceNumber}</p>
               )}
-              <p className="mt-1 text-[11px] text-muted-ink font-serif">
+              <p className="mt-1 text-[11px] text-muted-ink">
                 Must match the reference printed on the vendor invoice.
               </p>
             </div>
@@ -193,7 +193,7 @@ export function NewRequestForm() {
                 Requested Amount (KES) <span className="text-err">*</span>
               </label>
               <div className="relative mt-1.5">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-serif text-sm font-semibold text-muted-ink">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2  text-sm font-semibold text-muted-ink">
                   KES
                 </span>
                 <input
@@ -204,7 +204,7 @@ export function NewRequestForm() {
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className={`w-full rounded-md border bg-surface py-2 pl-12 pr-3 font-serif text-lg font-semibold text-ink placeholder:text-muted-ink focus:outline-none focus:ring-2 ${
+                  className={`w-full rounded-md border bg-surface py-2 pl-12 pr-3  text-lg font-semibold text-ink placeholder:text-muted-ink focus:outline-none focus:ring-2 ${
                     errors.amount
                       ? 'border-err focus:border-err focus:ring-err/20'
                       : 'border-line focus:border-brand focus:ring-brand/20'
@@ -215,7 +215,7 @@ export function NewRequestForm() {
                 <p className="mt-1 text-xs text-err font-medium">{errors.amount}</p>
               )}
               {numericAmount > 0 && (
-                <p className="mt-1 text-xs text-brand font-semibold font-serif">
+                <p className="mt-1 text-xs text-brand font-semibold">
                   {formatCurrency(numericAmount)}
                 </p>
               )}
@@ -269,7 +269,7 @@ export function NewRequestForm() {
                 id="project-select"
                 value={project}
                 onChange={(e) => setProject(e.target.value)}
-                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 font-serif ${
+                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2  ${
                   errors.project
                     ? 'border-err focus:border-err focus:ring-err/20'
                     : 'border-line focus:border-brand focus:ring-brand/20'
@@ -296,7 +296,7 @@ export function NewRequestForm() {
                 id="method-select"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="mt-1.5 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
+                className="mt-1.5 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
               >
                 <option value="MPESA">M-Pesa Payout</option>
                 <option value="BANK_TRANSFER">Bank</option>
@@ -313,7 +313,7 @@ export function NewRequestForm() {
                 type="date"
                 value={requestedDate}
                 onChange={(e) => setRequestedDate(e.target.value)}
-                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 font-serif ${
+                className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2  ${
                   errors.requestedDate
                     ? 'border-err focus:border-err focus:ring-err/20'
                     : 'border-line focus:border-brand focus:ring-brand/20'
