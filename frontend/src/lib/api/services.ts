@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { AccountIdentity } from '@/lib/auth/session';
 import {
   VendorDTO,
   ProjectDTO,
@@ -10,18 +11,25 @@ import {
   FailedPaymentsReportDTO,
   ProjectBreakdownReportDTO,
   PaginatedResponse,
-  User,
 } from './types';
+
+export type { AccountIdentity };
 
 export const authService = {
   login: (credentials: { username?: string; email?: string; password: string }) =>
-    apiClient<{ user: User }>('/api/accounts/login/', {
+    apiClient<{ user: AccountIdentity }>('/api/accounts/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
     }),
   logout: () =>
     apiClient<{ ok: boolean }>('/api/accounts/logout/', { method: 'POST' }),
-  getMe: () => apiClient<User>('/api/accounts/me/'),
+  // The backend wraps the identity in { "user": ... }.
+  getMe: async () => {
+    const data = await apiClient<{ user: AccountIdentity } | AccountIdentity>(
+      '/api/accounts/me/'
+    );
+    return 'user' in data ? data.user : data;
+  },
 };
 
 export const vendorService = {
