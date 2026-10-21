@@ -21,7 +21,7 @@ def _parse_json_body(request: HttpRequest) -> dict[str, Any]:
         if not isinstance(data, dict):
             return {}
         return data
-    except (json.JSONDecodeError, UnicodeDecodeError):
+    except json.JSONDecodeError, UnicodeDecodeError:
         return {}
 
 
