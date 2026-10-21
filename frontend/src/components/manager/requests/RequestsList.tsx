@@ -75,7 +75,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
   const totalFilteredAmount = filtered.reduce((acc, r) => acc + r.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-serif">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -110,7 +110,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full rounded-md border border-line bg-canvas/60 py-2 pl-9 pr-3 text-xs sm:text-sm text-ink placeholder:text-muted-ink focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
+              className="w-full rounded-md border border-line bg-canvas/60 py-2 pl-9 pr-3 text-xs sm:text-sm text-ink placeholder:text-muted-ink focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all font-serif"
             />
           </div>
 
@@ -124,7 +124,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
             >
               <option value="ALL">All Statuses</option>
               <option value="PENDING_APPROVAL">Pending Approval</option>
@@ -146,7 +146,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                 setProjectFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
             >
               <option value="ALL">All Projects</option>
               {MOCK_PROJECTS.map((proj) => (
@@ -167,7 +167,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                 setVendorFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
             >
               <option value="ALL">All Vendors</option>
               {MOCK_VENDORS.map((v) => (
@@ -187,7 +187,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
             </span>
             <span>·</span>
             <span>
-              Total Value: <strong className="text-ink">{formatCurrency(totalFilteredAmount)}</strong>
+              Total Value: <strong className="text-ink font-serif">{formatCurrency(totalFilteredAmount)}</strong>
             </span>
           </div>
 
@@ -244,11 +244,11 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                       <td className="whitespace-nowrap px-5 py-3.5">
                         <Link
                           href={`${basePath}/requests/${req.id}`}
-                          className="text-[13px] font-semibold text-brand group-hover:underline"
+                          className="font-serif text-[13px] font-semibold text-brand group-hover:underline"
                         >
                           {req.reference}
                         </Link>
-                        <span className="block  text-[11px] text-muted-ink">
+                        <span className="block font-serif text-[11px] text-muted-ink">
                           {req.invoiceNumber}
                         </span>
                       </td>
@@ -264,7 +264,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                       </td>
 
                       {/* Amount */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right  font-semibold tabular-nums text-ink">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">
                         {formatCurrency(req.amount)}
                       </td>
 
@@ -318,7 +318,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
                     className="group flex items-center justify-between p-4 hover:bg-slate-50/90 active:bg-slate-100 transition-colors block"
                   >
                     <div className="min-w-0 pr-3">
-                      <span className="text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
+                      <span className="font-serif text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
                         {req.reference}
                       </span>
                       <p className="mt-0.5 font-semibold text-ink text-sm truncate group-hover:text-brand-deep transition-colors">

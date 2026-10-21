@@ -1,11 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+import { UserProfile, UserRole } from '@/types/auth';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
-import { AppShellProps } from './AppShell.types';
 
-export type { AppShellProps };
+export interface AppShellProps {
+  role: UserRole;
+  basePath: string;
+  user: UserProfile;
+  badges?: {
+    approvals?: number;
+    payments?: number;
+    reconciliation?: number;
+  };
+  children: React.ReactNode;
+}
 
 export function AppShell({
   role,
@@ -17,7 +27,8 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-canvas  text-ink antialiased">
+    <div className="flex min-h-screen bg-canvas text-ink antialiased">
+      {/* Shared Responsive Sidebar */}
       <AppSidebar
         role={role}
         basePath={basePath}
@@ -26,12 +37,14 @@ export function AppShell({
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
+
+      {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
           user={user}
           onMenuClick={() => setMobileOpen(true)}
         />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>
