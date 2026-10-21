@@ -1,10 +1,16 @@
+"""Unit tests for audit service functionality."""
+
+from __future__ import annotations
+
 import uuid
 from decimal import Decimal
 
+from django.db import transaction
 from django.test import TestCase
 
 from apps.accounts.models import UserAccount, UserRole
-from apps.audit.models import AuditAction
+from apps.audit import services
+from apps.audit.models import AuditAction, AuditEvent
 from apps.audit.services import (
     get_entity_audit_trail,
     log_approval_invalidated,
@@ -15,12 +21,14 @@ from apps.audit.services import (
     log_payment_request_created,
     log_payment_request_rejected,
     log_payment_request_submitted,
+    log_project_created,
+    log_vendor_created,
     query_audit_events,
     record_audit_event,
-    sanitize_metadata,
 )
+from apps.core.security import sanitise_metadata
 from apps.payments.models import PaymentRequest
-from apps.vendors.models import Vendor
+from apps.vendors.models import Project, Vendor
 
 
 class AuditServicesUnitTestCase(TestCase):
@@ -46,17 +54,14 @@ class AuditServicesUnitTestCase(TestCase):
         )
 
     def test_all_lifecycle_events_can_be_represented(self) -> None:
-        # Create event
         e1 = log_payment_request_created(self.payment_req, actor=self.employee)
         self.assertEqual(e1.action, AuditAction.PAYMENT_REQUEST_CREATED)
         self.assertEqual(e1.entity_id, self.payment_req.id)
         self.assertEqual(e1.actor_email, self.employee.email)
 
-        # Submit event
         e2 = log_payment_request_submitted(self.payment_req, actor=self.employee)
         self.assertEqual(e2.action, AuditAction.PAYMENT_REQUEST_SUBMITTED)
 
-        # Approve event
         e3 = log_payment_request_approved(
             self.payment_req,
             approver=self.manager,
@@ -66,7 +71,6 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertEqual(e3.action, AuditAction.PAYMENT_REQUEST_APPROVED)
         self.assertEqual(e3.metadata["tier"], "MANAGER")
 
-        # Reject event
         e4 = log_payment_request_rejected(
             self.payment_req,
             rejecter=self.manager,
@@ -75,7 +79,6 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertEqual(e4.action, AuditAction.PAYMENT_REQUEST_REJECTED)
         self.assertEqual(e4.metadata["rejection_reason"], "Missing proforma invoice")
 
-        # Processing started event
         attempt_id = uuid.uuid4()
         e5 = log_payment_processing_started(
             self.payment_req,
@@ -85,7 +88,6 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertEqual(e5.action, AuditAction.PAYMENT_PROCESSING_STARTED)
         self.assertEqual(e5.metadata["attempt_id"], str(attempt_id))
 
-        # Completed/Paid event
         e6 = log_payment_completed(
             self.payment_req,
             actor=self.manager,
@@ -94,7 +96,6 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertEqual(e6.action, AuditAction.PAYMENT_COMPLETED)
         self.assertEqual(e6.metadata["provider_reference"], "MPESA-REF-8921")
 
-        # Failed event
         e7 = log_payment_failed(
             self.payment_req,
             actor=self.manager,
@@ -103,7 +104,6 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertEqual(e7.action, AuditAction.PAYMENT_FAILED)
         self.assertEqual(e7.metadata["failure_reason"], "Provider timeout")
 
-        # Approval invalidated event
         e8 = log_approval_invalidated(
             self.payment_req,
             actor=self.employee,
@@ -111,7 +111,7 @@ class AuditServicesUnitTestCase(TestCase):
         )
         self.assertEqual(e8.action, AuditAction.APPROVAL_INVALIDATED)
 
-    def test_sensitive_information_redacted_in_metadata(self) -> None:
+    def test_sensitive_information_filtered_in_metadata(self) -> None:
         raw_meta = {
             "invoice_number": "INV-SECRET-01",
             "account_number": "011234567890",
@@ -123,17 +123,16 @@ class AuditServicesUnitTestCase(TestCase):
                 "safe_info": "Kenya Shillings",
             },
         }
-        cleaned = sanitize_metadata(raw_meta)
+        cleaned = sanitise_metadata(raw_meta)
 
         self.assertEqual(cleaned["invoice_number"], "INV-SECRET-01")
-        self.assertEqual(cleaned["account_number"], "[REDACTED]")
-        self.assertEqual(cleaned["auth_token"], "[REDACTED]")
-        self.assertEqual(cleaned["card_number"], "[REDACTED]")
-        self.assertEqual(cleaned["pin"], "[REDACTED]")
-        self.assertEqual(cleaned["nested"]["api_key"], "[REDACTED]")
+        self.assertNotIn("account_number", cleaned)
+        self.assertNotIn("auth_token", cleaned)
+        self.assertNotIn("card_number", cleaned)
+        self.assertNotIn("pin", cleaned)
+        self.assertNotIn("api_key", cleaned["nested"])
         self.assertEqual(cleaned["nested"]["safe_info"], "Kenya Shillings")
 
-        # Test persisted through record_audit_event
         event = record_audit_event(
             action=AuditAction.PAYMENT_PROCESSING_STARTED,
             entity_type="PaymentRequest",
@@ -141,8 +140,8 @@ class AuditServicesUnitTestCase(TestCase):
             actor=self.employee,
             metadata=raw_meta,
         )
-        self.assertEqual(event.metadata["auth_token"], "[REDACTED]")
-        self.assertEqual(event.metadata["pin"], "[REDACTED]")
+        self.assertNotIn("auth_token", event.metadata)
+        self.assertNotIn("pin", event.metadata)
 
     def test_entity_audit_trail_and_filtering(self) -> None:
         e1 = log_payment_request_created(self.payment_req, actor=self.employee)
@@ -168,9 +167,6 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertNotIn(e2, filtered)
 
     def test_vendor_and_project_audit_logging(self) -> None:
-        from apps.audit.services import log_project_created, log_vendor_created
-        from apps.vendors.models import Project, Vendor
-
         vendor = Vendor.objects.create(name="New Audit Vendor")
         ev_v = log_vendor_created(vendor, actor=self.manager)
         self.assertEqual(ev_v.action, AuditAction.VENDOR_CREATED)
@@ -196,7 +192,7 @@ class AuditServicesUnitTestCase(TestCase):
         )
         self.assertTrue(by_entity.count() >= 2)
 
-    def test_record_audit_event_without_actor(self) -> None:
+    def test_record_audit_event_without_actor_and_atomic_rollback(self) -> None:
         ev = record_audit_event(
             action=AuditAction.PAYMENT_PROCESSING_STARTED,
             entity_type="PaymentRequest",
@@ -207,3 +203,17 @@ class AuditServicesUnitTestCase(TestCase):
         self.assertIsNone(ev.actor)
         self.assertEqual(ev.actor_email, "")
         self.assertIn("System-triggered", ev.description)
+
+        initial_count = AuditEvent.objects.count()
+        try:
+            with transaction.atomic():
+                services.record_event(
+                    actor=self.employee,
+                    action=AuditAction.PAYMENT_REQUEST_CREATED,
+                    entity_type="PaymentRequest",
+                    entity_id=self.payment_req.id,
+                )
+                raise RuntimeError("Simulated failure after audit event creation")
+        except RuntimeError:
+            pass
+        self.assertEqual(AuditEvent.objects.count(), initial_count)

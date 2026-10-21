@@ -1,3 +1,8 @@
+"""Integration tests for audit history views."""
+
+from __future__ import annotations
+
+import uuid
 from decimal import Decimal
 
 from django.test import Client, TestCase
@@ -52,7 +57,6 @@ class AuditViewsIntegrationTestCase(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_audit_list_accessible_to_manager_and_finance(self) -> None:
-        # Generate an audit event via approval action
         record_approval(
             payment_request=self.payment_req,
             approver=self.manager,
@@ -71,6 +75,13 @@ class AuditViewsIntegrationTestCase(TestCase):
 
         actions = [r["action"] for r in data["results"]]
         self.assertIn(AuditAction.PAYMENT_REQUEST_APPROVED, actions)
+
+        invalid_resp = self.client.get(url, {"entity_id": "not-a-valid-uuid"})
+        self.assertEqual(invalid_resp.status_code, 400)
+
+        empty_resp = self.client.get(url, {"entity_id": str(uuid.uuid4())})
+        self.assertEqual(empty_resp.status_code, 200)
+        self.assertEqual(empty_resp.json()["count"], 0)
 
     def test_entity_audit_trail_view(self) -> None:
         record_approval(

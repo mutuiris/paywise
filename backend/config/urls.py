@@ -6,7 +6,10 @@ Exposes admin, operational health, and domain module API routes.
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.core.views import health_view
+
 urlpatterns = [
+    path("health/", health_view, name="health"),
     path("admin/", admin.site.urls),
     path("api/accounts/", include("apps.accounts.urls")),
     path("api/vendors/", include("apps.vendors.urls")),

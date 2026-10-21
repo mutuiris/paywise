@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -47,6 +49,8 @@ class AuditEvent(OwnerlessAbstract):
     to guarantee that once created, records cannot be altered or removed.
     """
 
+    actor_id: UUID | None
+
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -77,7 +81,7 @@ class AuditEvent(OwnerlessAbstract):
             )
         super().save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs) -> None:
+    def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
         """Enforce append-only immutability; block deletions of audit records."""
         raise ValidationError("AuditEvent records are immutable and cannot be deleted.")
 

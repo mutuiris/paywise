@@ -9,6 +9,7 @@ on:
     branches:
       - develop
       - prod
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -51,6 +52,16 @@ jobs:
 
       - name: Ruff format
         run: uv run --locked ruff format --check .
+
+      - name: Type check application services
+        run: >
+          uv run --locked mypy
+          apps/accounts/models.py
+          apps/approvals/services.py
+          apps/audit/services.py
+          apps/payments/services.py
+          apps/vendors/services.py
+          apps/reporting/services.py
 
   test:
     name: Django Tests
@@ -119,6 +130,12 @@ jobs:
             --cov=apps \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml
+
+      - name: Verify dependency consistency
+        run: uv pip check
+
+      - name: Build application image
+        run: docker build -f Dockerfile -t paywise-backend:ci ..
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329 # v2.3.8
