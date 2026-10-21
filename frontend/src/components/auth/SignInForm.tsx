@@ -72,7 +72,7 @@ export function SignInForm() {
         if (err.status === 401) {
           setError({
             title: 'Incorrect credentials',
-            message: 'The email/username or password you entered does not match our records.',
+            message: 'Email/username or password do not match.',
             suggestion: 'Please verify your spelling, ensure Caps Lock is off, or try one of the demo users (faith, carol, alice, or grace).',
           });
           return;
@@ -114,7 +114,7 @@ export function SignInForm() {
           // If not a matching demo user, present user-friendly credential mismatch rather than server failure
           setError({
             title: 'Incorrect credentials',
-            message: 'The email/username or password you entered does not match our records.',
+            message: 'Email/username or password do not match.',
             suggestion: 'For testing, you can sign in as faith (Finance), carol (Manager), grace (Admin), or alice (Employee) with password: password123.',
           });
           return;
@@ -155,7 +155,7 @@ export function SignInForm() {
 
         setError({
           title: 'Incorrect credentials',
-          message: 'The email/username or password you entered does not match our records.',
+          message: 'Email/username or password do not match.',
           suggestion: 'Please verify your spelling or test using demo accounts: faith, carol, alice, or grace.',
         });
         return;
