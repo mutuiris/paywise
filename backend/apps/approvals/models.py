@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -30,6 +32,9 @@ class Approval(OwnerAbstract):
     Tracks the target payment request, the approving user, their authority tier,
     the decision made, and any supporting rationale (mandatory on rejection).
     """
+
+    payment_request_id: UUID
+    approver_id: UUID
 
     payment_request = models.ForeignKey(
         "payments.PaymentRequest",
@@ -85,7 +90,6 @@ class Approval(OwnerAbstract):
                 {"reason": "A reason is mandatory when rejecting a payment request."}
             )
 
-        # Enforce segregation of duties: requester/creator cannot approve
         if self.payment_request_id and self.approver_id:
             is_requester = (
                 getattr(self.payment_request, "requester_id", None) == self.approver_id
@@ -102,7 +106,6 @@ class Approval(OwnerAbstract):
                     }
                 )
 
-        # Validate that approver role corresponds to tier authority
         if self.approver_id and hasattr(self, "approver") and self.approver:
             is_super = getattr(self.approver, "is_superuser", False)
             if not is_super:

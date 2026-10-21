@@ -14,6 +14,7 @@ from apps.payments.models import (
     PaymentRequest,
     PaymentRequestStatus,
 )
+from apps.reporting import services
 from apps.reporting.services import (
     get_failed_payments_report,
     get_payment_activity_summary,
@@ -44,7 +45,6 @@ class ReportingServicesUnitTests(TestCase):
             code="PRJ-BRANCH",
         )
 
-        # Paid request (Project A, 50,000)
         self.paid_req = PaymentRequest.objects.create(
             vendor=self.vendor,
             project=self.project_a,
@@ -57,7 +57,6 @@ class ReportingServicesUnitTests(TestCase):
             status=PaymentRequestStatus.PAID,
         )
 
-        # Pending approval requests (Project A, 20,000; Project B, 30,000)
         self.pending_req1 = PaymentRequest.objects.create(
             vendor=self.vendor,
             project=self.project_a,
@@ -81,7 +80,6 @@ class ReportingServicesUnitTests(TestCase):
             status=PaymentRequestStatus.SUBMITTED,
         )
 
-        # Failed request (Project B, 15,000)
         self.failed_req = PaymentRequest.objects.create(
             vendor=self.vendor,
             project=self.project_b,
@@ -96,26 +94,25 @@ class ReportingServicesUnitTests(TestCase):
         )
 
     def test_payment_activity_summary_metrics(self) -> None:
-        """Verifies paid total, awaiting approval, and failed payment metrics."""
         summary = get_payment_activity_summary()
 
         self.assertEqual(summary["total_paid_amount"], "50000.00")
         self.assertEqual(summary["total_paid_count"], 1)
-
-        # 2 awaiting approval (1 PENDING_APPROVAL + 1 SUBMITTED)
         self.assertEqual(summary["awaiting_approval_count"], 2)
         self.assertEqual(summary["awaiting_approval_amount"], "50000.00")
-
-        # 1 failed payment
         self.assertEqual(summary["failed_payment_count"], 1)
         self.assertEqual(summary["failed_payment_amount"], "15000.00")
-
-        # Total 4 requests
         self.assertEqual(summary["total_requests_count"], 4)
         self.assertEqual(summary["total_requested_amount"], "115000.00")
 
+        legacy_summary = services.get_payment_summary_report()
+        self.assertEqual(legacy_summary["total_paid"], "50000.00")
+        self.assertEqual(legacy_summary["paid_count"], 1)
+        self.assertEqual(legacy_summary["awaiting_approval_count"], 2)
+        self.assertEqual(legacy_summary["failed_count"], 1)
+        self.assertEqual(legacy_summary["total_failed"], "15000.00")
+
     def test_payment_activity_summary_period_filter(self) -> None:
-        """Verifies period constraints on summary calculations."""
         today = timezone.now().date()
         yesterday = today - timedelta(days=1)
         future = today + timedelta(days=1)
@@ -130,7 +127,6 @@ class ReportingServicesUnitTests(TestCase):
         self.assertEqual(summary_future["total_paid_amount"], "0.00")
 
     def test_failed_payments_report(self) -> None:
-        """Verifies failed payment querying and failure reason details."""
         report = get_failed_payments_report()
 
         self.assertEqual(report["total_failed_count"], 1)
@@ -146,22 +142,16 @@ class ReportingServicesUnitTests(TestCase):
         self.assertEqual(item["project_name"], "Branch Expansion")
 
     def test_failed_payments_report_project_filter(self) -> None:
-        """Verifies failed payments report can filter by project."""
-        # Querying Project A yields 0 failed payments
         report_a = get_failed_payments_report(project_id=self.project_a.id)
         self.assertEqual(report_a["total_failed_count"], 0)
 
-        # Querying Project B yields 1 failed payment
         report_b = get_failed_payments_report(project_id=self.project_b.id)
         self.assertEqual(report_b["total_failed_count"], 1)
 
     def test_payments_by_project_report(self) -> None:
-        """Verifies grouped payments by project with paid and pending metrics."""
         report = get_payments_by_project_report()
         self.assertEqual(report["count"], 2)
 
-        # Project A: Total 70,000 (Paid 50,000, Pending 20,000)
-        # Project B: Total 45,000 (Paid 0.00, Pending 30,000, Failed 15,000)
         proj_map = {p["project_code"]: p for p in report["results"]}
 
         proj_a = proj_map["PRJ-CLOUD"]
@@ -178,8 +168,10 @@ class ReportingServicesUnitTests(TestCase):
         self.assertEqual(proj_b["pending_amount"], "30000.00")
         self.assertEqual(proj_b["total_count"], 2)
 
+        breakdown = services.get_project_breakdown_report()
+        self.assertEqual(len(breakdown), 2)
+
     def test_failed_payments_report_vendor_filter_and_invalid_uuid(self) -> None:
-        """Verifies vendor filter and invalid UUID handling in failed report."""
         report = get_failed_payments_report(vendor_id=self.vendor.id)
         self.assertEqual(report["total_failed_count"], 1)
 

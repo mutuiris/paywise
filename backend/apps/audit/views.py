@@ -28,7 +28,7 @@ def audit_event_to_dict(event: AuditEvent) -> dict[str, Any]:
         "actor_email": event.actor_email,
         "description": event.description,
         "metadata": event.metadata,
-        "created_at": (event.created_at.isoformat() if event.created_at else None),
+        "created_at": event.created_at.isoformat() if event.created_at else None,
     }
 
 

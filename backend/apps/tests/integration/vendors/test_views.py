@@ -93,6 +93,18 @@ class VendorViewsTestCase(TestCase):
         )
         self.assertEqual(response2.status_code, 403)
 
+    def test_vendor_mutation_requires_csrf_token(self) -> None:
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.finance)
+
+        response = client.post(
+            reverse("vendors:vendor-list-create"),
+            data=json.dumps({"name": "CSRF Protected Vendor"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     def test_vendor_create_success_for_finance_officer(self) -> None:
         self.client.force_login(self.finance)
         payload = {

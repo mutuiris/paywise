@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from uuid import UUID
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -28,6 +29,10 @@ class PaymentMethod(models.TextChoices):
 
 
 class PaymentRequest(OwnerAbstract):
+    vendor_id: UUID
+    project_id: UUID | None
+    requester_id: UUID | None
+
     vendor = models.ForeignKey(
         "vendors.Vendor",
         on_delete=models.PROTECT,
@@ -156,6 +161,8 @@ class PaymentAttemptStatus(models.TextChoices):
 
 
 class PaymentAttempt(OwnerAbstract):
+    payment_request_id: UUID
+
     payment_request = models.ForeignKey(
         PaymentRequest,
         on_delete=models.PROTECT,

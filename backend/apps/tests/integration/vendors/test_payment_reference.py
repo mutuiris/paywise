@@ -49,8 +49,8 @@ class PaymentVendorProjectReferenceIntegrationTestCase(TestCase):
         self.assertEqual(req.requester, self.employee)
 
         # Verify reverse relationships
-        self.assertIn(req, self.vendor.payment_requests.all())
-        self.assertIn(req, self.project.payment_requests.all())
+        self.assertIn(req, getattr(self.vendor, "payment_requests").all())
+        self.assertIn(req, getattr(self.project, "payment_requests").all())
 
     def test_payment_request_references_vendor_without_project(self) -> None:
         req = PaymentRequest.objects.create(
@@ -64,7 +64,7 @@ class PaymentVendorProjectReferenceIntegrationTestCase(TestCase):
         )
         self.assertEqual(req.vendor, self.vendor)
         self.assertIsNone(req.project)
-        self.assertIn(req, self.vendor.payment_requests.all())
+        self.assertIn(req, getattr(self.vendor, "payment_requests").all())
 
     def test_payment_request_fails_with_inactive_vendor(self) -> None:
         with self.assertRaises(ValidationError) as ctx:

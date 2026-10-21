@@ -74,6 +74,54 @@ Backend:
 http://127.0.0.1:8000/
 ```
 
+The liveness/readiness endpoint is `GET /health/`. It returns `200` only when
+the configured database accepts a basic query.
+
+To run the containerized application locally, use the opt-in Compose profile:
+
+```bash
+docker compose --profile app up --build
+```
+
+The application container does not run migrations by default. Set
+`RUN_MIGRATIONS=true` only in a controlled release job, not on every
+application replica.
+
+### API and authentication
+
+The JSON API uses Django session authentication. Fetch `GET /api/accounts/csrf/`
+before mutating requests and send the returned token in `X-CSRFToken`. Login,
+logout, and the current identity are available at:
+
+- `POST /api/accounts/login/`
+- `POST /api/accounts/logout/`
+- `GET /api/accounts/me/`
+
+Payment request creation uses `POST /api/payments/`; submit with
+`POST /api/payments/<id>/submit/`. Approval decisions use
+`POST /api/approvals/<id>/decisions/` with `tier`, `decision`, and a required
+nonblank `reason` for rejections. Processing requires a unique
+`Idempotency-Key` header at `POST /api/payments/<id>/process/`; ambiguous
+attempts can be reconciled at
+`POST /api/payments/attempts/<id>/reconcile/`.
+
+Employees can create and view their own requests. Managers, finance officers,
+and administrators can view organization requests; finance officers and
+administrators process payments. Managers and administrators manage projects,
+while finance officers and administrators manage vendors. Invalid or stale
+state transitions return `400`; authentication failures return `401`,
+authorization failures `403`, missing resources `404`, and idempotency or
+uniqueness conflicts `409`.
+
+### Optional observability
+
+`SENTRY_DSN` enables Sentry in production with personal data disabled.
+`OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_SERVICE_NAME` are reserved for an
+OTLP-compatible tracing deployment; they are optional and are not required for
+tests. `DJANGO_LOG_LEVEL` and `PAYWISE_LOG_LEVEL` control console log levels.
+Logs and audit metadata must not contain credentials, cookies, tokens, or raw
+payment destination details.
+
 ### Useful Commands
 ```bash
 uv sync
