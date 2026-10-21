@@ -75,7 +75,8 @@ export default function ApprovalsPage() {
     );
   };
 
-  const handleRejectSubmit = (reason: string) => {
+  const handleRejectSubmit = (_reason: string) => {
+    void _reason;
     if (!rejectModalItem) return;
     setQueue((prev) =>
       prev.map((req) =>
