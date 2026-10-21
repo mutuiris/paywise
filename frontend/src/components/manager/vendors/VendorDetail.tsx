@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   FileText,
   CheckCircle2,
   User,
+  AlertCircle,
 } from 'lucide-react';
 import {
   MOCK_VENDORS,
@@ -22,6 +23,8 @@ import {
 } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
 import { SummaryCard } from '../dashboard/SummaryCard';
+import { VendorItem, PaymentRequestItem } from '@/types/manager';
+import { vendorService, paymentService } from '@/lib/api/services';
 
 export interface VendorDetailProps {
   vendorId: string;
@@ -29,8 +32,71 @@ export interface VendorDetailProps {
 }
 
 export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailProps) {
-  const vendor = MOCK_VENDORS.find((v) => v.id === vendorId) || MOCK_VENDORS[0];
-  const vendorRequests = INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === vendor.id);
+  const fallbackVendor = MOCK_VENDORS.find((v) => v.id === vendorId) || MOCK_VENDORS[0];
+  const fallbackRequests = INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === fallbackVendor.id);
+
+  const [vendor, setVendor] = useState<VendorItem>(fallbackVendor);
+  const [vendorRequests, setVendorRequests] = useState<PaymentRequestItem[]>(fallbackRequests);
+  const [usingFallback, setUsingFallback] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    Promise.allSettled([
+      vendorService.getVendor(vendorId),
+      paymentService.listRequests({ vendor: vendorId }),
+    ]).then(([vendorRes, requestsRes]) => {
+      if (ignore) return;
+
+      if (vendorRes.status === 'fulfilled' && vendorRes.value) {
+        const v = vendorRes.value;
+        setVendor({
+          id: v.id,
+          name: v.name,
+          service: v.service_category || 'Contractor',
+          contactName: v.name,
+          contactEmail: v.email,
+          contactPhone: v.phone_number,
+          payoutMethod: v.payment_details?.payout_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+          bankName: v.payment_details?.bank_name,
+          accountNumber: v.payment_details?.account_number || v.payment_details?.mpesa_number,
+          isActive: v.is_active,
+        });
+      }
+
+      if (requestsRes.status === 'fulfilled' && requestsRes.value?.results?.length) {
+        const mapped: PaymentRequestItem[] = requestsRes.value.results.map((r) => ({
+          id: r.id,
+          reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
+          vendorId: r.vendor_id,
+          vendorName: r.vendor_name || 'Designated Vendor',
+          amount: parseFloat(r.amount) || 0,
+          currency: 'KES',
+          invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
+          project: r.project_name || 'ImaraWorks Construction',
+          requesterId: r.requester_id || '',
+          requesterName: r.requester_username || 'Employee',
+          paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+          requestedPaymentDate: r.created_at || new Date().toISOString(),
+          notes: r.description || '',
+          reason: r.description,
+          status: r.status,
+          rejectionReason: r.rejection_reason || undefined,
+          createdAt: r.created_at || new Date().toISOString(),
+          updatedAt: r.updated_at || new Date().toISOString(),
+        }));
+        setVendorRequests(mapped);
+      }
+
+      setUsingFallback(false);
+    }).catch(() => {
+      if (ignore) return;
+      setUsingFallback(true);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [vendorId]);
 
   const totalPaid = vendorRequests
     .filter((r) => r.status === 'PAID')
@@ -51,6 +117,13 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
           <ArrowLeft className="size-3.5" />
           <span>Back to Vendors</span>
         </Link>
+
+        {usingFallback && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            <AlertCircle className="size-4 shrink-0 text-amber-600" />
+            <span>Showing cached demonstration vendor profile (Backend server unreachable).</span>
+          </div>
+        )}
 
         {/* Vendor Header Row */}
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
@@ -76,13 +149,15 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
             </p>
           </div>
 
-          <Link
-            href={`${basePath}/requests/new`}
-            className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
-          >
-            <Plus className="size-4" />
-            <span>New Payment to Vendor</span>
-          </Link>
+          {basePath !== '/finance' && basePath !== '/admin' && (
+            <Link
+              href={`${basePath}/requests/new`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
+            >
+              <Plus className="size-4" />
+              <span>New Payment to Vendor</span>
+            </Link>
+          )}
         </div>
       </div>
 

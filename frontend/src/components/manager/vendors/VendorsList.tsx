@@ -6,6 +6,8 @@ import {
   Search,
   Building2,
   Eye,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import {
   MOCK_VENDORS,
@@ -13,16 +15,87 @@ import {
   formatCurrency,
 } from '@/data/mock-manager-data';
 import { SummaryCard } from '../dashboard/SummaryCard';
+import { vendorService } from '@/lib/api/services';
+import { VendorItem } from '@/types/manager';
 
 export interface VendorsListProps {
   basePath?: string;
 }
 
 export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
+  const [vendors, setVendors] = useState<VendorItem[]>(MOCK_VENDORS);
+  const [loading, setLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
   const [search, setSearch] = useState('');
 
+  const fetchLiveVendors = React.useCallback(async (isRefresh = false) => {
+    if (isRefresh) setLoading(true);
+    try {
+      const res = await vendorService.listVendors();
+      if (res && res.vendors && res.vendors.length > 0) {
+        const mapped: VendorItem[] = res.vendors.map((v) => ({
+          id: v.id,
+          name: v.name,
+          service: v.service_category || 'Contractor',
+          contactName: v.name,
+          contactEmail: v.email,
+          contactPhone: v.phone_number,
+          payoutMethod: v.payment_details?.payout_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+          bankName: v.payment_details?.bank_name,
+          accountNumber: v.payment_details?.account_number || v.payment_details?.mpesa_number,
+          isActive: v.is_active,
+        }));
+        setVendors(mapped);
+        setUsingFallback(false);
+      } else {
+        setUsingFallback(true);
+      }
+    } catch {
+      setUsingFallback(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    let ignore = false;
+    vendorService
+      .listVendors()
+      .then((res) => {
+        if (ignore) return;
+        if (res && res.vendors && res.vendors.length > 0) {
+          const mapped: VendorItem[] = res.vendors.map((v) => ({
+            id: v.id,
+            name: v.name,
+            service: v.service_category || 'Contractor',
+            contactName: v.name,
+            contactEmail: v.email,
+            contactPhone: v.phone_number,
+            payoutMethod: v.payment_details?.payout_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+            bankName: v.payment_details?.bank_name,
+            accountNumber: v.payment_details?.account_number || v.payment_details?.mpesa_number,
+            isActive: v.is_active,
+          }));
+          setVendors(mapped);
+          setUsingFallback(false);
+        } else {
+          setUsingFallback(true);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setUsingFallback(true);
+        setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   // Calculate dynamic stats for each vendor
-  const vendorStats = MOCK_VENDORS.map((v) => {
+  const vendorStats = vendors.map((v) => {
     const vendorRequests = INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === v.id);
     const totalPaid = vendorRequests
       .filter((r) => r.status === 'PAID')
@@ -65,19 +138,35 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
             Approved suppliers and service contractors paid through PayWise.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => fetchLiveVendors(true)}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs"
+        >
+          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh Directory</span>
+        </button>
       </div>
+
+      {usingFallback && (
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
+          <AlertCircle className="size-4 shrink-0 text-muted-ink" />
+          <span>Backend vendors directory unseeded or offline. Displaying demonstration vendor catalogue.</span>
+        </div>
+      )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard
           label="Total Registered"
-          value={MOCK_VENDORS.length}
+          value={vendors.length}
           tone="neutral"
           hint="All onboarded suppliers"
         />
         <SummaryCard
           label="Total Active"
-          value={MOCK_VENDORS.filter((v) => v.isActive).length}
+          value={vendors.filter((v) => v.isActive).length}
           tone="brand"
           hint="Operational & approved"
         />

@@ -38,6 +38,7 @@ export interface PaymentRequestItem {
   requesterId: string;
   requesterName: string;
   status: PaymentStatus;
+  rejectionReason?: string;
   createdAt: string;
   submittedAt?: string;
   updatedAt: string;

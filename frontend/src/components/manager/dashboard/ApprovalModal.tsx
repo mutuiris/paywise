@@ -15,10 +15,12 @@ import {
 } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
 import {
+  CURRENT_MANAGER,
   formatCurrency,
   getApprovalRoute,
 } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
+import { getClientUser } from '@/lib/auth/session';
 
 interface ApprovalModalProps {
   request: PaymentRequestItem | null;
@@ -41,9 +43,17 @@ export function ApprovalModal({
 
   if (!isOpen || !request) return null;
 
+  const currentUser = getClientUser();
   const route = getApprovalRoute(request.amount);
+  const isSelfRequest = Boolean(
+    (currentUser && request.requesterId === currentUser.id) ||
+    (request.requesterName && currentUser?.name && request.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
+    request.requesterId === CURRENT_MANAGER.id ||
+    (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
+  );
 
   const handleApprove = () => {
+    if (isSelfRequest) return;
     onApprove(request.id);
     onClose();
   };
@@ -242,8 +252,10 @@ export function ApprovalModal({
             </button>
             <button
               type="button"
+              disabled={isSelfRequest}
               onClick={handleApprove}
-              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer shadow-sm transition-colors"
+              title={isSelfRequest ? 'Self-approval is prohibited' : undefined}
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="size-4" />
               <span>Approve Payment</span>
