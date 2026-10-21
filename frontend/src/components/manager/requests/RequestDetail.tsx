@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   ExternalLink,
+  AlertCircle,
 } from 'lucide-react';
 import {
   INITIAL_PAYMENT_REQUESTS,
@@ -23,6 +24,8 @@ import {
 } from '@/data/mock-manager-data';
 import { PaymentRequestItem } from '@/types/manager';
 import { StatusBadge } from '../common/StatusBadge';
+import { paymentService, approvalService } from '@/lib/api/services';
+import { getClientUser } from '@/lib/auth/session';
 
 export interface RequestDetailProps {
   requestId: string;
@@ -30,89 +33,108 @@ export interface RequestDetailProps {
 }
 
 export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetailProps) {
-  const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
+  const fallback = INITIAL_PAYMENT_REQUESTS.find((r) => r.id === requestId) || INITIAL_PAYMENT_REQUESTS[0];
+  const [request, setRequest] = useState<PaymentRequestItem>(fallback);
+  const [usingFallback, setUsingFallback] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
 
-  const request = requests.find((r) => r.id === requestId) || requests[0];
+  useEffect(() => {
+    let ignore = false;
+    paymentService
+      .getRequest(requestId)
+      .then((dto) => {
+        if (ignore) return;
+        if (dto) {
+          const mapped: PaymentRequestItem = {
+            id: dto.id,
+            reference: dto.invoice_number || `PR-${dto.id.slice(0, 6).toUpperCase()}`,
+            vendorId: dto.vendor_id,
+            vendorName: dto.vendor_name || 'Designated Vendor',
+            amount: parseFloat(dto.amount) || 0,
+            currency: dto.currency || 'KES',
+            invoiceNumber: dto.invoice_number || `INV-${dto.id.slice(0, 6).toUpperCase()}`,
+            project: dto.project_name || 'ImaraWorks Construction',
+            requesterId: dto.requester_id || '',
+            requesterName: dto.requester_username || 'Employee',
+            paymentMethod: dto.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+            requestedPaymentDate: dto.created_at || new Date().toISOString(),
+            notes: dto.supporting_notes || dto.description || '',
+            reason: dto.description || '',
+            status: dto.status,
+            rejectionReason: dto.rejection_reason || undefined,
+            createdAt: dto.created_at || new Date().toISOString(),
+            updatedAt: dto.updated_at || new Date().toISOString(),
+          };
+          setRequest(mapped);
+          setUsingFallback(false);
+        }
+      })
+      .catch(() => {
+        if (ignore) return;
+        setUsingFallback(true);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [requestId]);
+
+  const currentUser = getClientUser();
   const route = getApprovalRoute(request.amount);
   const isSelfRequest = Boolean(
     request && (
+      (currentUser && request.requesterId === currentUser.id) ||
+      (request.requesterName && currentUser?.name && request.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
       request.requesterId === CURRENT_MANAGER.id ||
       (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
     )
   );
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+  const showToast = (message: string, isError = false) => {
+    setToast({ message, isError });
+    setTimeout(() => setToast(null), 4000);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (isSelfRequest) return;
-    const nowIso = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) => {
-        if (r.id !== request.id) return r;
-        return {
-          ...r,
-          status: 'APPROVED',
-          updatedAt: nowIso,
-          approvals: [
-            ...(r.approvals || []).map((ap) =>
-              ap.type === 'MANAGER'
-                ? {
-                    ...ap,
-                    decision: 'APPROVED' as const,
-                    approverId: CURRENT_MANAGER.id,
-                    approverName: CURRENT_MANAGER.name,
-                    decidedAt: nowIso,
-                  }
-                : ap
-            ),
-          ],
-        };
-      })
-    );
-    showToast(`✓ Payment request ${request.reference} has been approved.`);
+    try {
+      await approvalService.approve(request.id);
+      setRequest((prev) => ({
+        ...prev,
+        status: 'APPROVED',
+        updatedAt: new Date().toISOString(),
+      }));
+      showToast(`✓ Payment request ${request.reference} has been approved.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Approval failed.';
+      showToast(msg, true);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectReason.trim()) {
       setErrorMsg('Please specify a rejection reason.');
       return;
     }
-    const nowIso = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) => {
-        if (r.id !== request.id) return r;
-        return {
-          ...r,
-          status: 'REJECTED',
-          updatedAt: nowIso,
-          approvals: [
-            ...(r.approvals || []).map((ap) =>
-              ap.type === 'MANAGER'
-                ? {
-                    ...ap,
-                    decision: 'REJECTED' as const,
-                    approverId: CURRENT_MANAGER.id,
-                    approverName: CURRENT_MANAGER.name,
-                    decidedAt: nowIso,
-                    reason: rejectReason.trim(),
-                  }
-                : ap
-            ),
-          ],
-        };
-      })
-    );
-    setRejecting(false);
-    setRejectReason('');
-    setErrorMsg('');
-    showToast(`Payment request ${request.reference} was rejected.`);
+    try {
+      await approvalService.reject(request.id, rejectReason.trim());
+      setRequest((prev) => ({
+        ...prev,
+        status: 'REJECTED',
+        updatedAt: new Date().toISOString(),
+        rejectionReason: rejectReason.trim(),
+      }));
+      setRejecting(false);
+      setRejectReason('');
+      setErrorMsg('');
+      showToast(`Payment request ${request.reference} was rejected.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Rejection failed.';
+      showToast(msg, true);
+    }
   };
 
   const managerApproval = request.approvals?.find((a) => a.type === 'MANAGER');
@@ -121,10 +143,27 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
   return (
     <div className="space-y-6 font-serif max-w-5xl mx-auto pb-12">
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-16 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-ok/30 bg-ok-light px-4 py-3 text-sm font-medium text-ok shadow-lg transition-all animate-in fade-in">
-          <CheckCircle2 className="size-4 shrink-0" />
-          <span>{toastMessage}</span>
+      {toast && (
+        <div
+          className={`fixed top-16 right-6 z-50 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm font-medium shadow-lg transition-all animate-in fade-in ${
+            toast.isError
+              ? 'border-err/30 bg-err-light text-err'
+              : 'border-ok/30 bg-ok-light text-ok'
+          }`}
+        >
+          {toast.isError ? (
+            <AlertCircle className="size-4 shrink-0" />
+          ) : (
+            <CheckCircle2 className="size-4 shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {usingFallback && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+          <AlertCircle className="size-4 shrink-0 text-amber-600" />
+          <span>Showing cached demonstration requisition (Backend server unreachable). Approvals run in local demonstration mode.</span>
         </div>
       )}
 

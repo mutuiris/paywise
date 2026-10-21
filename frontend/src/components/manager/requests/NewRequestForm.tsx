@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +11,8 @@ import {
   CreditCard,
   UploadCloud,
   FileText,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import {
   MOCK_VENDORS,
@@ -18,11 +20,14 @@ import {
   formatCurrency,
   getApprovalRoute,
 } from '@/data/mock-manager-data';
-import { PaymentMethod } from '@/types/manager';
+import { PaymentMethod, VendorItem } from '@/types/manager';
+import { vendorService, paymentService } from '@/lib/api/services';
 
 export function NewRequestForm() {
   const router = useRouter();
 
+  const [vendors, setVendors] = useState<VendorItem[]>(MOCK_VENDORS);
+  const [projects, setProjects] = useState<string[]>(MOCK_PROJECTS);
   const [vendorId, setVendorId] = useState('');
   const [amount, setAmount] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -32,15 +37,49 @@ export function NewRequestForm() {
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const selectedVendor = MOCK_VENDORS.find((v) => v.id === vendorId);
+  useEffect(() => {
+    let ignore = false;
+    Promise.allSettled([
+      vendorService.listVendors(),
+      vendorService.listProjects(),
+    ]).then(([vendorsRes, projectsRes]) => {
+      if (ignore) return;
+      if (vendorsRes.status === 'fulfilled' && vendorsRes.value?.vendors?.length) {
+        const mappedVendors: VendorItem[] = vendorsRes.value.vendors.map((v) => ({
+          id: v.id,
+          name: v.name,
+          service: v.service_category || 'Contractor',
+          contactName: v.name,
+          contactEmail: v.email,
+          contactPhone: v.phone_number,
+          payoutMethod: v.payment_details?.payout_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+          bankName: v.payment_details?.bank_name,
+          accountNumber: v.payment_details?.account_number || v.payment_details?.mpesa_number,
+          isActive: v.is_active,
+        }));
+        setVendors(mappedVendors);
+      }
+      if (projectsRes.status === 'fulfilled' && projectsRes.value?.projects?.length) {
+        setProjects(projectsRes.value.projects.map((p) => p.name));
+      }
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const selectedVendor = vendors.find((v) => v.id === vendorId);
   const numericAmount = parseFloat(amount) || 0;
   const route = getApprovalRoute(numericAmount);
 
   const handleVendorChange = (id: string) => {
     setVendorId(id);
-    const v = MOCK_VENDORS.find((item) => item.id === id);
+    const v = vendors.find((item) => item.id === id);
     if (v) {
       setPaymentMethod(v.payoutMethod);
     }
@@ -58,14 +97,35 @@ export function NewRequestForm() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    setSubmittedSuccess(true);
-    setTimeout(() => {
-      router.push('/manager/requests');
-    }, 1500);
+    setIsSubmitting(true);
+    setServerError(null);
+
+    try {
+      await paymentService.createRequest({
+        vendor_id: vendorId,
+        amount: numericAmount,
+        currency: 'KES',
+        invoice_number: invoiceNumber.trim(),
+        description: reason.trim(),
+        payment_method: paymentMethod === 'BANK_TRANSFER' ? 'BANK' : 'MPESA',
+        supporting_notes: notes.trim() || undefined,
+        project_name: project,
+      });
+
+      setSubmittedSuccess(true);
+      setTimeout(() => {
+        router.push('/manager/requests');
+      }, 1500);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to submit payment request to server.';
+      setServerError(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,6 +160,17 @@ export function NewRequestForm() {
         </div>
       )}
 
+      {/* Server Error Banner */}
+      {serverError && (
+        <div className="flex items-center gap-3 rounded-xl border border-err/30 bg-err-light p-4 text-err shadow-sm animate-in fade-in">
+          <AlertCircle className="size-5 shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">Submission Error</p>
+            <p className="text-xs text-err/90">{serverError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Main Form Card */}
       <form
         onSubmit={handleSubmit}
@@ -129,7 +200,7 @@ export function NewRequestForm() {
                 }`}
               >
                 <option value="">-- Choose registered vendor --</option>
-                {MOCK_VENDORS.map((v) => (
+                {vendors.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name} ({v.service})
                   </option>
@@ -276,7 +347,7 @@ export function NewRequestForm() {
                 }`}
               >
                 <option value="">-- Choose project site --</option>
-                {MOCK_PROJECTS.map((proj) => (
+                {projects.map((proj) => (
                   <option key={proj} value={proj}>
                     {proj}
                   </option>
@@ -394,11 +465,20 @@ export function NewRequestForm() {
           </Link>
           <button
             type="submit"
-            disabled={submittedSuccess}
+            disabled={submittedSuccess || isSubmitting}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-brand px-6 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-sm disabled:opacity-50"
           >
-            <CheckCircle2 className="size-4" />
-            <span>Submit Payment Request</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                <span>Submitting to Server…</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-4" />
+                <span>Submit Payment Request</span>
+              </>
+            )}
           </button>
         </div>
       </form>

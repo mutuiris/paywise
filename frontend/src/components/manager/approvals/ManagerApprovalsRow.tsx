@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, X, ShieldAlert } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
 import { CURRENT_MANAGER, formatCurrency, formatDate } from '@/data/mock-manager-data';
+import { getClientUser } from '@/lib/auth/session';
 
 interface ManagerApprovalsRowProps {
   req: PaymentRequestItem;
@@ -13,8 +14,11 @@ interface ManagerApprovalsRowProps {
 }
 
 export function ManagerApprovalsRow({ req, onApprove, onReject }: ManagerApprovalsRowProps) {
+  const currentUser = getClientUser();
   const isDual = req.amount > CURRENT_MANAGER.approvalLimit;
   const isSelf = Boolean(
+    (currentUser && req.requesterId === currentUser.id) ||
+    (req.requesterName && currentUser?.name && req.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
     req.requesterId === CURRENT_MANAGER.id ||
     (req.requesterName && req.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
   );
