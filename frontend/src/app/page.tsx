@@ -1,11 +1,12 @@
 import { Metadata } from 'next';
-import { SignInCard } from '@/components/auth/SignInCard';
+import { LandingPage } from '@/components/landing';
 
 export const metadata: Metadata = {
-  title: 'Sign in — ImaraPay',
-  description: 'Vendor payment requests, approvals and processing for ImaraWorks Ltd.',
+  title: 'PayWise — Vendor Payment & Approval Management System',
+  description:
+    'Vendor payment requests, dual-level approvals, and tracking in one clear, secure, and traceable workflow for ImaraWorks Ltd.',
 };
 
 export default function HomePage() {
-  return <SignInCard />;
+  return <LandingPage />;
 }

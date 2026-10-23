@@ -173,7 +173,7 @@ export function ManagerDashboard() {
       {/* 4-Card Summary Grid */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard
-          label="Awaiting My Approval"
+          label="Pending Approval"
           value={pendingRequests.length}
           tone="warn"
           hint="Needs your decision"

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { FinanceShell } from '@/components/finance';
 
 export const metadata: Metadata = {
-  title: 'Finance Portal — ImaraPay',
+  title: 'Finance Portal — PayWise',
   description:
     'Finance Officer portal for secondary payment approvals, disbursement execution, and reconciliation.',
 };

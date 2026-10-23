@@ -30,3 +30,5 @@ coverage.xml
 
 #implementation documents
 backend/docs/
+.vercel
+.env*
