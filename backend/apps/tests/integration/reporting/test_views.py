@@ -75,20 +75,17 @@ class ReportingViewsIntegrationTests(TestCase):
         self.by_project_url = reverse("reporting:projects-breakdown")
 
     def test_unauthenticated_requests_return_401(self) -> None:
-        """Unauthenticated access to any reporting endpoint returns 401."""
         for url in (self.summary_url, self.failed_url, self.by_project_url):
             res = self.client.get(url)
             self.assertEqual(res.status_code, 401)
 
     def test_employee_access_returns_403(self) -> None:
-        """Standard employees are forbidden from accessing financial reports."""
         self.client.force_login(self.employee)
         for url in (self.summary_url, self.failed_url, self.by_project_url):
             res = self.client.get(url)
             self.assertEqual(res.status_code, 403)
 
     def test_manager_and_finance_can_access_summary(self) -> None:
-        """Finance and Manager users receive 200 with aggregated metrics."""
         self.client.force_login(self.finance)
         res = self.client.get(self.summary_url)
         self.assertEqual(res.status_code, 200)
@@ -100,7 +97,6 @@ class ReportingViewsIntegrationTests(TestCase):
         self.assertEqual(data["failed_payment_amount"], "25000.00")
 
     def test_failed_payments_endpoint(self) -> None:
-        """Finance users can query failed payment records and reasons."""
         self.client.force_login(self.finance)
         res = self.client.get(self.failed_url)
         self.assertEqual(res.status_code, 200)
@@ -113,7 +109,6 @@ class ReportingViewsIntegrationTests(TestCase):
         )
 
     def test_projects_breakdown_endpoint(self) -> None:
-        """Managers can retrieve payments grouped by project."""
         self.client.force_login(self.manager)
         res = self.client.get(self.by_project_url)
         self.assertEqual(res.status_code, 200)
@@ -125,7 +120,6 @@ class ReportingViewsIntegrationTests(TestCase):
         self.assertEqual(proj["paid_amount"], "150000.00")
 
     def test_invalid_date_returns_400(self) -> None:
-        """Invalid date query parameter returns 400 Bad Request."""
         self.client.force_login(self.finance)
         for url in (self.summary_url, self.failed_url, self.by_project_url):
             res = self.client.get(url, {"date_from": "bad-date"})

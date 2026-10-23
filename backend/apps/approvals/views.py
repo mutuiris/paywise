@@ -42,6 +42,7 @@ def approval_to_dict(approval: Approval) -> dict[str, Any]:
         "tier": approval.tier,
         "decision": approval.decision,
         "reason": approval.reason,
+        "is_active": approval.is_active,
         "created_at": approval.created_at.isoformat() if approval.created_at else None,
     }
 

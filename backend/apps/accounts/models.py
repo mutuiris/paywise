@@ -32,7 +32,8 @@ class UserAccount(AbstractUser, TimeStampable):
         ordering = ("username",)
 
     def __str__(self) -> str:
-        return f"{self.username} ({self.get_role_display()})"
+        role_label = getattr(self, "get_role_display")()
+        return f"{self.username} ({role_label})"
 
     @property
     def is_employee(self) -> bool:

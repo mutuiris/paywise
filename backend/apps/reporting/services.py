@@ -30,13 +30,6 @@ def get_payment_activity_summary(
 
     Computes total paid amounts, requests awaiting approval, and failed payment
     totals across the organization.
-
-    Args:
-        date_from: Optional start date or ISO timestamp (inclusive).
-        date_to: Optional end date or ISO timestamp (inclusive).
-
-    Returns:
-        Dictionary containing aggregated KPI counts and sums.
     """
     start_boundary = parse_datetime_boundary(date_from, is_end_of_day=False)
     end_boundary = parse_datetime_boundary(date_to, is_end_of_day=True)
@@ -99,8 +92,56 @@ def get_payment_activity_summary(
             aggregates["total_requested_amount"]
         ),
         "period": {
-            "date_from": (start_boundary.isoformat() if start_boundary else None),
+            "date_from": start_boundary.isoformat() if start_boundary else None,
             "date_to": end_boundary.isoformat() if end_boundary else None,
+        },
+    }
+
+
+def get_payment_summary_report(
+    *,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+) -> dict[str, Any]:
+    """Calculate aggregated payment metrics across the organization."""
+    queryset = PaymentRequest.objects.all()
+    if start_date is not None:
+        queryset = queryset.filter(created_at__gte=start_date)
+    if end_date is not None:
+        queryset = queryset.filter(created_at__lt=end_date)
+
+    aggregates = queryset.aggregate(
+        total_paid=Sum(
+            "amount",
+            filter=Q(status=PaymentRequestStatus.PAID),
+            default=Decimal("0.00"),
+        ),
+        total_failed=Sum(
+            "amount",
+            filter=Q(status=PaymentRequestStatus.FAILED),
+            default=Decimal("0.00"),
+        ),
+    )
+
+    paid_count = queryset.filter(status=PaymentRequestStatus.PAID).count()
+    failed_count = queryset.filter(status=PaymentRequestStatus.FAILED).count()
+    awaiting_approval_count = queryset.filter(
+        status__in=(
+            PaymentRequestStatus.SUBMITTED,
+            PaymentRequestStatus.PENDING_APPROVAL,
+        )
+    ).count()
+
+    return {
+        "currency": "KES",
+        "total_paid": format_currency_amount(aggregates["total_paid"]),
+        "paid_count": paid_count,
+        "awaiting_approval_count": awaiting_approval_count,
+        "failed_count": failed_count,
+        "total_failed": format_currency_amount(aggregates["total_failed"]),
+        "period": {
+            "start_date": start_date.isoformat() if start_date else None,
+            "end_date": end_date.isoformat() if end_date else None,
         },
     }
 
@@ -111,17 +152,7 @@ def get_failed_payments_report(
     project_id: uuid.UUID | str | None = None,
     vendor_id: uuid.UUID | str | None = None,
 ) -> dict[str, Any]:
-    """Retrieve detailed failure records and root-cause reasons.
-
-    Args:
-        date_from: Optional start date or ISO timestamp.
-        date_to: Optional end date or ISO timestamp.
-        project_id: Optional project UUID filter.
-        vendor_id: Optional vendor UUID filter.
-
-    Returns:
-        Dictionary containing total failed amount, count, and detailed items.
-    """
+    """Retrieve detailed failure records and root-cause reasons."""
     start_boundary = parse_datetime_boundary(date_from, is_end_of_day=False)
     end_boundary = parse_datetime_boundary(date_to, is_end_of_day=True)
 
@@ -170,13 +201,13 @@ def get_failed_payments_report(
                 "vendor_name": req.vendor.name if req.vendor else None,
                 "project_id": str(req.project_id) if req.project_id else None,
                 "project_name": req.project.name if req.project else None,
-                "requester_id": (str(req.requester_id) if req.requester_id else None),
+                "requester_id": str(req.requester_id) if req.requester_id else None,
                 "requester_username": (
                     req.requester.username if req.requester else None
                 ),
                 "payment_method": req.payment_method,
                 "failure_reason": reason,
-                "created_at": (req.created_at.isoformat() if req.created_at else None),
+                "created_at": req.created_at.isoformat() if req.created_at else None,
             }
         )
 
@@ -187,7 +218,7 @@ def get_failed_payments_report(
         "total_failed_count": aggregates["total_failed_count"],
         "results": items,
         "period": {
-            "date_from": (start_boundary.isoformat() if start_boundary else None),
+            "date_from": start_boundary.isoformat() if start_boundary else None,
             "date_to": end_boundary.isoformat() if end_boundary else None,
         },
     }
@@ -197,15 +228,7 @@ def get_payments_by_project_report(
     date_from: str | datetime | date | None = None,
     date_to: str | datetime | date | None = None,
 ) -> dict[str, Any]:
-    """Group payment requests by project/department and calculate totals.
-
-    Args:
-        date_from: Optional start date or ISO timestamp.
-        date_to: Optional end date or ISO timestamp.
-
-    Returns:
-        Dictionary containing project-grouped metrics and period context.
-    """
+    """Group payment requests by project/department and calculate totals."""
     start_boundary = parse_datetime_boundary(date_from, is_end_of_day=False)
     end_boundary = parse_datetime_boundary(date_to, is_end_of_day=True)
 
@@ -266,12 +289,18 @@ def get_payments_by_project_report(
                 "project_name": p.name,
                 "project_code": p.code,
                 "department": p.department,
-                "total_amount": format_currency_amount(p.total_amount),
-                "paid_amount": format_currency_amount(p.paid_amount),
-                "pending_amount": format_currency_amount(p.pending_amount),
-                "total_count": p.total_count,
-                "paid_count": p.paid_count,
-                "pending_count": p.pending_count,
+                "total_amount": format_currency_amount(
+                    getattr(p, "total_amount", Decimal("0.00"))
+                ),
+                "paid_amount": format_currency_amount(
+                    getattr(p, "paid_amount", Decimal("0.00"))
+                ),
+                "pending_amount": format_currency_amount(
+                    getattr(p, "pending_amount", Decimal("0.00"))
+                ),
+                "total_count": getattr(p, "total_count", 0),
+                "paid_count": getattr(p, "paid_count", 0),
+                "pending_count": getattr(p, "pending_count", 0),
             }
         )
 
@@ -279,7 +308,75 @@ def get_payments_by_project_report(
         "count": len(results),
         "results": results,
         "period": {
-            "date_from": (start_boundary.isoformat() if start_boundary else None),
+            "date_from": start_boundary.isoformat() if start_boundary else None,
             "date_to": end_boundary.isoformat() if end_boundary else None,
         },
     }
+
+
+def get_project_breakdown_report(
+    *,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+) -> list[dict[str, Any]]:
+    """Generate payment activity totals broken down by project."""
+    req_filter = Q()
+    if start_date is not None:
+        req_filter &= Q(payment_requests__created_at__gte=start_date)
+    if end_date is not None:
+        req_filter &= Q(payment_requests__created_at__lt=end_date)
+
+    projects_qs = Project.objects.annotate(
+        paid_amount=Sum(
+            "payment_requests__amount",
+            filter=req_filter & Q(payment_requests__status=PaymentRequestStatus.PAID),
+            default=Decimal("0.00"),
+        ),
+        request_count=Count(
+            "payment_requests",
+            filter=req_filter,
+        ),
+    ).order_by("name")
+
+    results: list[dict[str, Any]] = [
+        {
+            "project_id": str(p.id),
+            "name": p.name,
+            "code": p.code,
+            "department": p.department,
+            "total_paid": format_currency_amount(
+                getattr(p, "paid_amount", Decimal("0.00"))
+            ),
+            "request_count": getattr(p, "request_count", 0),
+        }
+        for p in projects_qs
+    ]
+
+    unassigned_qs = PaymentRequest.objects.filter(project__isnull=True)
+    if start_date is not None:
+        unassigned_qs = unassigned_qs.filter(created_at__gte=start_date)
+    if end_date is not None:
+        unassigned_qs = unassigned_qs.filter(created_at__lt=end_date)
+
+    unassigned_agg = unassigned_qs.aggregate(
+        paid_amount=Sum(
+            "amount",
+            filter=Q(status=PaymentRequestStatus.PAID),
+            default=Decimal("0.00"),
+        ),
+        request_count=Count("id"),
+    )
+
+    if unassigned_agg["request_count"] > 0:
+        results.append(
+            {
+                "project_id": None,
+                "name": "General Operations (No Project)",
+                "code": None,
+                "department": "",
+                "total_paid": format_currency_amount(unassigned_agg["paid_amount"]),
+                "request_count": unassigned_agg["request_count"],
+            }
+        )
+
+    return results

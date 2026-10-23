@@ -1,12 +1,12 @@
 """URL configuration for the approvals domain API endpoints."""
 
-from django.urls import path
+from django.urls import URLPattern, path
 
 from apps.approvals import views
 
 app_name = "approvals"
 
-urlpatterns = [
+urlpatterns: list[URLPattern] = [
     path("queue/", views.approval_queue_view, name="approval-queue"),
     path(
         "<uuid:payment_request_id>/",

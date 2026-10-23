@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from django.urls import path
+from django.urls import URLPattern, path
 
 from apps.vendors import views
 
 app_name = "vendors"
 
-urlpatterns: list[path] = [
+urlpatterns: list[URLPattern] = [
     path("", views.vendor_list_create_view, name="vendor-list-create"),
     path(
         "<uuid:vendor_id>/",
