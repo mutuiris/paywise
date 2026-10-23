@@ -18,7 +18,7 @@ export function FinanceDashboardStats({
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <SummaryCard
-        label="Awaiting Finance Approval"
+        label="Pending Approval"
         value="2"
         tone="warn"
         onClick={() => router.push('/finance/approvals')}
@@ -33,7 +33,6 @@ export function FinanceDashboardStats({
         label="Processing"
         value="1"
         tone="warn"
-        hint="Includes unconfirmed"
         onClick={() => router.push('/finance/reconciliation')}
       />
       <SummaryCard

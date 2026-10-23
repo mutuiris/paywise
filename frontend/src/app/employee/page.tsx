@@ -90,7 +90,7 @@ function EmployeeDashboardContent() {
       {/* Metric Cards Row */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-          <p className="text-xs font-medium text-gray-900">Awaiting Finance Approval</p>
+          <p className="text-xs font-medium text-gray-900">Pending Approval</p>
           <p className="text-2xl font-bold text-gray-900 mt-3">2</p>
         </div>
 
@@ -102,7 +102,6 @@ function EmployeeDashboardContent() {
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
           <p className="text-xs font-medium text-gray-900">Processing</p>
           <p className="text-2xl font-bold text-gray-900 mt-3">1</p>
-          <p className="text-[11px] text-amber-600 mt-1 font-medium">Includes unconfirmed</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">

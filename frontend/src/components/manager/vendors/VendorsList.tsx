@@ -73,25 +73,21 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
           label="Total Registered"
           value={MOCK_VENDORS.length}
           tone="neutral"
-          hint="All onboarded suppliers"
         />
         <SummaryCard
           label="Total Active"
           value={MOCK_VENDORS.filter((v) => v.isActive).length}
           tone="brand"
-          hint="Operational & approved"
         />
         <SummaryCard
           label="Total Disbursed"
           value={formatCurrency(totalCumulativePaid)}
           tone="ok"
-          hint="Completed settlements"
         />
         <SummaryCard
           label="Total Requisitions"
           value={INITIAL_PAYMENT_REQUESTS.length}
           tone="warn"
-          hint="Across all vendors"
         />
       </div>
 
