@@ -54,34 +54,28 @@ export function NewRequestForm({
     ]).then(([vendorsRes, projectsRes]) => {
       if (ignore) return;
       if (vendorsRes.status === 'fulfilled' && vendorsRes.value) {
-        const rawList = Array.isArray(vendorsRes.value)
-          ? vendorsRes.value
-          : (vendorsRes.value as any)?.vendors || [];
+        const rawList = vendorsRes.value;
         if (rawList.length > 0) {
-          const mappedVendors: VendorItem[] = rawList.map((v: any) => {
-            const pd = v.payment_details || {};
-            return {
-              id: v.id,
-              name: v.name,
-              service: v.service || v.service_category || 'Contractor',
-              contactName: v.contactName || v.name,
-              contactEmail: v.contactEmail || v.email || '',
-              contactPhone: v.contactPhone || v.phone_number || '',
-              payoutMethod: (v.payoutMethod || pd.payout_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-              bankName: v.bankName || pd.bank_name,
-              accountNumber: v.accountNumber || pd.account_number || pd.mpesa_number,
-              isActive: v.isActive ?? v.is_active ?? true,
-            };
-          });
+          const mappedVendors: VendorItem[] = rawList.map((v) => ({
+            id: v.id,
+            name: v.name,
+            service: v.service,
+            contactName: v.contactName,
+            contactEmail: v.contactEmail,
+            contactPhone: v.contactPhone,
+            payoutMethod: v.payoutMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+            bankName: v.bankName,
+            accountNumber: v.accountNumber,
+            isActive: v.isActive,
+            createdAt: v.createdAt,
+          }));
           setVendors(mappedVendors);
         }
       }
       if (projectsRes.status === 'fulfilled' && projectsRes.value) {
-        const rawProjects = Array.isArray(projectsRes.value)
-          ? projectsRes.value
-          : (projectsRes.value as any)?.projects || [];
+        const rawProjects = projectsRes.value;
         if (rawProjects.length > 0) {
-          setProjects(rawProjects.map((p: any) => p.name || p));
+          setProjects(rawProjects.map((p) => p.name));
         }
       }
     });
@@ -97,7 +91,7 @@ export function NewRequestForm({
     setVendorId(id);
     const v = vendors.find((item) => item.id === id);
     if (v) {
-      setPaymentMethod(v.payoutMethod as PaymentMethod);
+      setPaymentMethod(v.payoutMethod);
     }
   };
 

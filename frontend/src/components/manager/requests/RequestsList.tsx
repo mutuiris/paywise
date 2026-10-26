@@ -6,6 +6,7 @@ import { Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
 import { INITIAL_PAYMENT_REQUESTS } from '@/data/mock-manager-data';
 import { paymentService } from '@/lib/api/services';
+import { PaymentRequest } from '@/lib/api/types';
 import { RequestFilterBar } from './RequestFilterBar';
 import { RequestsTable } from './RequestsTable';
 
@@ -15,7 +16,7 @@ export interface RequestsListProps {
 
 export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) {
   const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -24,33 +25,36 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
+  const mapRequest = useCallback((r: PaymentRequest | Record<string, unknown>): PaymentRequestItem => {
+    const raw = r as Record<string, unknown>;
+    return {
+      id: String(raw.id || ''),
+      reference: String(raw.reference || raw.invoice_number || (raw.id ? `PR-${String(raw.id).slice(0, 6).toUpperCase()}` : 'PR-REQ')),
+      vendorId: String(raw.vendorId || raw.vendor_id || ''),
+      vendorName: String(raw.vendorName || raw.vendor_name || 'Designated Vendor'),
+      amount: typeof raw.amount === 'number' ? raw.amount : parseFloat(String(raw.amount)) || 0,
+      currency: 'KES',
+      invoiceNumber: String(raw.invoiceNumber || raw.invoice_number || (raw.id ? `INV-${String(raw.id).slice(0, 6).toUpperCase()}` : 'INV-REQ')),
+      project: String(raw.project || raw.project_name || 'ImaraWorks Construction'),
+      requesterId: String(raw.requesterId || raw.requester_id || ''),
+      requesterName: String(raw.requesterName || raw.requester_username || 'Employee'),
+      paymentMethod: (raw.paymentMethod || raw.payment_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+      requestedPaymentDate: String(raw.createdAt || raw.created_at || new Date().toISOString()),
+      notes: String(raw.notes || raw.description || ''),
+      reason: String(raw.reason || raw.description || ''),
+      status: (raw.status as PaymentRequestItem['status']) || 'DRAFT',
+      rejectionReason: typeof raw.rejectionReason === 'string' ? raw.rejectionReason : typeof raw.rejection_reason === 'string' ? raw.rejection_reason : undefined,
+      createdAt: String(raw.createdAt || raw.created_at || new Date().toISOString()),
+      updatedAt: String(raw.updatedAt || raw.updated_at || new Date().toISOString()),
+    };
+  }, []);
+
   const fetchLiveRequests = useCallback(async (isRefresh = false) => {
     if (isRefresh) setLoading(true);
     try {
       const res = await paymentService.listRequests();
-      const list = Array.isArray(res) ? res : (res as any)?.results;
-      if (list && list.length > 0) {
-        const mapped: PaymentRequestItem[] = list.map((r: any) => ({
-          id: r.id,
-          reference: r.reference || r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
-          vendorId: r.vendorId || r.vendor_id,
-          vendorName: r.vendorName || r.vendor_name || 'Designated Vendor',
-          amount: typeof r.amount === 'number' ? r.amount : parseFloat(r.amount) || 0,
-          currency: 'KES',
-          invoiceNumber: r.invoiceNumber || r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
-          project: r.project || r.project_name || 'ImaraWorks Construction',
-          requesterId: r.requesterId || r.requester_id || '',
-          requesterName: r.requesterName || r.requester_username || 'Employee',
-          paymentMethod: (r.paymentMethod || r.payment_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-          requestedPaymentDate: r.createdAt || r.created_at || new Date().toISOString(),
-          notes: r.notes || r.description || '',
-          reason: r.reason || r.description || '',
-          status: r.status,
-          rejectionReason: r.rejectionReason || r.rejection_reason || undefined,
-          createdAt: r.createdAt || r.created_at || new Date().toISOString(),
-          updatedAt: r.updatedAt || r.updated_at || new Date().toISOString(),
-        }));
-        setRequests(mapped);
+      if (res && res.length > 0) {
+        setRequests(res.map(mapRequest));
         setUsingFallback(false);
       } else {
         setUsingFallback(true);
@@ -60,11 +64,30 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mapRequest]);
 
   useEffect(() => {
-    fetchLiveRequests();
-  }, [fetchLiveRequests]);
+    let ignore = false;
+    paymentService
+      .listRequests()
+      .then((res) => {
+        if (ignore) return;
+        if (res && res.length > 0) {
+          setRequests(res.map(mapRequest));
+          setUsingFallback(false);
+        } else {
+          setUsingFallback(true);
+        }
+      })
+      .catch(() => {
+        if (ignore) return;
+        setUsingFallback(true);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [mapRequest]);
 
   // Filtering
   const filtered = requests.filter((r) => {

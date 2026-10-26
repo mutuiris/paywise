@@ -8,6 +8,7 @@ import {
 } from '@/data/mock-manager-data';
 import { VendorItem } from '@/types/manager';
 import { vendorService } from '@/lib/api/services';
+import { Vendor } from '@/lib/api/types';
 import { VendorsOverviewStats } from './VendorsOverviewStats';
 import { VendorsTable, VendorWithStats } from './VendorsTable';
 
@@ -17,33 +18,41 @@ export interface VendorsListProps {
 
 export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
   const [vendors, setVendors] = useState<VendorItem[]>(MOCK_VENDORS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
   const [search, setSearch] = useState('');
+
+  const mapVendor = useCallback((v: Vendor | Record<string, unknown>): VendorItem => {
+    const raw = v as Record<string, unknown>;
+    const pd = (typeof raw.payment_details === 'object' && raw.payment_details ? raw.payment_details : {}) as Record<string, unknown>;
+    return {
+      id: String(raw.id || ''),
+      name: String(raw.name || ''),
+      service: String(raw.service || raw.service_category || 'Contractor'),
+      contactName: String(raw.contactName || raw.name || ''),
+      contactEmail: String(raw.contactEmail || raw.email || ''),
+      contactPhone: String(raw.contactPhone || raw.phone_number || ''),
+      payoutMethod: (raw.payoutMethod || pd.payout_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+      bankName: typeof raw.bankName === 'string' ? raw.bankName : typeof pd.bank_name === 'string' ? pd.bank_name : undefined,
+      accountNumber:
+        typeof raw.accountNumber === 'string'
+          ? raw.accountNumber
+          : typeof pd.account_number === 'string'
+          ? pd.account_number
+          : typeof pd.mpesa_number === 'string'
+          ? pd.mpesa_number
+          : undefined,
+      isActive: Boolean(raw.isActive ?? raw.is_active ?? true),
+      createdAt: String(raw.createdAt || raw.created_at || new Date().toISOString()),
+    };
+  }, []);
 
   const fetchLiveVendors = useCallback(async (isRefresh = false) => {
     if (isRefresh) setLoading(true);
     try {
       const res = await vendorService.listVendors();
-      const list = Array.isArray(res) ? res : (res as any)?.vendors;
-      if (list && list.length > 0) {
-        const mapped: VendorItem[] = list.map((v: any) => {
-          const pd = v.payment_details || {};
-          return {
-            id: v.id,
-            name: v.name,
-            service: v.service || v.service_category || 'Contractor',
-            contactName: v.contactName || v.name,
-            contactEmail: v.contactEmail || v.email || '',
-            contactPhone: v.contactPhone || v.phone_number || '',
-            payoutMethod: (v.payoutMethod || pd.payout_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-            bankName: v.bankName || pd.bank_name,
-            accountNumber: v.accountNumber || pd.account_number || pd.mpesa_number,
-            isActive: v.isActive ?? v.is_active ?? true,
-            createdAt: v.createdAt || v.created_at || new Date().toISOString(),
-          };
-        });
-        setVendors(mapped);
+      if (res && res.length > 0) {
+        setVendors(res.map(mapVendor));
         setUsingFallback(false);
       } else {
         setUsingFallback(true);
@@ -53,11 +62,30 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mapVendor]);
 
   useEffect(() => {
-    fetchLiveVendors();
-  }, [fetchLiveVendors]);
+    let ignore = false;
+    vendorService
+      .listVendors()
+      .then((res) => {
+        if (ignore) return;
+        if (res && res.length > 0) {
+          setVendors(res.map(mapVendor));
+          setUsingFallback(false);
+        } else {
+          setUsingFallback(true);
+        }
+      })
+      .catch(() => {
+        if (ignore) return;
+        setUsingFallback(true);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [mapVendor]);
 
   // Calculate dynamic stats for each vendor
   const vendorStats: VendorWithStats[] = vendors.map((v) => {

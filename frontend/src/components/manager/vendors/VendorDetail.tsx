@@ -26,11 +26,9 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
     INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === fallbackVendor.id)
   );
   const [usingFallback, setUsingFallback] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let ignore = false;
-    setLoading(true);
 
     Promise.allSettled([
       vendorService.getVendor(vendorId),
@@ -41,23 +39,20 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
         let foundLiveVendor = false;
 
         if (vRes.status === 'fulfilled' && vRes.value) {
-          const raw: any = (vRes.value as any)?.vendor || vRes.value;
-          if (raw && (raw.id || raw.name)) {
-            const pd = raw.payment_details || {};
+          const v = vRes.value;
+          if (v && (v.id || v.name)) {
             const mappedVendor: VendorItem = {
-              id: raw.id || vendorId,
-              name: raw.name,
-              service: raw.service || raw.service_category || 'Contractor',
-              contactName: raw.contactName || raw.name,
-              contactEmail: raw.contactEmail || raw.email || '',
-              contactPhone: raw.contactPhone || raw.phone_number || '',
-              payoutMethod:
-                (raw.payoutMethod || pd.payout_method) === 'BANK' ? 'BANK' : 'MPESA',
-              bankName: raw.bankName || pd.bank_name || undefined,
-              accountNumber:
-                raw.accountNumber || pd.account_number || pd.mpesa_number || undefined,
-              isActive: raw.isActive ?? raw.is_active ?? true,
-              createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
+              id: v.id || vendorId,
+              name: v.name,
+              service: v.service,
+              contactName: v.contactName,
+              contactEmail: v.contactEmail,
+              contactPhone: v.contactPhone,
+              payoutMethod: v.payoutMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+              bankName: v.bankName,
+              accountNumber: v.accountNumber,
+              isActive: v.isActive,
+              createdAt: v.createdAt,
             };
             setVendor(mappedVendor);
             foundLiveVendor = true;
@@ -65,47 +60,43 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
         }
 
         if (pRes.status === 'fulfilled' && pRes.value) {
-          const list: any[] = Array.isArray(pRes.value)
-            ? pRes.value
-            : (pRes.value as any)?.results || [];
+          const list = pRes.value;
           if (list.length > 0) {
-            const mappedRequests: PaymentRequestItem[] = list.map((r: any) => ({
+            const mappedRequests: PaymentRequestItem[] = list.map((r) => ({
               id: r.id,
-              reference: r.reference || r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
-              vendorId: r.vendorId || r.vendor_id,
-              vendorName: r.vendorName || r.vendor_name || fallbackVendor.name,
-              amount: typeof r.amount === 'number' ? r.amount : parseFloat(r.amount) || 0,
+              reference: r.reference,
+              vendorId: r.vendorId,
+              vendorName: r.vendorName || fallbackVendor.name,
+              amount: r.amount,
               currency: 'KES',
-              invoiceNumber: r.invoiceNumber || r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
-              project: r.project || r.project_name || 'ImaraWorks Construction',
-              requesterId: r.requesterId || r.requester_id || '',
-              requesterName: r.requesterName || r.requester_username || 'Employee',
-              paymentMethod: (r.paymentMethod || r.payment_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-              requestedPaymentDate: r.createdAt || r.created_at || new Date().toISOString(),
-              notes: r.notes || r.description || '',
-              reason: r.reason || r.description || '',
+              invoiceNumber: r.invoiceNumber,
+              project: r.project,
+              requesterId: r.requesterId,
+              requesterName: r.requesterName,
+              paymentMethod: r.paymentMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+              requestedPaymentDate: r.createdAt,
+              notes: r.notes || '',
+              reason: r.reason,
               status: r.status,
-              rejectionReason: r.rejectionReason || r.rejection_reason || undefined,
-              createdAt: r.createdAt || r.created_at || new Date().toISOString(),
-              updatedAt: r.updatedAt || r.updated_at || new Date().toISOString(),
+              rejectionReason: r.rejectionReason,
+              createdAt: r.createdAt,
+              updatedAt: r.updatedAt,
             }));
             setVendorRequests(mappedRequests);
           }
         }
 
         setUsingFallback(!foundLiveVendor);
-        setLoading(false);
       })
       .catch(() => {
         if (ignore) return;
         setUsingFallback(true);
-        setLoading(false);
       });
 
     return () => {
       ignore = true;
     };
-  }, [vendorId]);
+  }, [vendorId, fallbackVendor.name]);
 
   const totalPaid = vendorRequests
     .filter((r) => r.status === 'PAID')
