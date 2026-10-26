@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   INITIAL_PAYMENT_REQUESTS,
   CURRENT_MANAGER,
@@ -10,6 +10,8 @@ import {
 } from '@/data/mock-manager-data';
 import { PaymentRequestItem } from '@/types/manager';
 import { StatusBadge } from '../common/StatusBadge';
+import { paymentService, approvalService } from '@/lib/api/services';
+import { getClientUser } from '@/lib/auth/session';
 import { RequestHighlightCards } from './RequestHighlightCards';
 import { RequisitionDetailsCard } from './RequisitionDetailsCard';
 import { ApprovalActionCard } from './ApprovalActionCard';
@@ -22,87 +24,112 @@ export interface RequestDetailProps {
 }
 
 export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetailProps) {
-  const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const fallback = INITIAL_PAYMENT_REQUESTS.find((r) => r.id === requestId) || INITIAL_PAYMENT_REQUESTS[0];
+  const [request, setRequest] = useState<PaymentRequestItem>(fallback);
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
 
-  const request = requests.find((r) => r.id === requestId) || requests[0];
+  useEffect(() => {
+    let ignore = false;
+    paymentService
+      .getRequest(requestId)
+      .then((dto) => {
+        if (ignore) return;
+        if (dto) {
+          const mapped: PaymentRequestItem = {
+            id: dto.id,
+            reference: dto.invoice_number || `PR-${dto.id.slice(0, 6).toUpperCase()}`,
+            vendorId: dto.vendor_id,
+            vendorName: dto.vendor_name || 'Designated Vendor',
+            amount: parseFloat(dto.amount) || 0,
+            currency: dto.currency || 'KES',
+            invoiceNumber: dto.invoice_number || `INV-${dto.id.slice(0, 6).toUpperCase()}`,
+            project: dto.project_name || 'ImaraWorks Construction',
+            requesterId: dto.requester_id || '',
+            requesterName: dto.requester_username || 'Employee',
+            paymentMethod: dto.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+            requestedPaymentDate: dto.created_at || new Date().toISOString(),
+            notes: dto.supporting_notes || dto.description || '',
+            reason: dto.description || '',
+            status: dto.status,
+            rejectionReason: dto.rejection_reason || undefined,
+            createdAt: dto.created_at || new Date().toISOString(),
+            updatedAt: dto.updated_at || new Date().toISOString(),
+          };
+          setRequest(mapped);
+          setUsingFallback(false);
+        }
+      })
+      .catch(() => {
+        if (ignore) return;
+        setUsingFallback(true);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [requestId]);
+
+  const currentUser = getClientUser();
   const isSelfRequest = Boolean(
     request && (
+      (currentUser && request.requesterId === currentUser.id) ||
+      (request.requesterName && currentUser?.name && request.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
       request.requesterId === CURRENT_MANAGER.id ||
       (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
     )
   );
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+  const showToast = (message: string, isError = false) => {
+    setToast({ message, isError });
+    setTimeout(() => setToast(null), 4000);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (isSelfRequest) return;
-    const nowIso = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) => {
-        if (r.id !== request.id) return r;
-        return {
-          ...r,
-          status: 'APPROVED',
-          updatedAt: nowIso,
-          approvals: [
-            ...(r.approvals || []).map((ap) =>
-              ap.type === 'MANAGER'
-                ? {
-                    ...ap,
-                    decision: 'APPROVED' as const,
-                    approverId: CURRENT_MANAGER.id,
-                    approverName: CURRENT_MANAGER.name,
-                    decidedAt: nowIso,
-                  }
-                : ap
-            ),
-          ],
-        };
-      })
-    );
-    showToast(`✓ Payment request ${request.reference} has been approved.`);
+    try {
+      await approvalService.approve(request.id);
+      setRequest((prev) => ({
+        ...prev,
+        status: 'APPROVED',
+        updatedAt: new Date().toISOString(),
+      }));
+      showToast(`✓ Payment request ${request.reference} has been approved.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Approval failed.';
+      showToast(msg, true);
+    }
   };
 
-  const handleReject = (reason: string) => {
-    const nowIso = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) => {
-        if (r.id !== request.id) return r;
-        return {
-          ...r,
-          status: 'REJECTED',
-          updatedAt: nowIso,
-          approvals: [
-            ...(r.approvals || []).map((ap) =>
-              ap.type === 'MANAGER'
-                ? {
-                    ...ap,
-                    decision: 'REJECTED' as const,
-                    approverId: CURRENT_MANAGER.id,
-                    approverName: CURRENT_MANAGER.name,
-                    decidedAt: nowIso,
-                    reason,
-                  }
-                : ap
-            ),
-          ],
-        };
-      })
-    );
-    showToast(`Payment request ${request.reference} was rejected.`);
+  const handleReject = async (reason: string) => {
+    try {
+      await approvalService.reject(request.id, reason);
+      setRequest((prev) => ({
+        ...prev,
+        status: 'REJECTED',
+        updatedAt: new Date().toISOString(),
+        rejectionReason: reason,
+      }));
+      showToast(`Payment request ${request.reference} was rejected.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Rejection failed.';
+      showToast(msg, true);
+    }
   };
 
   return (
     <div className="space-y-6 font-serif max-w-5xl mx-auto pb-12">
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-16 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-ok/30 bg-ok-light px-4 py-3 text-sm font-medium text-ok shadow-lg transition-all animate-in fade-in">
+      {toast && (
+        <div
+          className={`fixed top-16 right-6 z-50 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm font-medium shadow-lg transition-all animate-in fade-in ${
+            toast.isError
+              ? 'border-err/30 bg-err-light text-err'
+              : 'border-ok/30 bg-ok-light text-ok'
+          }`}
+        >
           <CheckCircle2 className="size-4 shrink-0" />
-          <span>{toastMessage}</span>
+          <span>{toast.message}</span>
         </div>
       )}
 
@@ -131,6 +158,13 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
           </div>
         </div>
       </div>
+
+      {usingFallback && (
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
+          <AlertCircle className="size-4 shrink-0 text-muted-ink" />
+          <span>Backend payments endpoint offline. Displaying local data.</span>
+        </div>
+      )}
 
       {/* Top Highlight Cards */}
       <RequestHighlightCards request={request} />

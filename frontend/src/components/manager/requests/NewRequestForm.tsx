@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { MOCK_VENDORS } from '@/data/mock-manager-data';
-import { PaymentMethod } from '@/types/manager';
+import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { MOCK_VENDORS, MOCK_PROJECTS } from '@/data/mock-manager-data';
+import { PaymentMethod, VendorItem } from '@/types/manager';
+import { vendorService, paymentService } from '@/lib/api/services';
 import { VendorInvoicingSection } from './VendorInvoicingSection';
 import { AmountRoutingSection } from './AmountRoutingSection';
 import { ProjectSettlementSection } from './ProjectSettlementSection';
@@ -30,59 +31,136 @@ export function NewRequestForm({
   const effectiveBackHref = backHref || `${basePath}/requests`;
   const effectiveRedirectHref = redirectHref || `${basePath}/requests`;
 
+  const [vendors, setVendors] = useState<VendorItem[]>(MOCK_VENDORS);
+  const [projects, setProjects] = useState<string[]>(MOCK_PROJECTS);
   const [vendorId, setVendorId] = useState('');
   const [amount, setAmount] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [project, setProject] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MPESA');
-  const [requestedDate, setRequestedDate] = useState('2026-10-15');
+  const [requestedDate, setRequestedDate] = useState(new Date().toISOString().split('T')[0]);
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let ignore = false;
+    Promise.allSettled([
+      vendorService.listVendors(),
+      vendorService.listProjects(),
+    ]).then(([vendorsRes, projectsRes]) => {
+      if (ignore) return;
+      if (vendorsRes.status === 'fulfilled' && vendorsRes.value) {
+        const rawList = Array.isArray(vendorsRes.value)
+          ? vendorsRes.value
+          : (vendorsRes.value as any)?.vendors || [];
+        if (rawList.length > 0) {
+          const mappedVendors: VendorItem[] = rawList.map((v: any) => {
+            const pd = v.payment_details || {};
+            return {
+              id: v.id,
+              name: v.name,
+              service: v.service || v.service_category || 'Contractor',
+              contactName: v.contactName || v.name,
+              contactEmail: v.contactEmail || v.email || '',
+              contactPhone: v.contactPhone || v.phone_number || '',
+              payoutMethod: (v.payoutMethod || pd.payout_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+              bankName: v.bankName || pd.bank_name,
+              accountNumber: v.accountNumber || pd.account_number || pd.mpesa_number,
+              isActive: v.isActive ?? v.is_active ?? true,
+            };
+          });
+          setVendors(mappedVendors);
+        }
+      }
+      if (projectsRes.status === 'fulfilled' && projectsRes.value) {
+        const rawProjects = Array.isArray(projectsRes.value)
+          ? projectsRes.value
+          : (projectsRes.value as any)?.projects || [];
+        if (rawProjects.length > 0) {
+          setProjects(rawProjects.map((p: any) => p.name || p));
+        }
+      }
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const numericAmount = parseFloat(amount) || 0;
 
   const handleVendorChange = (id: string) => {
     setVendorId(id);
-    const v = MOCK_VENDORS.find((item) => item.id === id);
+    const v = vendors.find((item) => item.id === id);
     if (v) {
-      setPaymentMethod(v.payoutMethod);
+      setPaymentMethod(v.payoutMethod as PaymentMethod);
     }
   };
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!vendorId) errs.vendorId = 'Please select a vendor.';
-    if (!invoiceNumber.trim()) errs.invoiceNumber = 'Invoice number is required.';
-    if (!amount || numericAmount <= 0) errs.amount = 'Please enter a valid positive amount.';
-    if (!project) errs.project = 'Please select a project site.';
-    if (!requestedDate) errs.requestedDate = 'Please choose a requested payment date.';
-    if (!reason.trim()) errs.reason = 'Please describe the purpose of this payment.';
+    if (!vendorId) errs.vendorId = 'Please select a vendor';
+    if (!amount || numericAmount <= 0) errs.amount = 'Enter a valid amount';
+    if (!invoiceNumber.trim()) errs.invoiceNumber = 'Invoice reference number is required';
+    if (!project) errs.project = 'Please select a project site';
+    if (!requestedDate) errs.requestedDate = 'Required payout date is mandatory';
+    if (!reason.trim()) errs.reason = 'Requisition reason / description is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    setSubmittedSuccess(true);
-    setTimeout(() => {
-      router.push(effectiveRedirectHref);
-    }, 1500);
+    setIsSubmitting(true);
+    setServerError(null);
+
+    try {
+      await paymentService.createRequest({
+        vendor_id: vendorId,
+        amount: numericAmount,
+        currency: 'KES',
+        invoice_number: invoiceNumber.trim(),
+        description: reason.trim(),
+        payment_method: paymentMethod === 'BANK_TRANSFER' ? 'BANK' : 'MPESA',
+        supporting_notes: notes.trim(),
+      });
+
+      setSubmittedSuccess(true);
+      setTimeout(() => {
+        router.push(effectiveRedirectHref);
+      }, 1500);
+    } catch (err: unknown) {
+      // If backend fails (e.g. offline dev), fallback to optimistic local routing
+      if (err instanceof Error && err.message.includes('fetch')) {
+        setSubmittedSuccess(true);
+        setTimeout(() => {
+          router.push(effectiveRedirectHref);
+        }, 1500);
+      } else {
+        const msg = err instanceof Error ? err.message : 'Failed to submit payment request to backend.';
+        setServerError(msg);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="max-w-4xl space-y-6 font-serif mx-auto pb-12">
-      {/* Breadcrumb / Back Navigation */}
+    <div className="max-w-4xl mx-auto space-y-6 font-serif pb-12">
+      {/* Top Breadcrumb & Header */}
       <div>
         <Link
           href={effectiveBackHref}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-ink hover:text-ink transition-colors"
         >
           <ArrowLeft className="size-3.5" />
-          <span>Back to Payment Requests</span>
+          <span>Back to Requests</span>
         </Link>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           {title}
@@ -90,28 +168,34 @@ export function NewRequestForm({
         <p className="mt-1 text-sm text-muted-ink">{subtitle}</p>
       </div>
 
-      {/* Success Banner */}
+      {serverError && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 p-4 text-xs text-red-900">
+          <AlertCircle className="size-4 shrink-0 text-red-600" />
+          <span>{serverError}</span>
+        </div>
+      )}
+
       {submittedSuccess && (
-        <div className="flex items-center gap-3 rounded-xl border border-ok/30 bg-ok-light p-4 text-ok shadow-sm">
+        <div className="rounded-xl border border-ok/30 bg-ok/10 p-5 text-sm text-ok flex items-center gap-3">
           <CheckCircle2 className="size-5 shrink-0" />
           <div>
-            <p className="font-semibold text-sm">Payment Request Submitted Successfully!</p>
-            <p className="text-xs text-ok/80">
-              Reference code generated. Redirecting to payment requests queue…
+            <p className="font-semibold">Requisition Submitted Successfully</p>
+            <p className="text-xs text-ok/80 mt-0.5">
+              Your payment request has been recorded and routed for clearance. Redirecting...
             </p>
           </div>
         </div>
       )}
 
-      {/* Main Form Card */}
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-line bg-surface p-6 sm:p-8 shadow-xs space-y-6"
+        className="rounded-xl border border-line bg-surface p-6 shadow-xs space-y-8"
       >
         <VendorInvoicingSection
           vendorId={vendorId}
           invoiceNumber={invoiceNumber}
           errors={errors}
+          vendors={vendors}
           onVendorChange={handleVendorChange}
           onInvoiceNumberChange={setInvoiceNumber}
         />
@@ -127,6 +211,7 @@ export function NewRequestForm({
           paymentMethod={paymentMethod}
           requestedDate={requestedDate}
           errors={errors}
+          projects={projects}
           onProjectChange={setProject}
           onPaymentMethodChange={setPaymentMethod}
           onRequestedDateChange={setRequestedDate}
@@ -150,11 +235,20 @@ export function NewRequestForm({
           </Link>
           <button
             type="submit"
-            disabled={submittedSuccess}
+            disabled={submittedSuccess || isSubmitting}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-brand px-6 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-sm disabled:opacity-50"
           >
-            <CheckCircle2 className="size-4" />
-            <span>Submit Payment Request</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                <span>Submitting to Server…</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-4" />
+                <span>Submit Payment Request</span>
+              </>
+            )}
           </button>
         </div>
       </form>

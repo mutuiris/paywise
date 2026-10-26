@@ -3,11 +3,13 @@
 import React from 'react';
 import { Building2, ChevronDown } from 'lucide-react';
 import { MOCK_VENDORS } from '@/data/mock-manager-data';
+import { VendorItem } from '@/types/manager';
 
 interface VendorInvoicingSectionProps {
   vendorId: string;
   invoiceNumber: string;
   errors: Record<string, string>;
+  vendors?: VendorItem[];
   onVendorChange: (id: string) => void;
   onInvoiceNumberChange: (val: string) => void;
 }
@@ -16,10 +18,11 @@ export function VendorInvoicingSection({
   vendorId,
   invoiceNumber,
   errors,
+  vendors = MOCK_VENDORS,
   onVendorChange,
   onInvoiceNumberChange,
 }: VendorInvoicingSectionProps) {
-  const selectedVendor = MOCK_VENDORS.find((v) => v.id === vendorId);
+  const selectedVendor = vendors.find((v) => v.id === vendorId);
 
   return (
     <div>
@@ -46,7 +49,7 @@ export function VendorInvoicingSection({
               }`}
             >
               <option value="">-- Choose registered vendor --</option>
-              {MOCK_VENDORS.map((v) => (
+              {vendors.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name} ({v.service})
                 </option>

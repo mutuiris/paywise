@@ -20,6 +20,7 @@ import {
   getApprovalRoute,
 } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
+import { getClientUser } from '@/lib/auth/session';
 
 interface ApprovalModalProps {
   request: PaymentRequestItem | null;
@@ -42,8 +43,11 @@ export function ApprovalModal({
 
   if (!isOpen || !request) return null;
 
+  const currentUser = getClientUser();
   const route = getApprovalRoute(request.amount);
   const isSelfRequest = Boolean(
+    (currentUser && request.requesterId === currentUser.id) ||
+    (request.requesterName && currentUser?.name && request.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
     request.requesterId === CURRENT_MANAGER.id ||
     (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
   );

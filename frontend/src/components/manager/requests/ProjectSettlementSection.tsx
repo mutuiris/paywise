@@ -10,6 +10,7 @@ interface ProjectSettlementSectionProps {
   paymentMethod: PaymentMethod;
   requestedDate: string;
   errors: Record<string, string>;
+  projects?: string[];
   onProjectChange: (val: string) => void;
   onPaymentMethodChange: (val: PaymentMethod) => void;
   onRequestedDateChange: (val: string) => void;
@@ -20,6 +21,7 @@ export function ProjectSettlementSection({
   paymentMethod,
   requestedDate,
   errors,
+  projects = MOCK_PROJECTS,
   onProjectChange,
   onPaymentMethodChange,
   onRequestedDateChange,
@@ -49,7 +51,7 @@ export function ProjectSettlementSection({
               }`}
             >
               <option value="">-- Choose project site --</option>
-              {MOCK_PROJECTS.map((proj) => (
+              {projects.map((proj) => (
                 <option key={proj} value={proj}>
                   {proj}
                 </option>
