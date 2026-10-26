@@ -1,4 +1,9 @@
-"""Application services for recording and querying immutable audit events."""
+"""Application services for recording and querying immutable audit events.
+
+Provides a consistent interface for recording audit events atomically
+with the business state changes they describe. All workflow services
+should use this module rather than creating AuditEvent records directly.
+"""
 
 from __future__ import annotations
 
@@ -8,46 +13,47 @@ from typing import TYPE_CHECKING, Any
 from django.db.models import QuerySet
 
 from apps.audit.models import AuditAction, AuditEvent
+from apps.core.security import sanitise_metadata
 
 if TYPE_CHECKING:
     from apps.accounts.models import UserAccount
     from apps.payments.models import PaymentRequest
     from apps.vendors.models import Project, Vendor
 
-SENSITIVE_KEY_PATTERNS = {
-    "password",
-    "secret",
-    "token",
-    "cvv",
-    "pin",
-    "api_key",
-    "account_number",
-    "card_number",
-    "private_key",
-    "auth",
-}
 
+def record_event(
+    *,
+    actor: UserAccount | Any | None = None,
+    action: str,
+    entity_type: str,
+    entity_id: uuid.UUID,
+    actor_email: str = "",
+    description: str = "",
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Create and persist an immutable AuditEvent record.
 
-def sanitize_metadata(data: dict[str, Any] | None) -> dict[str, Any]:
-    """Recursively scrub sensitive keys and credentials from audit metadata."""
-    if not data or not isinstance(data, dict):
-        return {}
+    This function should be called inside the same transaction.atomic()
+    block as the business state change it describes, ensuring both
+    succeed or fail together.
+    """
+    resolved_email = actor_email
+    if not resolved_email and actor is not None:
+        resolved_email = getattr(actor, "email", "") or ""
 
-    sanitized: dict[str, Any] = {}
-    for key, value in data.items():
-        lower_key = str(key).lower()
-        if any(pat in lower_key for pat in SENSITIVE_KEY_PATTERNS):
-            sanitized[key] = "[REDACTED]"
-        elif isinstance(value, dict):
-            sanitized[key] = sanitize_metadata(value)
-        elif isinstance(value, list):
-            sanitized[key] = [
-                sanitize_metadata(item) if isinstance(item, dict) else item
-                for item in value
-            ]
-        else:
-            sanitized[key] = str(value) if isinstance(value, uuid.UUID) else value
-    return sanitized
+    safe_metadata = sanitise_metadata(metadata)
+
+    event = AuditEvent(
+        actor=actor,
+        actor_email=resolved_email,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        description=description,
+        metadata=safe_metadata,
+    )
+    event.save()
+    return event
 
 
 def record_audit_event(
@@ -55,33 +61,201 @@ def record_audit_event(
     action: str,
     entity_type: str,
     entity_id: uuid.UUID,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     actor_email: str = "",
     description: str = "",
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
     """Create and persist an immutable AuditEvent record."""
-    resolved_email = actor_email
-    if not resolved_email and actor:
-        resolved_email = getattr(actor, "email", "") or getattr(actor, "username", "")
-
-    clean_meta = sanitize_metadata(metadata)
-
-    return AuditEvent.objects.create(
+    return record_event(
         actor=actor,
-        actor_email=resolved_email,
+        actor_email=actor_email,
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,
         description=description,
-        metadata=clean_meta,
+        metadata=metadata,
+    )
+
+
+def record_payment_request_created(
+    *,
+    actor: UserAccount,
+    payment_request_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a payment request creation event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_REQUEST_CREATED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description="Payment request created.",
+        metadata=metadata,
+    )
+
+
+def record_payment_request_submitted(
+    *,
+    actor: UserAccount,
+    payment_request_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a payment request submission event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_REQUEST_SUBMITTED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description="Payment request submitted for approval.",
+        metadata=metadata,
+    )
+
+
+def record_payment_request_approved(
+    *,
+    actor: UserAccount,
+    payment_request_id: uuid.UUID,
+    tier: str,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a payment request approval event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_REQUEST_APPROVED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description=f"Payment request approved at {tier} tier.",
+        metadata=metadata,
+    )
+
+
+def record_payment_request_rejected(
+    *,
+    actor: UserAccount,
+    payment_request_id: uuid.UUID,
+    tier: str,
+    reason: str,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a payment request rejection event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_REQUEST_REJECTED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description=f"Payment request rejected at {tier} tier: {reason}",
+        metadata=metadata,
+    )
+
+
+def record_payment_processing_started(
+    *,
+    actor: UserAccount,
+    payment_request_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record that payment processing has started."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_PROCESSING_STARTED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description="Payment processing started.",
+        metadata=metadata,
+    )
+
+
+def record_payment_completed(
+    *,
+    actor: UserAccount | None,
+    payment_request_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a successful payment completion event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_COMPLETED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description="Payment completed successfully.",
+        metadata=metadata,
+    )
+
+
+def record_payment_failed(
+    *,
+    actor: UserAccount | None,
+    payment_request_id: uuid.UUID,
+    reason: str = "",
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a payment failure event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PAYMENT_FAILED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description=f"Payment failed: {reason}" if reason else "Payment failed.",
+        metadata=metadata,
+    )
+
+
+def record_approval_invalidated(
+    *,
+    actor: UserAccount,
+    payment_request_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record that approvals have been invalidated (e.g. due to amount change)."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.APPROVAL_INVALIDATED,
+        entity_type="PaymentRequest",
+        entity_id=payment_request_id,
+        description="Existing approvals invalidated due to material change.",
+        metadata=metadata,
+    )
+
+
+def record_vendor_created(
+    *,
+    actor: UserAccount,
+    vendor_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a vendor creation event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.VENDOR_CREATED,
+        entity_type="Vendor",
+        entity_id=vendor_id,
+        description="Vendor created.",
+        metadata=metadata,
+    )
+
+
+def record_project_created(
+    *,
+    actor: UserAccount,
+    project_id: uuid.UUID,
+    metadata: dict[str, Any] | None = None,
+) -> AuditEvent:
+    """Record a project creation event."""
+    return record_event(
+        actor=actor,
+        action=AuditAction.PROJECT_CREATED,
+        entity_type="Project",
+        entity_id=project_id,
+        description="Project created.",
+        metadata=metadata,
     )
 
 
 def log_payment_request_created(
     payment_request: PaymentRequest,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
     """Record an audit event for initial payment request creation."""
@@ -109,7 +283,7 @@ def log_payment_request_created(
 def log_payment_request_submitted(
     payment_request: PaymentRequest,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
     """Record an audit event for payment request submission into approval queue."""
@@ -136,7 +310,7 @@ def log_payment_request_submitted(
 def log_payment_request_approved(
     payment_request: PaymentRequest,
     *,
-    approver: UserAccount,
+    approver: UserAccount | Any,
     tier: str,
     reason: str = "",
     metadata: dict[str, Any] | None = None,
@@ -168,7 +342,7 @@ def log_payment_request_approved(
 def log_payment_request_rejected(
     payment_request: PaymentRequest,
     *,
-    rejecter: UserAccount,
+    rejecter: UserAccount | Any,
     reason: str,
     tier: str | None = None,
     metadata: dict[str, Any] | None = None,
@@ -199,7 +373,7 @@ def log_payment_request_rejected(
 def log_payment_processing_started(
     payment_request: PaymentRequest,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     attempt_id: uuid.UUID | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
@@ -229,7 +403,7 @@ def log_payment_processing_started(
 def log_payment_completed(
     payment_request: PaymentRequest,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     provider_reference: str = "",
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
@@ -260,7 +434,7 @@ def log_payment_completed(
 def log_payment_failed(
     payment_request: PaymentRequest,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     failure_reason: str = "",
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
@@ -289,7 +463,7 @@ def log_payment_failed(
 def log_approval_invalidated(
     payment_request: PaymentRequest,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     reason: str = "",
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
@@ -319,7 +493,7 @@ def log_approval_invalidated(
 def log_vendor_created(
     vendor: Vendor,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
     """Record an audit event when a new vendor is registered."""
@@ -340,7 +514,7 @@ def log_vendor_created(
 def log_project_created(
     project: Project,
     *,
-    actor: UserAccount | None = None,
+    actor: UserAccount | Any | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
     """Record an audit event when a new project/department is registered."""

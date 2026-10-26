@@ -1,3 +1,5 @@
+from typing import Any, ClassVar
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -16,7 +18,7 @@ class UserAccountAdmin(UserAdmin):
     )
     list_filter = ("role", "is_active", "is_staff")
     search_fields = ("username", "email", "first_name", "last_name")
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets: ClassVar[Any] = tuple(UserAdmin.fieldsets or ()) + (
         (
             "Role & Permissions",
             {
@@ -24,7 +26,7 @@ class UserAccountAdmin(UserAdmin):
             },
         ),
     )
-    add_fieldsets = UserAdmin.add_fieldsets + (
+    add_fieldsets: Any = tuple(UserAdmin.add_fieldsets or ()) + (
         (
             "Role & Permissions",
             {

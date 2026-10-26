@@ -5,11 +5,17 @@ requires-python = ">=3.14"
 dependencies = [
     "django>=6.1,<6.2",
     "django-simple-history>=3.13,<3.14",
+    "gunicorn>=23,<24",
+    "opentelemetry-api>=1.30,<2.0",
+    "opentelemetry-sdk>=1.30,<2.0",
     "psycopg[binary]>=3.3,<3.4",
+    "sentry-sdk>=2.0,<3.0",
 ]
 
 [dependency-groups]
 dev = [
+    "django-stubs>=5.1,<7.0",
+    "mypy>=1.14,<3.0",
     "pytest>=9.1,<9.2",
     "pytest-cov>=7.1,<7.2",
     "pytest-django>=4.14,<4.15",
@@ -43,3 +49,15 @@ python_files = [
     "tests.py",
 ]
 addopts = "-ra"
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main"]
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+

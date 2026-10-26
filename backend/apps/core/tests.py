@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from django.db import models
 from django.test import SimpleTestCase
@@ -31,10 +31,10 @@ class TimeStampableTests(SimpleTestCase):
         updated_at = TimeStampable._meta.get_field("updated_at")
 
         self.assertIsInstance(created_at, models.DateTimeField)
-        self.assertTrue(created_at.auto_now_add)
+        self.assertTrue(getattr(created_at, "auto_now_add", False))
 
         self.assertIsInstance(updated_at, models.DateTimeField)
-        self.assertTrue(updated_at.auto_now)
+        self.assertTrue(getattr(updated_at, "auto_now", False))
 
 
 class OwnerlessAbstractTests(SimpleTestCase):
@@ -45,15 +45,15 @@ class OwnerlessAbstractTests(SimpleTestCase):
         field = OwnerlessAbstract._meta.get_field("id")
 
         self.assertIsInstance(field, models.UUIDField)
-        self.assertTrue(field.primary_key)
+        self.assertTrue(getattr(field, "primary_key", False))
         self.assertFalse(field.editable)
-        self.assertIs(field.default, uuid.uuid4)
+        self.assertIs(getattr(field, "default", None), uuid.uuid4)
 
     def test_is_active_defaults_to_true(self) -> None:
         field = OwnerlessAbstract._meta.get_field("is_active")
 
         self.assertIsInstance(field, models.BooleanField)
-        self.assertTrue(field.default)
+        self.assertTrue(getattr(field, "default", False))
 
     def test_default_ordering(self) -> None:
         self.assertEqual(
@@ -72,12 +72,12 @@ class OwnerAbstractTests(SimpleTestCase):
 
         self.assertIsInstance(created_by, models.UUIDField)
         self.assertTrue(created_by.null)
-        self.assertTrue(created_by.blank)
+        self.assertTrue(getattr(created_by, "blank", False))
         self.assertFalse(created_by.editable)
 
         self.assertIsInstance(updated_by, models.UUIDField)
         self.assertTrue(updated_by.null)
-        self.assertTrue(updated_by.blank)
+        self.assertTrue(getattr(updated_by, "blank", False))
 
     def test_history_is_inherited_by_concrete_models(self) -> None:
         history = ModelMixinTestModel.history
@@ -98,10 +98,11 @@ class OwnerAbstractTests(SimpleTestCase):
     @staticmethod
     def test_save_calls_full_clean_before_parent_save() -> None:
         instance = ModelMixinTestModel()
-        instance.full_clean = Mock()
-
-        with patch.object(models.Model, "save") as parent_save:
+        with (
+            patch.object(instance, "full_clean") as full_clean,
+            patch.object(models.Model, "save") as parent_save,
+        ):
             instance.save()
 
-        instance.full_clean.assert_called_once_with()
+        full_clean.assert_called_once_with()
         parent_save.assert_called_once_with()

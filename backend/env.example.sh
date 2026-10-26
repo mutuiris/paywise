@@ -10,3 +10,10 @@ export POSTGRES_USER="paywise"
 export POSTGRES_PASSWORD="local-password-here"
 export POSTGRES_HOST="localhost"
 export POSTGRES_PORT="5432"
+
+# Optional observability configuration.
+export SENTRY_DSN=""
+export OTEL_EXPORTER_OTLP_ENDPOINT=""
+export OTEL_SERVICE_NAME="paywise-backend"
+export DJANGO_LOG_LEVEL="INFO"
+export PAYWISE_LOG_LEVEL="INFO"

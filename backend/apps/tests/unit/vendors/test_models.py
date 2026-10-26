@@ -28,7 +28,7 @@ class VendorModelTestCase(TestCase):
         self.assertEqual(str(vendor), "Metro Hardware Ltd.")
         self.assertIsNotNone(vendor.created_at)
         self.assertIsNotNone(vendor.updated_at)
-        self.assertEqual(vendor.history.count(), 1)
+        self.assertEqual(getattr(vendor, "history").count(), 1)
 
     def test_vendor_name_uniqueness(self) -> None:
         Vendor.objects.create(name="Prime Cement Supplies")
@@ -43,7 +43,7 @@ class VendorModelTestCase(TestCase):
         with self.assertRaises(ValidationError):
             Vendor.objects.create(
                 name="Invalid Vendor",
-                payment_details="not-a-dict",  # type: ignore[arg-type]
+                payment_details="not-a-dict",
             )
 
 
@@ -63,7 +63,7 @@ class ProjectModelTestCase(TestCase):
         self.assertTrue(project.is_active)
         self.assertEqual(project.creator, self.user)
         self.assertEqual(str(project), "Westlands Commercial Center")
-        self.assertEqual(project.history.count(), 1)
+        self.assertEqual(getattr(project, "history").count(), 1)
 
     def test_project_name_uniqueness(self) -> None:
         Project.objects.create(name="Upperhill Towers")

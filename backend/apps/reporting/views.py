@@ -33,8 +33,16 @@ def activity_summary_view(request: HttpRequest) -> JsonResponse:
             status=403,
         )
 
-    date_from = request.GET.get("date_from") or request.GET.get("created_after")
-    date_to = request.GET.get("date_to") or request.GET.get("created_before")
+    date_from = (
+        request.GET.get("date_from")
+        or request.GET.get("created_after")
+        or request.GET.get("start_date")
+    )
+    date_to = (
+        request.GET.get("date_to")
+        or request.GET.get("created_before")
+        or request.GET.get("end_date")
+    )
 
     try:
         report = services.get_payment_activity_summary(
@@ -66,8 +74,16 @@ def failed_payments_view(request: HttpRequest) -> JsonResponse:
             status=403,
         )
 
-    date_from = request.GET.get("date_from") or request.GET.get("created_after")
-    date_to = request.GET.get("date_to") or request.GET.get("created_before")
+    date_from = (
+        request.GET.get("date_from")
+        or request.GET.get("created_after")
+        or request.GET.get("start_date")
+    )
+    date_to = (
+        request.GET.get("date_to")
+        or request.GET.get("created_before")
+        or request.GET.get("end_date")
+    )
     project_id = request.GET.get("project_id")
     vendor_id = request.GET.get("vendor_id")
 
@@ -104,8 +120,16 @@ def projects_breakdown_view(request: HttpRequest) -> JsonResponse:
             status=403,
         )
 
-    date_from = request.GET.get("date_from") or request.GET.get("created_after")
-    date_to = request.GET.get("date_to") or request.GET.get("created_before")
+    date_from = (
+        request.GET.get("date_from")
+        or request.GET.get("created_after")
+        or request.GET.get("start_date")
+    )
+    date_to = (
+        request.GET.get("date_to")
+        or request.GET.get("created_before")
+        or request.GET.get("end_date")
+    )
 
     try:
         report = services.get_payments_by_project_report(
