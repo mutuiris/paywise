@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { RequestDetail } from '@/components/manager/requests';
 
 export const metadata: Metadata = {
-  title: 'Request Details — Finance — ImaraPay',
+  title: 'Request Details — Finance — PayWise',
   description: 'View vendor payment request details and financial audit trail.',
 };
 

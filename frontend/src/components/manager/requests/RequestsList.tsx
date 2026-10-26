@@ -10,6 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
 import {
@@ -20,13 +22,16 @@ import {
   formatDate,
 } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
+import { paymentService } from '@/lib/api/services';
 
 export interface RequestsListProps {
   basePath?: string;
 }
 
 export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) {
-  const [requests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
+  const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
+  const [loading, setLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [vendorFilter, setVendorFilter] = useState<string>('ALL');
@@ -34,6 +39,88 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
   const [methodFilter, setMethodFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
+
+  const fetchLiveRequests = React.useCallback(async (isRefresh = false) => {
+    if (isRefresh) setLoading(true);
+    try {
+      const res = await paymentService.listRequests();
+      if (res && res.results && res.results.length > 0) {
+        const mapped: PaymentRequestItem[] = res.results.map((r) => ({
+          id: r.id,
+          reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
+          vendorId: r.vendor_id,
+          vendorName: r.vendor_name || 'Designated Vendor',
+          amount: parseFloat(r.amount) || 0,
+          currency: 'KES',
+          invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
+          project: r.project_name || 'ImaraWorks Construction',
+          requesterId: r.requester_id || '',
+          requesterName: r.requester_username || 'Employee',
+          paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+          requestedPaymentDate: r.created_at || new Date().toISOString(),
+          notes: r.description || '',
+          reason: r.description,
+          status: r.status,
+          rejectionReason: r.rejection_reason || undefined,
+          createdAt: r.created_at || new Date().toISOString(),
+          updatedAt: r.updated_at || new Date().toISOString(),
+        }));
+        setRequests(mapped);
+        setUsingFallback(false);
+      } else {
+        setUsingFallback(true);
+      }
+    } catch {
+      setUsingFallback(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    let ignore = false;
+    paymentService
+      .listRequests()
+      .then((res) => {
+        if (ignore) return;
+        if (res && res.results && res.results.length > 0) {
+          const mapped: PaymentRequestItem[] = res.results.map((r) => ({
+            id: r.id,
+            reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
+            vendorId: r.vendor_id,
+            vendorName: r.vendor_name || 'Designated Vendor',
+            amount: parseFloat(r.amount) || 0,
+            currency: 'KES',
+            invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
+            project: r.project_name || 'ImaraWorks Construction',
+            requesterId: r.requester_id || '',
+            requesterName: r.requester_username || 'Employee',
+            paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+            requestedPaymentDate: r.created_at || new Date().toISOString(),
+            notes: r.description || '',
+            reason: r.description,
+            status: r.status,
+            rejectionReason: r.rejection_reason || undefined,
+            createdAt: r.created_at || new Date().toISOString(),
+            updatedAt: r.updated_at || new Date().toISOString(),
+          }));
+          setRequests(mapped);
+          setUsingFallback(false);
+        } else {
+          setUsingFallback(true);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setUsingFallback(true);
+        setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Filtering
   const filtered = requests.filter((r) => {
@@ -87,14 +174,34 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
           </p>
         </div>
 
-        <Link
-          href={`${basePath}/requests/new`}
-          className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3.5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
-        >
-          <Plus className="size-4" />
-          <span>New Payment Request</span>
-        </Link>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => fetchLiveRequests(true)}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-2 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs"
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          {basePath !== '/finance' && basePath !== '/admin' && (
+            <Link
+              href={`${basePath}/requests/new`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3.5 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer transition-colors shadow-2xs"
+            >
+              <Plus className="size-4" />
+              <span>New Payment Request</span>
+            </Link>
+          )}
+        </div>
       </div>
+
+      {usingFallback && (
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
+          <AlertCircle className="size-4 shrink-0 text-muted-ink" />
+          <span>Backend payments endpoint unseeded or offline. Displaying demonstration requisitions.</span>
+        </div>
+      )}
 
       {/* Filter Bar Card */}
       <div className="rounded-xl border border-line bg-surface p-4 shadow-xs space-y-3">

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { VendorDetail } from '@/components/manager/vendors';
 
 export const metadata: Metadata = {
-  title: 'Vendor Profile — Finance — ImaraPay',
+  title: 'Vendor Profile — Finance — PayWise',
   description: 'View vendor settlement channels, banking info and payment requisition history.',
 };
 
