@@ -2,6 +2,8 @@
 
 import os
 
+import sentry_sdk
+
 from .base import *  # noqa: F403
 
 DEBUG = False
@@ -16,3 +18,6 @@ CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+if os.environ.get("SENTRY_DSN"):
+    sentry_sdk.init(dsn=os.environ["SENTRY_DSN"], send_default_pii=False)

@@ -8,9 +8,9 @@ from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from apps.core.security import authenticated_user
 from apps.vendors import services
 from apps.vendors.models import Project, Vendor
 from apps.vendors.permissions import (
@@ -68,7 +68,6 @@ def project_to_dict(project: Project) -> dict[str, Any]:
     }
 
 
-@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def vendor_list_create_view(request: HttpRequest) -> JsonResponse:
     """List active vendors (GET) or create a new vendor (POST).
@@ -100,7 +99,7 @@ def vendor_list_create_view(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         if not request.user.is_authenticated:
             return JsonResponse({"error": "Authentication required."}, status=401)
-        if not can_view_vendors(request.user):
+        if not can_view_vendors(authenticated_user(request)):
             return JsonResponse({"error": "Permission denied."}, status=403)
 
         queryset = Vendor.objects.all()
@@ -125,7 +124,7 @@ def vendor_list_create_view(request: HttpRequest) -> JsonResponse:
     # POST - Create vendor
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required."}, status=401)
-    if not can_manage_vendors(request.user):
+    if not can_manage_vendors(authenticated_user(request)):
         return JsonResponse(
             {"error": "Only Finance Officers and Administrators can manage vendors."},
             status=403,
@@ -141,7 +140,7 @@ def vendor_list_create_view(request: HttpRequest) -> JsonResponse:
             phone_number=payload.get("phone_number", ""),
             payment_details=payload.get("payment_details"),
             description=payload.get("description", ""),
-            actor=request.user,
+            actor=authenticated_user(request),
         )
         return JsonResponse({"vendor": vendor_to_dict(vendor)}, status=201)
     except ValidationError as exc:
@@ -157,7 +156,6 @@ def vendor_list_create_view(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["GET", "PUT", "PATCH"])
 def vendor_detail_update_view(
     request: HttpRequest, vendor_id: uuid.UUID
@@ -188,14 +186,14 @@ def vendor_detail_update_view(
     if request.method == "GET":
         if not request.user.is_authenticated:
             return JsonResponse({"error": "Authentication required."}, status=401)
-        if not can_view_vendors(request.user):
+        if not can_view_vendors(authenticated_user(request)):
             return JsonResponse({"error": "Permission denied."}, status=403)
         return JsonResponse({"vendor": vendor_to_dict(vendor)}, status=200)
 
     # PUT or PATCH
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required."}, status=401)
-    if not can_manage_vendors(request.user):
+    if not can_manage_vendors(authenticated_user(request)):
         return JsonResponse(
             {"error": "Only Finance Officers and Administrators can manage vendors."},
             status=403,
@@ -203,7 +201,9 @@ def vendor_detail_update_view(
 
     try:
         payload = _parse_json_body(request)
-        vendor = services.update_vendor(vendor, actor=request.user, **payload)
+        vendor = services.update_vendor(
+            vendor, actor=authenticated_user(request), **payload
+        )
         return JsonResponse({"vendor": vendor_to_dict(vendor)}, status=200)
     except ValidationError as exc:
         message = (
@@ -218,7 +218,6 @@ def vendor_detail_update_view(
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def vendor_toggle_active_view(
     request: HttpRequest, vendor_id: uuid.UUID
@@ -236,7 +235,7 @@ def vendor_toggle_active_view(
     """
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required."}, status=401)
-    if not can_manage_vendors(request.user):
+    if not can_manage_vendors(authenticated_user(request)):
         return JsonResponse(
             {"error": "Only Finance Officers and Administrators can manage vendors."},
             status=403,
@@ -250,15 +249,16 @@ def vendor_toggle_active_view(
         payload = _parse_json_body(request)
         desired_state = payload.get("is_active")
         if desired_state is False or (desired_state is None and vendor.is_active):
-            vendor = services.deactivate_vendor(vendor, actor=request.user)
+            vendor = services.deactivate_vendor(
+                vendor, actor=authenticated_user(request)
+            )
         else:
-            vendor = services.activate_vendor(vendor, actor=request.user)
+            vendor = services.activate_vendor(vendor, actor=authenticated_user(request))
         return JsonResponse({"vendor": vendor_to_dict(vendor)}, status=200)
     except PermissionDenied as exc:
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def project_list_create_view(request: HttpRequest) -> JsonResponse:
     """List active projects (GET) or create a new project (POST).
@@ -288,7 +288,7 @@ def project_list_create_view(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         if not request.user.is_authenticated:
             return JsonResponse({"error": "Authentication required."}, status=401)
-        if not can_view_projects(request.user):
+        if not can_view_projects(authenticated_user(request)):
             return JsonResponse({"error": "Permission denied."}, status=403)
 
         queryset = Project.objects.all()
@@ -313,7 +313,7 @@ def project_list_create_view(request: HttpRequest) -> JsonResponse:
     # POST - Create project
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required."}, status=401)
-    if not can_manage_projects(request.user):
+    if not can_manage_projects(authenticated_user(request)):
         return JsonResponse(
             {"error": "Only Managers and Administrators can manage projects."},
             status=403,
@@ -327,7 +327,7 @@ def project_list_create_view(request: HttpRequest) -> JsonResponse:
             code=payload.get("code"),
             department=payload.get("department", ""),
             description=payload.get("description", ""),
-            actor=request.user,
+            actor=authenticated_user(request),
         )
         return JsonResponse({"project": project_to_dict(project)}, status=201)
     except ValidationError as exc:
@@ -343,7 +343,6 @@ def project_list_create_view(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["GET", "PUT", "PATCH"])
 def project_detail_update_view(
     request: HttpRequest, project_id: uuid.UUID
@@ -373,14 +372,14 @@ def project_detail_update_view(
     if request.method == "GET":
         if not request.user.is_authenticated:
             return JsonResponse({"error": "Authentication required."}, status=401)
-        if not can_view_projects(request.user):
+        if not can_view_projects(authenticated_user(request)):
             return JsonResponse({"error": "Permission denied."}, status=403)
         return JsonResponse({"project": project_to_dict(project)}, status=200)
 
     # PUT or PATCH
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required."}, status=401)
-    if not can_manage_projects(request.user):
+    if not can_manage_projects(authenticated_user(request)):
         return JsonResponse(
             {"error": "Only Managers and Administrators can manage projects."},
             status=403,
@@ -388,7 +387,9 @@ def project_detail_update_view(
 
     try:
         payload = _parse_json_body(request)
-        project = services.update_project(project, actor=request.user, **payload)
+        project = services.update_project(
+            project, actor=authenticated_user(request), **payload
+        )
         return JsonResponse({"project": project_to_dict(project)}, status=200)
     except ValidationError as exc:
         message = (
@@ -403,7 +404,6 @@ def project_detail_update_view(
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def project_toggle_active_view(
     request: HttpRequest, project_id: uuid.UUID
@@ -421,7 +421,7 @@ def project_toggle_active_view(
     """
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required."}, status=401)
-    if not can_manage_projects(request.user):
+    if not can_manage_projects(authenticated_user(request)):
         return JsonResponse(
             {"error": "Only Managers and Administrators can manage projects."},
             status=403,
@@ -435,9 +435,13 @@ def project_toggle_active_view(
         payload = _parse_json_body(request)
         desired_state = payload.get("is_active")
         if desired_state is False or (desired_state is None and project.is_active):
-            project = services.deactivate_project(project, actor=request.user)
+            project = services.deactivate_project(
+                project, actor=authenticated_user(request)
+            )
         else:
-            project = services.activate_project(project, actor=request.user)
+            project = services.activate_project(
+                project, actor=authenticated_user(request)
+            )
         return JsonResponse({"project": project_to_dict(project)}, status=200)
     except PermissionDenied as exc:
         return JsonResponse({"error": str(exc)}, status=403)
