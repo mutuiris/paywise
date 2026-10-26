@@ -4,8 +4,6 @@ from django.urls import URLPattern, path
 
 from apps.accounts import views
 
-from apps.accounts import views
-
 app_name = "accounts"
 
 urlpatterns: list[URLPattern] = [
