@@ -21,7 +21,7 @@ export function ManagerApprovalsStats({
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 font-serif">
       <SummaryCard
-        label="Awaiting My Approval"
+        label="Pending Approval"
         value={pendingCount}
         tone="warn"
         hint="Needs your authorization"

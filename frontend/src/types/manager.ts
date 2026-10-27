@@ -64,6 +64,7 @@ export interface VendorItem {
   tillNumber?: string;
   paybillNumber?: string;
   isActive: boolean;
+  createdAt?: string;
 }
 
 export interface ActivityEvent {

@@ -77,6 +77,7 @@ export interface PaymentRequest {
   notes?: string;
   status: PaymentRequestStatus;
   approvals?: ApprovalRecord[];
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,24 +97,27 @@ export interface PaymentAttempt {
   completedAt?: string;
 }
 
+export interface VendorPaymentDetails {
+  payout_method?: PaymentMethod | string;
+  bank_name?: string;
+  account_number?: string;
+  mpesa_number?: string;
+  paybill_number?: string;
+  account_reference?: string;
+  [key: string]: unknown;
+}
+
 export interface VendorDTO {
   id: string;
   name: string;
   service_category: string;
   email: string;
   phone_number: string;
-  payment_details: {
-    payout_method: PaymentMethod;
-    bank_name?: string;
-    account_number?: string;
-    mpesa_number?: string;
-    paybill_number?: string;
-    account_reference?: string;
-  };
+  payment_details: VendorPaymentDetails | null;
   description?: string;
   is_active: boolean;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   created_by?: string;
   updated_by?: string;
 }
@@ -123,10 +127,13 @@ export interface ProjectDTO {
   name: string;
   code: string;
   department: string;
-  site_location: string;
+  site_location?: string;
+  description?: string;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface PaymentRequestDTO {
@@ -272,3 +279,54 @@ export interface ApiErrorEnvelope {
   fields?: Record<string, string[]>;
 }
 
+// Normalized responses that support both flat array operations (.map, .filter, etc.)
+// AND wrapped envelope properties (.vendors, .results, .projects, .count)
+export interface VendorListResponse extends Array<Vendor> {
+  vendors: VendorDTO[];
+  count: number;
+}
+
+export interface ProjectListResponse extends Array<Project> {
+  projects: ProjectDTO[];
+  count: number;
+}
+
+export interface PaymentRequestListResponse extends Array<PaymentRequest> {
+  results: PaymentRequestDTO[];
+  count: number;
+}
+
+export interface ApprovalQueueResponse extends Array<ApprovalQueueItemDTO> {
+  results: ApprovalQueueItemDTO[];
+  count: number;
+}
+
+export interface AuditEventListResponse extends Array<AuditEventDTO> {
+  results: AuditEventDTO[];
+  count: number;
+}
+
+export interface NormalizedVendorResponse extends Vendor {
+  vendor: VendorDTO;
+}
+
+export interface NormalizedProjectResponse extends Project {
+  project: ProjectDTO;
+}
+
+export interface NormalizedPaymentRequestResponse extends PaymentRequest {
+  payment_request?: PaymentRequestDTO;
+  vendor_id?: string;
+  vendor_name?: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
+  requester_id?: string | null;
+  requester_username?: string | null;
+  invoice_number?: string;
+  description?: string;
+  payment_method?: PaymentMethod;
+  rejection_reason?: string | null;
+  supporting_notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
