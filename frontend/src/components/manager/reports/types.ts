@@ -7,6 +7,7 @@ export interface DepartmentSummaryRow {
   status: 'Compliant' | 'Review Needed';
 }
 
+/** Sample cost-centre rows used by the labelled demo mode. */
 export const DEPARTMENT_SUMMARY: DepartmentSummaryRow[] = [
   { id: 'DEP-01', department: 'Engineering & IT', totalSpent: 450000, approvedCount: 12, flaggedCount: 0, status: 'Compliant' },
   { id: 'DEP-02', department: 'Operations & Facilities', totalSpent: 310000, approvedCount: 8, flaggedCount: 1, status: 'Review Needed' },

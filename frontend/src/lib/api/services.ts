@@ -346,7 +346,10 @@ export const authService = {
     }),
   logout: () =>
     apiClient<{ ok: boolean; detail?: string }>('/api/accounts/logout/', { method: 'POST' }),
-  getMe: () => apiClient<User>('/api/accounts/me/'),
+  getMe: async () => {
+    const data = await apiClient<{ user: User } | User>('/api/accounts/me/');
+    return 'user' in data ? data.user : data;
+  },
 };
 
 export const vendorService = {
