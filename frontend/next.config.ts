@@ -2,10 +2,14 @@ import type { NextConfig } from 'next';
 
 /**
  * Backend origin used by the same-origin development proxy.
- * Leave unset to call the backend directly from the browser instead
- * (that requires the backend to allow this origin via CORS).
  */
-const apiOrigin = (process.env.PAYWISE_API_ORIGIN ?? '').replace(/\/+$/, '');
+const backendUrl =
+  process.env.BACKEND_INTERNAL_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.PAYWISE_API_ORIGIN ||
+  'http://127.0.0.1:8000';
+
+const apiOrigin = backendUrl.replace(/\/+$/, '');
 
 const nextConfig: NextConfig = {
   // The backend serves its API on trailing-slash paths (Django APPEND_SLASH).
@@ -15,10 +19,12 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_PROXY: apiOrigin ? '1' : '',
   },
   async rewrites() {
-    if (!apiOrigin) return [];
-    // The catch-all pattern keeps the trailing slash, which Django's API routes
-    // require (APPEND_SLASH cannot redirect a POST, so the slash must survive).
-    return [{ source: '/api/:path(.*)', destination: `${apiOrigin}/api/:path` }];
+    return [
+      {
+        source: '/api/:path(.*)',
+        destination: `${apiOrigin}/api/:path`,
+      },
+    ];
   },
 };
 

@@ -2,7 +2,7 @@ import React from 'react';
 
 export function SignInHeader() {
   return (
-    <div className="mb-8">
+    <div className="mb-8 font-serif">
       <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
         Sign in
       </h1>
