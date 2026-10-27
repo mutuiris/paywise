@@ -9,13 +9,13 @@ from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.approvals import services
 from apps.approvals.models import Approval, ApprovalDecision
 from apps.approvals.permissions import is_active_authenticated_user
 from apps.payments.models import PaymentRequest
+from apps.payments.permissions import can_view_payment_request
 
 
 def _parse_json_body(request: HttpRequest) -> dict[str, Any]:
@@ -58,6 +58,10 @@ def payment_request_summary(payment_request: PaymentRequest) -> dict[str, Any]:
         "description": payment_request.description,
         "vendor_id": str(payment_request.vendor_id),
         "vendor_name": payment_request.vendor.name if payment_request.vendor else None,
+        "project_name": (
+            payment_request.project.name if payment_request.project else None
+        ),
+        "payment_method": payment_request.payment_method,
         "requester_id": (
             str(payment_request.requester_id) if payment_request.requester_id else None
         ),
@@ -76,7 +80,6 @@ def payment_request_summary(payment_request: PaymentRequest) -> dict[str, Any]:
     }
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def approval_queue_view(request: HttpRequest) -> JsonResponse:
     """Retrieve list of payment requests awaiting approval by the authenticated user."""
@@ -92,7 +95,6 @@ def approval_queue_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"results": results, "count": len(results)}, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def payment_approval_detail_view(
     request: HttpRequest, payment_request_id: uuid.UUID
@@ -110,13 +112,18 @@ def payment_approval_detail_view(
     except PaymentRequest.DoesNotExist, ValueError:
         return JsonResponse({"detail": "Payment request not found."}, status=404)
 
+    if not can_view_payment_request(request.user, payment_request):
+        return JsonResponse(
+            {"detail": "You do not have permission to view this payment request."},
+            status=403,
+        )
+
     data = payment_request_summary(payment_request)
     data["history"] = services.get_approval_history(payment_request)
     data["rejection_reason"] = payment_request.rejection_reason
     return JsonResponse(data, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def record_approval_decision_view(
     request: HttpRequest, payment_request_id: uuid.UUID
@@ -166,7 +173,6 @@ def record_approval_decision_view(
     )
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def approve_payment_request_view(
     request: HttpRequest, payment_request_id: uuid.UUID
@@ -215,7 +221,6 @@ def approve_payment_request_view(
     )
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def reject_payment_request_view(
     request: HttpRequest, payment_request_id: uuid.UUID
@@ -264,7 +269,6 @@ def reject_payment_request_view(
     )
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_payment_request_amount_view(
     request: HttpRequest, payment_request_id: uuid.UUID

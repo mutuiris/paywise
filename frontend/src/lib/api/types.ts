@@ -176,6 +176,8 @@ export interface ApprovalQueueItemDTO {
   description: string;
   vendor_id: string;
   vendor_name: string | null;
+  project_name: string | null;
+  payment_method: string;
   requester_id: string | null;
   requester_name: string | null;
   required_tiers: string[];

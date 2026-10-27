@@ -19,7 +19,7 @@ export function PaymentProcessingView() {
     activeItem,
     isProcessing,
     successRef,
-    usingFallback,
+    error,
     handleExecute,
     handleRetry,
     refreshData,
@@ -50,10 +50,10 @@ export function PaymentProcessingView() {
         </div>
       </div>
 
-      {usingFallback && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+      {error && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
           <AlertCircle className="size-4 shrink-0 text-amber-600" />
-          <span>No live approved requests found on backend. Displaying demonstration pipeline items.</span>
+          <span>{error}</span>
         </div>
       )}
 

@@ -8,6 +8,8 @@ import { ManagerApprovalsHeader } from './ManagerApprovalsHeader';
 import { ManagerApprovalsStats } from './ManagerApprovalsStats';
 import { ManagerApprovalsTable } from './ManagerApprovalsTable';
 import { RejectionModal } from '@/components/approvals/RejectionModal';
+import type { AccountIdentity } from '@/lib/auth/session';
+import { toPaymentMethod } from '../common/mapPaymentRequest';
 import { AlertCircle, RefreshCw, Loader2, Database } from 'lucide-react';
 
 /**
@@ -109,7 +111,8 @@ export function ManagerApprovalsView() {
     try {
       // The identity decides which approval tier this queue belongs to, so it
       // is resolved first: a finance officer has no manager-tier queue.
-      const me = await authService.getMe().catch(() => null);
+      // getMe returns the raw backend identity (snake_case, no display name).
+      const me = (await authService.getMe().catch(() => null)) as AccountIdentity | null;
       const tier = tierForRole(me?.role);
 
       const [queue, requests] = await Promise.all([
@@ -136,8 +139,7 @@ export function ManagerApprovalsView() {
           invoiceNumber: item.invoice_number || `INV-${item.id.slice(0, 6).toUpperCase()}`,
           reason: item.description,
           project: detail?.project_name || '—',
-          paymentMethod:
-            (detail?.payment_method as PaymentRequestItem['paymentMethod']) || 'MPESA',
+          paymentMethod: toPaymentMethod(detail?.payment_method),
           requestedPaymentDate: item.created_at || '',
           notes: item.description,
           requesterId: item.requester_id || '',

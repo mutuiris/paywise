@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { FileText, ChevronDown } from 'lucide-react';
-import { MOCK_PROJECTS } from '@/data/mock-manager-data';
 import { PaymentMethod } from '@/types/manager';
 
 interface ProjectSettlementSectionProps {
@@ -10,7 +9,8 @@ interface ProjectSettlementSectionProps {
   paymentMethod: PaymentMethod;
   requestedDate: string;
   errors: Record<string, string>;
-  projects?: string[];
+  /** Option value is the project id. */
+  projects?: { id: string; name: string }[];
   onProjectChange: (val: string) => void;
   onPaymentMethodChange: (val: PaymentMethod) => void;
   onRequestedDateChange: (val: string) => void;
@@ -21,7 +21,7 @@ export function ProjectSettlementSection({
   paymentMethod,
   requestedDate,
   errors,
-  projects = MOCK_PROJECTS,
+  projects = [],
   onProjectChange,
   onPaymentMethodChange,
   onRequestedDateChange,
@@ -52,8 +52,8 @@ export function ProjectSettlementSection({
             >
               <option value="">-- Choose project site --</option>
               {projects.map((proj) => (
-                <option key={proj} value={proj}>
-                  {proj}
+                <option key={proj.id} value={proj.id}>
+                  {proj.name}
                 </option>
               ))}
             </select>

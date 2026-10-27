@@ -1,8 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, RotateCcw, ChevronDown } from 'lucide-react';
 import { MOCK_VENDORS, MOCK_PROJECTS, formatCurrency } from '@/data/mock-manager-data';
+import { vendorService } from '@/lib/api/services';
+import { DEMO_MODE } from '@/lib/config';
+
+type Option = { id: string; name: string };
 
 export interface RequestFilterBarProps {
   search: string;
@@ -31,6 +35,29 @@ export function RequestFilterBar({
   onVendorChange,
   onReset,
 }: RequestFilterBarProps) {
+  const [vendors, setVendors] = useState<Option[]>(DEMO_MODE ? MOCK_VENDORS : []);
+  // Requests carry the project name, so project options filter by name.
+  const [projects, setProjects] = useState<string[]>(DEMO_MODE ? MOCK_PROJECTS : []);
+
+  useEffect(() => {
+    if (DEMO_MODE) return;
+    let ignore = false;
+    Promise.allSettled([vendorService.listVendors(), vendorService.listProjects()]).then(
+      ([vendorRes, projectRes]) => {
+        if (ignore) return;
+        if (vendorRes.status === 'fulfilled') {
+          setVendors(vendorRes.value.map((v) => ({ id: v.id, name: v.name })));
+        }
+        if (projectRes.status === 'fulfilled') {
+          setProjects(projectRes.value.map((p) => p.name));
+        }
+      }
+    );
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const isFiltered =
     Boolean(search) ||
     statusFilter !== 'ALL' ||
@@ -86,7 +113,7 @@ export function RequestFilterBar({
             className="w-full appearance-none rounded-md border border-line bg-surface pl-3 pr-8 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif cursor-pointer"
           >
             <option value="ALL">All Projects</option>
-            {MOCK_PROJECTS.map((proj) => (
+            {projects.map((proj) => (
               <option key={proj} value={proj}>
                 {proj}
               </option>
@@ -107,7 +134,7 @@ export function RequestFilterBar({
             className="w-full appearance-none rounded-md border border-line bg-surface pl-3 pr-8 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif cursor-pointer"
           >
             <option value="ALL">All Vendors</option>
-            {MOCK_VENDORS.map((v) => (
+            {vendors.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
               </option>

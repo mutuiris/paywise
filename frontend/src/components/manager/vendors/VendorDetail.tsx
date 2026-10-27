@@ -13,6 +13,8 @@ import { VendorHistoryTable } from './VendorHistoryTable';
 import { VendorItem, PaymentRequestItem } from '@/types/manager';
 import { vendorService, paymentService } from '@/lib/api/services';
 import { AlertCircle } from 'lucide-react';
+import { DEMO_MODE } from '@/lib/config';
+import { toPaymentMethod, toRequestItem } from '../common/mapPaymentRequest';
 
 export interface VendorDetailProps {
   vendorId: string;
@@ -20,83 +22,68 @@ export interface VendorDetailProps {
 }
 
 export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailProps) {
-  const fallbackVendor = MOCK_VENDORS.find((v) => v.id === vendorId) || MOCK_VENDORS[0];
-  const [vendor, setVendor] = useState<VendorItem>(fallbackVendor);
-  const [vendorRequests, setVendorRequests] = useState<PaymentRequestItem[]>(
-    INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === fallbackVendor.id)
+  const [vendor, setVendor] = useState<VendorItem | null>(
+    DEMO_MODE ? MOCK_VENDORS.find((v) => v.id === vendorId) ?? null : null
   );
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [vendorRequests, setVendorRequests] = useState<PaymentRequestItem[]>(
+    DEMO_MODE ? INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === vendorId) : []
+  );
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (DEMO_MODE) return;
     let ignore = false;
 
     Promise.allSettled([
       vendorService.getVendor(vendorId),
-      paymentService.listRequests({ vendor: vendorId }),
-    ])
-      .then(([vRes, pRes]) => {
-        if (ignore) return;
-        let foundLiveVendor = false;
+      paymentService.listRequests({ vendor_id: vendorId, limit: '500' }),
+    ]).then(([vRes, pRes]) => {
+      if (ignore) return;
 
-        if (vRes.status === 'fulfilled' && vRes.value) {
-          const v = vRes.value;
-          if (v && (v.id || v.name)) {
-            const mappedVendor: VendorItem = {
-              id: v.id || vendorId,
-              name: v.name,
-              service: v.service,
-              contactName: v.contactName,
-              contactEmail: v.contactEmail,
-              contactPhone: v.contactPhone,
-              payoutMethod: v.payoutMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-              bankName: v.bankName,
-              accountNumber: v.accountNumber,
-              isActive: v.isActive,
-              createdAt: v.createdAt,
-            };
-            setVendor(mappedVendor);
-            foundLiveVendor = true;
-          }
-        }
+      if (vRes.status === 'fulfilled') {
+        const v = vRes.value;
+        setVendor({
+          id: v.id || vendorId,
+          name: v.name,
+          service: v.service,
+          contactName: v.contactName,
+          contactEmail: v.contactEmail,
+          contactPhone: v.contactPhone,
+          payoutMethod: toPaymentMethod(v.payoutMethod),
+          bankName: v.bankName,
+          accountNumber: v.accountNumber,
+          isActive: v.isActive,
+          createdAt: v.createdAt,
+        });
+      } else {
+        const err = vRes.reason;
+        setLoadError(err instanceof Error ? err.message : 'Unable to load this vendor.');
+      }
 
-        if (pRes.status === 'fulfilled' && pRes.value) {
-          const list = pRes.value;
-          if (list.length > 0) {
-            const mappedRequests: PaymentRequestItem[] = list.map((r) => ({
-              id: r.id,
-              reference: r.reference,
-              vendorId: r.vendorId,
-              vendorName: r.vendorName || fallbackVendor.name,
-              amount: r.amount,
-              currency: 'KES',
-              invoiceNumber: r.invoiceNumber,
-              project: r.project,
-              requesterId: r.requesterId,
-              requesterName: r.requesterName,
-              paymentMethod: r.paymentMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-              requestedPaymentDate: r.createdAt,
-              notes: r.notes || '',
-              reason: r.reason,
-              status: r.status,
-              rejectionReason: r.rejectionReason,
-              createdAt: r.createdAt,
-              updatedAt: r.updatedAt,
-            }));
-            setVendorRequests(mappedRequests);
-          }
-        }
-
-        setUsingFallback(!foundLiveVendor);
-      })
-      .catch(() => {
-        if (ignore) return;
-        setUsingFallback(true);
-      });
+      if (pRes.status === 'fulfilled') {
+        setVendorRequests((pRes.value.results ?? []).map(toRequestItem));
+      }
+    });
 
     return () => {
       ignore = true;
     };
-  }, [vendorId, fallbackVendor.name]);
+  }, [vendorId]);
+
+  if (!vendor) {
+    return (
+      <div className="space-y-4 font-serif max-w-6xl mx-auto pb-12">
+        {loadError ? (
+          <div role="alert" className="flex items-center gap-2 rounded-lg border border-err/30 bg-err-light p-3 text-xs text-err">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-ink">Loading vendor…</p>
+        )}
+      </div>
+    );
+  }
 
   const totalPaid = vendorRequests
     .filter((r) => r.status === 'PAID')
@@ -111,10 +98,10 @@ export function VendorDetail({ vendorId, basePath = '/manager' }: VendorDetailPr
       {/* 1. Header & Navigation */}
       <VendorHeader vendor={vendor} basePath={basePath} />
 
-      {usingFallback && (
+      {DEMO_MODE && (
         <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
           <AlertCircle className="size-4 shrink-0 text-amber-600" />
-          <span>Showing cached demonstration vendor profile (Backend server unreachable).</span>
+          <span>Demo mode: showing a sample vendor profile. Nothing is read from the backend.</span>
         </div>
       )}
 

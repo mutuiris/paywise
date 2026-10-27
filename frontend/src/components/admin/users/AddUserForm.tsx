@@ -2,7 +2,7 @@ import React from 'react';
 import { UserRole, ROLE_LABELS } from '@/types/auth';
 
 export interface AddUserFormData {
-  name: string; email: string; department: string; role: UserRole;
+  name: string; email: string; password: string; department: string; role: UserRole;
 }
 
 export function AddUserForm({ data, onChange }: { data: AddUserFormData; onChange: (d: AddUserFormData) => void }) {
@@ -15,6 +15,10 @@ export function AddUserForm({ data, onChange }: { data: AddUserFormData; onChang
       <div>
         <label className="block text-xs font-semibold text-ink">Email Address</label>
         <input type="email" required value={data.email} onChange={(e) => onChange({ ...data, email: e.target.value })} placeholder="samuel.gitau@imaraworks.co.ke" className="mt-1 w-full rounded-md border border-line px-3 py-1.5 text-xs text-ink focus:border-brand focus:outline-none" />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-ink">Initial Password</label>
+        <input type="password" required minLength={8} autoComplete="new-password" value={data.password} onChange={(e) => onChange({ ...data, password: e.target.value })} placeholder="At least 8 characters" className="mt-1 w-full rounded-md border border-line px-3 py-1.5 text-xs text-ink focus:border-brand focus:outline-none" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

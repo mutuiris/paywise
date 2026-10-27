@@ -14,11 +14,10 @@ import {
 } from 'lucide-react';
 import { useApiResource } from '@/hooks/useApiResource';
 import { listProjects, listVendors } from '@/api/vendors';
-import { createPaymentRequest } from '@/api/payments';
+import { createPaymentRequest, submitPaymentRequest } from '@/api/payments';
 import {
   DemoDataBanner,
   ErrorState,
-  IntegrationBlockedState,
 } from '@/components/employee/AsyncState';
 import { PaymentStatusBadge } from '@/components/employee/StatusBadge';
 import { toApiError, type ApiError } from '@/lib/api-client';
@@ -84,8 +83,7 @@ export default function NewPaymentRequestPage() {
   const fieldErrors = submitError?.fieldErrors ?? {};
   const tier = useMemo(() => approvalTierForAmount(form.amount || '0'), [form.amount]);
 
-  const blocked = submitError?.kind === 'notfound' || submitError?.kind === 'unknown';
-  const formLevelError = submitError && !blocked ? submitError : null;
+  const formLevelError = submitError;
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((previous) => ({ ...previous, [key]: value }));
@@ -116,7 +114,8 @@ export default function NewPaymentRequestPage() {
         payment_method: form.paymentMethod,
         supporting_notes: form.supportingNotes.trim(),
       });
-      setCreated(request);
+      // Create returns a DRAFT; submitting is what puts it in the approval queue.
+      setCreated(await submitPaymentRequest(request.id));
     } catch (error) {
       setSubmitError(toApiError(error));
     } finally {
@@ -178,12 +177,6 @@ export default function NewPaymentRequestPage() {
         </div>
       </div>
 
-      {blocked ? (
-        <IntegrationBlockedState
-          title="Request submission is not connected yet"
-          description="The Paywise backend does not expose POST /api/payments/ in this build, so nothing was saved. This is an integration status, not a success."
-        />
-      ) : null}
 
       {formLevelError ? (
         <ErrorState

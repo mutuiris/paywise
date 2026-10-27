@@ -1,8 +1,0 @@
-{
-  "name": "paywise",
-  "private": true,
-  "scripts": {
-    "build": "npm --prefix frontend run build",
-    "vercel-build": "npm --prefix frontend run build"
-  }
-}

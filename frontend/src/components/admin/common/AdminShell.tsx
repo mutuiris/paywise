@@ -25,7 +25,6 @@ export function AdminShell({ children }: AdminShellProps) {
         {/* Admin Header */}
         <AppHeader
           user={DEMO_USERS.grace}
-          notificationCount={2}
           onMenuClick={() => setMobileOpen(true)}
         />
 

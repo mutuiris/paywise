@@ -6,7 +6,8 @@ import { Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
 import { INITIAL_PAYMENT_REQUESTS } from '@/data/mock-manager-data';
 import { paymentService } from '@/lib/api/services';
-import { PaymentRequest } from '@/lib/api/types';
+import { DEMO_MODE } from '@/lib/config';
+import { toRequestItem } from '../common/mapPaymentRequest';
 import { RequestFilterBar } from './RequestFilterBar';
 import { RequestsTable } from './RequestsTable';
 
@@ -15,9 +16,11 @@ export interface RequestsListProps {
 }
 
 export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) {
-  const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
-  const [loading, setLoading] = useState(false);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [requests, setRequests] = useState<PaymentRequestItem[]>(
+    DEMO_MODE ? INITIAL_PAYMENT_REQUESTS : []
+  );
+  const [loading, setLoading] = useState(!DEMO_MODE);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [vendorFilter, setVendorFilter] = useState<string>('ALL');
@@ -25,69 +28,24 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
-  const mapRequest = useCallback((r: PaymentRequest | Record<string, unknown>): PaymentRequestItem => {
-    const raw = r as Record<string, unknown>;
-    return {
-      id: String(raw.id || ''),
-      reference: String(raw.reference || raw.invoice_number || (raw.id ? `PR-${String(raw.id).slice(0, 6).toUpperCase()}` : 'PR-REQ')),
-      vendorId: String(raw.vendorId || raw.vendor_id || ''),
-      vendorName: String(raw.vendorName || raw.vendor_name || 'Designated Vendor'),
-      amount: typeof raw.amount === 'number' ? raw.amount : parseFloat(String(raw.amount)) || 0,
-      currency: 'KES',
-      invoiceNumber: String(raw.invoiceNumber || raw.invoice_number || (raw.id ? `INV-${String(raw.id).slice(0, 6).toUpperCase()}` : 'INV-REQ')),
-      project: String(raw.project || raw.project_name || 'ImaraWorks Construction'),
-      requesterId: String(raw.requesterId || raw.requester_id || ''),
-      requesterName: String(raw.requesterName || raw.requester_username || 'Employee'),
-      paymentMethod: (raw.paymentMethod || raw.payment_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-      requestedPaymentDate: String(raw.createdAt || raw.created_at || new Date().toISOString()),
-      notes: String(raw.notes || raw.description || ''),
-      reason: String(raw.reason || raw.description || ''),
-      status: (raw.status as PaymentRequestItem['status']) || 'DRAFT',
-      rejectionReason: typeof raw.rejectionReason === 'string' ? raw.rejectionReason : typeof raw.rejection_reason === 'string' ? raw.rejection_reason : undefined,
-      createdAt: String(raw.createdAt || raw.created_at || new Date().toISOString()),
-      updatedAt: String(raw.updatedAt || raw.updated_at || new Date().toISOString()),
-    };
-  }, []);
-
-  const fetchLiveRequests = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setLoading(true);
+  const fetchLiveRequests = useCallback(async () => {
+    if (DEMO_MODE) return;
+    setLoading(true);
     try {
-      const res = await paymentService.listRequests();
-      if (res && res.length > 0) {
-        setRequests(res.map(mapRequest));
-        setUsingFallback(false);
-      } else {
-        setUsingFallback(true);
-      }
-    } catch {
-      setUsingFallback(true);
+      const res = await paymentService.listRequests({ limit: '500' });
+      setRequests((res.results ?? []).map(toRequestItem));
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Unable to load payment requests.');
     } finally {
       setLoading(false);
     }
-  }, [mapRequest]);
+  }, []);
 
   useEffect(() => {
-    let ignore = false;
-    paymentService
-      .listRequests()
-      .then((res) => {
-        if (ignore) return;
-        if (res && res.length > 0) {
-          setRequests(res.map(mapRequest));
-          setUsingFallback(false);
-        } else {
-          setUsingFallback(true);
-        }
-      })
-      .catch(() => {
-        if (ignore) return;
-        setUsingFallback(true);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [mapRequest]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
+    fetchLiveRequests();
+  }, [fetchLiveRequests]);
 
   // Filtering
   const filtered = requests.filter((r) => {
@@ -142,7 +100,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
-            onClick={() => fetchLiveRequests(true)}
+            onClick={() => fetchLiveRequests()}
             disabled={loading}
             className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-2 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs cursor-pointer disabled:opacity-50"
           >
@@ -161,10 +119,17 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
         </div>
       </div>
 
-      {usingFallback && (
+      {DEMO_MODE && (
         <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
           <AlertCircle className="size-4 shrink-0 text-muted-ink" />
-          <span>Backend payments endpoint unseeded or offline. Displaying demonstration requisitions.</span>
+          <span>Demo mode: showing sample requisitions. Nothing is read from the backend.</span>
+        </div>
+      )}
+
+      {loadError && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-err/30 bg-err-light p-3 text-xs text-err">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{loadError}</span>
         </div>
       )}
 

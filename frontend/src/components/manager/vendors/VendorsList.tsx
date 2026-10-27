@@ -6,8 +6,10 @@ import {
   MOCK_VENDORS,
   INITIAL_PAYMENT_REQUESTS,
 } from '@/data/mock-manager-data';
-import { VendorItem } from '@/types/manager';
-import { vendorService } from '@/lib/api/services';
+import { PaymentRequestItem, VendorItem } from '@/types/manager';
+import { paymentService, vendorService } from '@/lib/api/services';
+import { DEMO_MODE } from '@/lib/config';
+import { toPaymentMethod, toRequestItem } from '../common/mapPaymentRequest';
 import { Vendor } from '@/lib/api/types';
 import { VendorsOverviewStats } from './VendorsOverviewStats';
 import { VendorsTable, VendorWithStats } from './VendorsTable';
@@ -17,9 +19,12 @@ export interface VendorsListProps {
 }
 
 export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
-  const [vendors, setVendors] = useState<VendorItem[]>(MOCK_VENDORS);
-  const [loading, setLoading] = useState(false);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [vendors, setVendors] = useState<VendorItem[]>(DEMO_MODE ? MOCK_VENDORS : []);
+  const [requests, setRequests] = useState<PaymentRequestItem[]>(
+    DEMO_MODE ? INITIAL_PAYMENT_REQUESTS : []
+  );
+  const [loading, setLoading] = useState(!DEMO_MODE);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   const mapVendor = useCallback((v: Vendor | Record<string, unknown>): VendorItem => {
@@ -32,7 +37,7 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
       contactName: String(raw.contactName || raw.name || ''),
       contactEmail: String(raw.contactEmail || raw.email || ''),
       contactPhone: String(raw.contactPhone || raw.phone_number || ''),
-      payoutMethod: (raw.payoutMethod || pd.payout_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+      payoutMethod: toPaymentMethod(String(raw.payoutMethod || pd.payout_method || '')),
       bankName: typeof raw.bankName === 'string' ? raw.bankName : typeof pd.bank_name === 'string' ? pd.bank_name : undefined,
       accountNumber:
         typeof raw.accountNumber === 'string'
@@ -47,49 +52,34 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
     };
   }, []);
 
-  const fetchLiveVendors = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setLoading(true);
-    try {
-      const res = await vendorService.listVendors();
-      if (res && res.length > 0) {
-        setVendors(res.map(mapVendor));
-        setUsingFallback(false);
-      } else {
-        setUsingFallback(true);
-      }
-    } catch {
-      setUsingFallback(true);
-    } finally {
-      setLoading(false);
+  const fetchLiveVendors = useCallback(async () => {
+    if (DEMO_MODE) return;
+    setLoading(true);
+    const [vendorRes, requestRes] = await Promise.allSettled([
+      vendorService.listVendors(),
+      paymentService.listRequests({ limit: '500' }),
+    ]);
+    if (vendorRes.status === 'fulfilled') {
+      setVendors(vendorRes.value.map(mapVendor));
+      setLoadError(null);
+    } else {
+      const err = vendorRes.reason;
+      setLoadError(err instanceof Error ? err.message : 'Unable to load vendors.');
     }
+    if (requestRes.status === 'fulfilled') {
+      setRequests((requestRes.value.results ?? []).map(toRequestItem));
+    }
+    setLoading(false);
   }, [mapVendor]);
 
   useEffect(() => {
-    let ignore = false;
-    vendorService
-      .listVendors()
-      .then((res) => {
-        if (ignore) return;
-        if (res && res.length > 0) {
-          setVendors(res.map(mapVendor));
-          setUsingFallback(false);
-        } else {
-          setUsingFallback(true);
-        }
-      })
-      .catch(() => {
-        if (ignore) return;
-        setUsingFallback(true);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [mapVendor]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
+    fetchLiveVendors();
+  }, [fetchLiveVendors]);
 
   // Calculate dynamic stats for each vendor
   const vendorStats: VendorWithStats[] = vendors.map((v) => {
-    const vendorRequests = INITIAL_PAYMENT_REQUESTS.filter((r) => r.vendorId === v.id);
+    const vendorRequests = requests.filter((r) => r.vendorId === v.id);
     const totalPaid = vendorRequests
       .filter((r) => r.status === 'PAID')
       .reduce((acc, r) => acc + r.amount, 0);
@@ -135,7 +125,7 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
 
         <button
           type="button"
-          onClick={() => fetchLiveVendors(true)}
+          onClick={() => fetchLiveVendors()}
           disabled={loading}
           className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs cursor-pointer disabled:opacity-50"
         >
@@ -144,10 +134,17 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
         </button>
       </div>
 
-      {usingFallback && (
+      {DEMO_MODE && (
         <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
           <AlertCircle className="size-4 shrink-0 text-muted-ink" />
-          <span>Backend vendors endpoint unseeded or offline. Displaying demonstration vendor registry.</span>
+          <span>Demo mode: showing a sample vendor registry. Nothing is read from the backend.</span>
+        </div>
+      )}
+
+      {loadError && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-err/30 bg-err-light p-3 text-xs text-err">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{loadError}</span>
         </div>
       )}
 
@@ -156,7 +153,7 @@ export function VendorsList({ basePath = '/manager' }: VendorsListProps = {}) {
         totalVendors={vendorStats.length}
         activeVendors={activeVendors}
         totalCumulativePaid={totalCumulativePaid}
-        totalRequisitions={INITIAL_PAYMENT_REQUESTS.length}
+        totalRequisitions={requests.length}
       />
 
       {/* Vendors Table Card */}

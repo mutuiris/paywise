@@ -12,6 +12,7 @@ export function ReconciliationView() {
   const {
     filtered,
     verifyingId,
+    error,
     search,
     setSearch,
     statusFilter,
@@ -26,6 +27,11 @@ export function ReconciliationView() {
     <div className="space-y-6 font-serif">
       <ReconciliationHeader />
       <ReconciliationNotice />
+      {error && (
+        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+          {error}
+        </div>
+      )}
       <ReconciliationStats
         ambiguousCount={ambiguousCount}
         succeededCount={succeededCount}
