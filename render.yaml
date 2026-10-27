@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: paywise-backend
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: prod
+    autoDeployTrigger: checksPass
+    dockerContext: .
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health/
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      # Single instance, so migrating on boot is safe.
+      - key: RUN_MIGRATIONS
+        value: "true"
+      # Set to the Vercel production URL, e.g. https://paywise.vercel.app
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: paywise-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: paywise-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: paywise-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: paywise-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: paywise-db
+          property: password
+
+databases:
+  - name: paywise-db
+    plan: free
+    region: frankfurt
+    databaseName: paywise
+    user: paywise

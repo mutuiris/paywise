@@ -388,7 +388,6 @@ def payment_attempt_list_view(request: HttpRequest) -> JsonResponse:
     if status := request.GET.get("status"):
         attempts = attempts.filter(status=status.upper())
 
-    # ponytail: capped at 200, add pagination when attempt volume needs it
     results = [
         {
             **payment_attempt_to_dict(a),

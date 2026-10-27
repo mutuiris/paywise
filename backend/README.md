@@ -136,16 +136,23 @@ production.
 
 ### Deploying
 
-Backend environment:
+Pushing to `prod` runs CI. Render deploys the backend once CI passes, and
+Vercel deploys the frontend from its own Git integration.
 
-- `DJANGO_SETTINGS_MODULE=config.settings.production`
-- `DJANGO_SECRET_KEY`, `POSTGRES_*`
-- `DJANGO_ALLOWED_HOSTS` — the backend's own hostname
-- `DJANGO_CSRF_TRUSTED_ORIGINS` — the frontend origin, e.g. `https://paywise.vercel.app`
-- Run `python manage.py migrate` once per release (or `RUN_MIGRATIONS=true` in a release job)
+**Backend (Render).** `render.yaml` at the repo root defines the web service
+(Docker, `backend/Dockerfile`, health check `/health/`) and its Postgres
+database. Create it once from the Render dashboard (New → Blueprint), then set
+`DJANGO_CSRF_TRUSTED_ORIGINS` to the Vercel production URL. Migrations run on
+boot. Create the first users from the Render shell:
 
-Frontend (Vercel): set `PAYWISE_API_ORIGIN` to the backend URL. Next.js proxies
-`/api/*` to it, so the browser stays same-origin and no CORS setup is needed.
+```bash
+python manage.py seed_demo --password '<something-strong>'   # or createsuperuser
+```
+
+**Frontend (Vercel).** In the Vercel project settings, set Root Directory to
+`frontend`, Production Branch to `prod`, and the Production environment
+variable `PAYWISE_API_ORIGIN` to the Render URL. Next.js proxies `/api/*` to
+the backend, so no CORS setup is needed.
 
 The Django admin (`/admin/`) has no static file serving under gunicorn, so its
 pages render unstyled; the app itself does not need it.
