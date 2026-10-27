@@ -16,10 +16,10 @@ services:
         value: config.settings.production
       - key: DJANGO_SECRET_KEY
         generateValue: true
-      # Single instance, so migrating on boot is safe.
+      # This is single instance migrating on boot is safe.
       - key: RUN_MIGRATIONS
         value: "true"
-      # Set to the Vercel production URL, e.g. https://paywise.vercel.app
+      # Set to the production URL
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         sync: false
       - key: POSTGRES_HOST
