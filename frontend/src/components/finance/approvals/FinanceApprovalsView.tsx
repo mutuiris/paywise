@@ -7,6 +7,7 @@ import { FinanceApprovalsStats } from './FinanceApprovalsStats';
 import { FinanceApprovalItem } from './FinanceApprovalItem';
 import { RejectionModal } from '@/components/approvals/RejectionModal';
 import { approvalService } from '@/lib/api/services';
+import { DEMO_MODE } from '@/lib/config';
 import { getClientUser } from '@/lib/auth/session';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -14,7 +15,6 @@ export function FinanceApprovalsView() {
   const [items, setItems] = useState<PendingFinanceApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [usingFallback, setUsingFallback] = useState(false);
   const [rejectingItem, setRejectingItem] = useState<PendingFinanceApproval | null>(null);
   const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
   const currentUser = getClientUser();
@@ -24,47 +24,17 @@ export function FinanceApprovalsView() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const fetchQueue = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setLoading(true);
-      setError(null);
-    }
+  const fetchQueue = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
+      if (DEMO_MODE) {
+        setItems(MOCK_FINANCE_APPROVALS);
+        return;
+      }
       const res = await approvalService.getQueue({ tier: 'FINANCE' });
-      const apiItems: PendingFinanceApproval[] = (res.results || []).map((req) => ({
-        id: req.id,
-        reference: req.invoice_number || `PR-${req.id.slice(0, 6).toUpperCase()}`,
-        vendorName: req.vendor_name || 'Designated Vendor',
-        amount: parseFloat(req.amount) || 0,
-        reason: req.description || 'Vendor requisition',
-        requesterId: req.requester_id || undefined,
-        requesterName: req.requester_name || 'Employee',
-        project: 'ImaraWorks Construction',
-        managerApprovedBy: req.approved_tiers?.includes('MANAGER') ? 'Manager Clearance' : 'Pending Manager',
-        managerApprovedAt: req.created_at || new Date().toISOString(),
-        invoiceNumber: req.invoice_number,
-      }));
-
-      setItems(apiItems);
-      setUsingFallback(false);
-    } catch (err: unknown) {
-      // Backend not running or unauthenticated
-      setUsingFallback(true);
-      setItems(MOCK_FINANCE_APPROVALS);
-      const msg = err instanceof Error ? err.message : 'Failed to fetch approvals from server.';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let ignore = false;
-    approvalService
-      .getQueue({ tier: 'FINANCE' })
-      .then((res) => {
-        if (ignore) return;
-        const apiItems: PendingFinanceApproval[] = (res.results || []).map((req) => ({
+      setItems(
+        (res.results || []).map((req) => ({
           id: req.id,
           reference: req.invoice_number || `PR-${req.id.slice(0, 6).toUpperCase()}`,
           vendorName: req.vendor_name || 'Designated Vendor',
@@ -72,29 +42,23 @@ export function FinanceApprovalsView() {
           reason: req.description || 'Vendor requisition',
           requesterId: req.requester_id || undefined,
           requesterName: req.requester_name || 'Employee',
-          project: 'ImaraWorks Construction',
+          project: req.project_name || '—',
           managerApprovedBy: req.approved_tiers?.includes('MANAGER') ? 'Manager Clearance' : 'Pending Manager',
-          managerApprovedAt: req.created_at || new Date().toISOString(),
+          managerApprovedAt: req.created_at || '',
           invoiceNumber: req.invoice_number,
-        }));
-
-        setItems(apiItems);
-        setUsingFallback(false);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (ignore) return;
-        setUsingFallback(true);
-        setItems(MOCK_FINANCE_APPROVALS);
-        const msg = err instanceof Error ? err.message : 'Failed to fetch approvals from server.';
-        setError(msg);
-        setLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
+        }))
+      );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch approvals from server.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch
+    fetchQueue();
+  }, [fetchQueue]);
 
   const handleApprove = async (item: PendingFinanceApproval) => {
     try {
@@ -136,7 +100,7 @@ export function FinanceApprovalsView() {
         <FinanceApprovalsHeader />
         <button
           type="button"
-          onClick={() => fetchQueue(true)}
+          onClick={fetchQueue}
           disabled={loading}
           className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition"
         >
@@ -145,10 +109,10 @@ export function FinanceApprovalsView() {
         </button>
       </div>
 
-      {usingFallback && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+      {error && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
           <AlertCircle className="size-4 shrink-0 text-amber-600" />
-          <span>Showing cached demonstration queue ({error || 'Backend service unreachable'}). Dual approvals are simulated in local mode.</span>
+          <span>{error}</span>
         </div>
       )}
 

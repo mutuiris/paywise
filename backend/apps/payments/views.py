@@ -9,9 +9,9 @@ from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from apps.accounts.models import UserRole
 from apps.core.security import authenticated_user
 from apps.payments import services
 from apps.payments.models import (
@@ -98,7 +98,6 @@ def _parse_json_body(request: HttpRequest) -> dict[str, Any]:
         raise ValidationError(f"Invalid JSON payload: {exc}") from exc
 
 
-@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def payment_request_list_view(request: HttpRequest) -> JsonResponse:
     """List and filter payment requests (GET) or create a draft request (POST)."""
@@ -220,7 +219,6 @@ def payment_request_list_view(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["GET", "PUT", "PATCH"])
 def payment_request_detail_view(
     request: HttpRequest,
@@ -282,7 +280,6 @@ def payment_request_detail_view(
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def payment_request_submit_view(
     request: HttpRequest, payment_id: uuid.UUID
@@ -317,7 +314,6 @@ def payment_request_submit_view(
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def payment_request_process_view(
     request: HttpRequest, payment_id: uuid.UUID
@@ -371,7 +367,39 @@ def payment_request_process_view(
         return JsonResponse({"error": str(exc)}, status=403)
 
 
-@csrf_exempt
+@require_http_methods(["GET"])
+def payment_attempt_list_view(request: HttpRequest) -> JsonResponse:
+    """List payment attempts for finance reconciliation, optionally by status."""
+    if not is_active_authenticated_user(request.user):
+        return JsonResponse({"error": "Authentication required."}, status=401)
+    if not (
+        getattr(request.user, "is_superuser", False)
+        or getattr(request.user, "role", None)
+        in (UserRole.FINANCE_OFFICER, UserRole.ADMINISTRATOR)
+    ):
+        return JsonResponse(
+            {"error": "Only Finance Officers and Administrators can view attempts."},
+            status=403,
+        )
+
+    attempts = PaymentAttempt.objects.select_related(
+        "payment_request__vendor"
+    ).order_by("-created_at")
+    if status := request.GET.get("status"):
+        attempts = attempts.filter(status=status.upper())
+
+    # ponytail: capped at 200, add pagination when attempt volume needs it
+    results = [
+        {
+            **payment_attempt_to_dict(a),
+            "invoice_number": a.payment_request.invoice_number,
+            "vendor_name": a.payment_request.vendor.name,
+        }
+        for a in attempts[:200]
+    ]
+    return JsonResponse({"results": results, "count": len(results)}, status=200)
+
+
 @require_http_methods(["POST"])
 def payment_attempt_reconcile_view(
     request: HttpRequest, attempt_id: uuid.UUID

@@ -11,7 +11,7 @@ import { ForgotNotice } from './ForgotNotice';
 import { authService } from '@/lib/api/services';
 import { ApiClientError } from '@/lib/api/client';
 import { setClientSession, getRoleDashboardPath } from '@/lib/auth/session';
-import { DEMO_USERS } from '@/types/auth';
+import { SHOW_DEMO_ACCOUNTS } from '@/lib/config';
 
 interface AuthError {
   title: string;
@@ -20,6 +20,12 @@ interface AuthError {
 }
 
 const DEMO_ACCOUNTS = [
+  {
+    name: 'Grace Otieno',
+    role: 'Administrator',
+    email: 'grace.otieno@imaraworks.co.ke',
+    target: '/admin/dashboard',
+  },
   {
     name: 'Faith Njeri',
     role: 'Finance Officer',
@@ -79,33 +85,20 @@ export function SignInForm() {
       return;
     }
 
+    await signIn(trimmedEmail, password);
+  };
+
+  const signIn = async (username: string, secret: string) => {
+    setError(null);
     setIsSubmitting(true);
-
     try {
-      // 1. Attempt authentication with backend API endpoint
-      const res = await authService.login({
-        username: trimmedEmail,
-        password,
-      });
-
-      if (res && res.user) {
-        setClientSession(res.user);
-        router.push(getRoleDashboardPath(res.user.role));
-        return;
-      }
+      const res = await authService.login({ username, password: secret });
+      setClientSession(res.user);
+      router.push(getRoleDashboardPath(res.user.role));
     } catch (err: unknown) {
-      // 2. Human-centered error handling mapping
       if (err instanceof ApiClientError) {
-        if (err.status === 401) {
-          setError({
-            title: 'Incorrect credentials',
-            message: 'Email/username or password do not match.',
-            suggestion: 'Please verify your spelling, ensure Caps Lock is off, or try one of the demo users (faith, carol, alice, or grace).',
-          });
-          return;
-        }
-
-        if (err.status === 403) {
+        // The backend answers 401 for both bad credentials and inactive accounts.
+        if (err.status === 401 && /inactive/i.test(err.message)) {
           setError({
             title: 'Account inactive',
             message: 'This user account is currently disabled or pending administrative activation.',
@@ -114,84 +107,46 @@ export function SignInForm() {
           return;
         }
 
-        // If backend returned a 5xx or server proxy error, check for offline demo match
-        if (err.status >= 500) {
-          const normalized = trimmedEmail.toLowerCase();
-          const matchedUser = Object.values(DEMO_USERS).find(
-            (u) =>
-              u.email.toLowerCase() === normalized ||
-              u.name.toLowerCase().includes(normalized) ||
-              normalized.includes(u.name.toLowerCase().split(' ')[0])
-          );
-
-          if (matchedUser && password.trim().length > 0) {
-            setClientSession({
-              id: matchedUser.id,
-              name: matchedUser.name,
-              email: matchedUser.email,
-              role: matchedUser.role,
-              isActive: true,
-              department: matchedUser.department,
-              approvalLimit: matchedUser.approvalLimit,
-            });
-            router.push(getRoleDashboardPath(matchedUser.role));
-            return;
-          }
-
-          // If not a matching demo user, present user-friendly credential mismatch rather than server failure
+        if (err.status === 401) {
           setError({
             title: 'Incorrect credentials',
             message: 'Email/username or password do not match.',
-            suggestion: 'For testing, you can sign in as faith (Finance), carol (Manager), grace (Admin), or alice (Employee) with password: password123.',
+            suggestion: 'Please verify your spelling and ensure Caps Lock is off.',
           });
           return;
         }
 
-        // Other client errors (400 validation, etc.)
+        // 403 here is Django's CSRF/origin check, not the account.
+        if (err.status === 403) {
+          setError({
+            title: 'Sign-in blocked by security check',
+            message: 'The server did not trust this page\'s origin.',
+            suggestion: 'Add this site\'s origin to DJANGO_CSRF_TRUSTED_ORIGINS on the backend.',
+          });
+          return;
+        }
+
+        if (err.status >= 500) {
+          setError({
+            title: 'Server error',
+            message: 'The PayWise server could not complete the sign-in.',
+            suggestion: 'Please try again shortly. If it keeps failing, contact IT Support.',
+          });
+          return;
+        }
+
         setError({
           title: 'Unable to sign in',
-          message: err.data?.detail || err.message || 'Please check your information and try again.',
+          message: err.message || 'Please check your information and try again.',
           suggestion: 'Ensure your work email or username and password are typed correctly.',
         });
         return;
       }
 
-      // Network failure (offline / unreachable fetch)
-      if (err instanceof Error) {
-        const normalized = trimmedEmail.toLowerCase();
-        const matchedUser = Object.values(DEMO_USERS).find(
-          (u) =>
-            u.email.toLowerCase() === normalized ||
-            u.name.toLowerCase().includes(normalized) ||
-            normalized.includes(u.name.toLowerCase().split(' ')[0])
-        );
-
-        if (matchedUser && password.trim().length > 0) {
-          setClientSession({
-            id: matchedUser.id,
-            name: matchedUser.name,
-            email: matchedUser.email,
-            role: matchedUser.role,
-            isActive: true,
-            department: matchedUser.department,
-            approvalLimit: matchedUser.approvalLimit,
-          });
-          router.push(getRoleDashboardPath(matchedUser.role));
-          return;
-        }
-
-        setError({
-          title: 'Incorrect credentials',
-          message: 'Email/username or password do not match.',
-          suggestion: 'Please verify your spelling or test using demo accounts: faith, carol, alice, or grace.',
-        });
-        return;
-      }
-
       setError({
-        title: 'Sign in failed',
-        message: 'An unexpected authentication error occurred.',
-        suggestion: 'Please check your connection and try again.',
+        title: "Can't reach PayWise",
+        message: 'The sign-in server is unreachable.',
+        suggestion: 'Check your connection, or confirm the backend is running, then try again.',
       });
     } finally {
       setIsSubmitting(false);
@@ -201,21 +156,7 @@ export function SignInForm() {
   const handleSelectDemo = (demo: (typeof DEMO_ACCOUNTS)[0]) => {
     setEmail(demo.email);
     setPassword('password123');
-    const matchedUser = Object.values(DEMO_USERS).find(
-      (u) => u.email.toLowerCase() === demo.email.toLowerCase()
-    );
-    if (matchedUser) {
-      setClientSession({
-        id: matchedUser.id,
-        name: matchedUser.name,
-        email: matchedUser.email,
-        role: matchedUser.role,
-        isActive: true,
-        department: matchedUser.department,
-        approvalLimit: matchedUser.approvalLimit,
-      });
-    }
-    router.push(demo.target);
+    signIn(demo.email, 'password123');
   };
 
   const hasError = Boolean(error);
@@ -287,32 +228,34 @@ export function SignInForm() {
       </form>
 
       {/* Demo Accounts Quick-Access */}
-      <div className="mt-8 rounded-lg border border-dashed border-line bg-surface p-4">
-        <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-ink">
-          Demo accounts (development only)
-        </p>
-        <p className="mt-1 text-[12px] text-muted-ink">
-          Click any account to jump directly into that role:
-        </p>
-        <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {DEMO_ACCOUNTS.map((acc) => (
-            <li key={acc.email}>
-              <button
-                type="button"
-                onClick={() => handleSelectDemo(acc)}
-                className="w-full rounded-md border border-line p-2 text-left transition hover:border-brand hover:bg-brand/5 cursor-pointer"
-              >
-                <span className="block text-[13px] font-medium text-ink">
-                  {acc.name}
-                </span>
-                <span className="block text-[11px] text-muted-ink">
-                  {acc.role}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {SHOW_DEMO_ACCOUNTS && (
+        <div className="mt-8 rounded-lg border border-dashed border-line bg-surface p-4">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-ink">
+            Demo accounts (development only)
+          </p>
+          <p className="mt-1 text-[12px] text-muted-ink">
+            Click any account to jump directly into that role:
+          </p>
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {DEMO_ACCOUNTS.map((acc) => (
+              <li key={acc.email}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectDemo(acc)}
+                  className="w-full rounded-md border border-line p-2 text-left transition hover:border-brand hover:bg-brand/5 cursor-pointer"
+                >
+                  <span className="block text-[13px] font-medium text-ink">
+                    {acc.name}
+                  </span>
+                  <span className="block text-[11px] text-muted-ink">
+                    {acc.role}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

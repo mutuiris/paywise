@@ -15,9 +15,9 @@ interface FinanceDashboardStatsProps {
 export function FinanceDashboardStats({
   queueCount,
   failedCount,
-  awaitingApprovalCount = 2,
-  paidCount = 14,
-  processingCount = 1,
+  awaitingApprovalCount = 0,
+  paidCount = 0,
+  processingCount = 0,
 }: FinanceDashboardStatsProps) {
   const router = useRouter();
 

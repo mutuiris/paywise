@@ -8,120 +8,54 @@ import { ActivityTimeline } from './ActivityTimeline';
 import { getAdminOverviewStats } from '@/data/mock-admin-store';
 import { INITIAL_AUDIT_EVENTS } from '@/data/mock-admin-audit';
 import { AuditEvent, AdminOverviewStats } from '@/types/admin';
-import { auditService, reportingService, vendorService } from '@/lib/api/services';
+import { auditService, reportingService, userService, vendorService } from '@/lib/api/services';
+import { DEMO_MODE } from '@/lib/config';
 import { getClientUser } from '@/lib/auth/session';
+import { toAuditEvent } from '../audit/useAudit';
 import { RefreshCw, AlertCircle } from 'lucide-react';
+
+const EMPTY_STATS: AdminOverviewStats = { totalUsers: 0, activeUsers: 0, totalVendors: 0, totalRequests: 0 };
 
 export function AdminDashboard() {
   const [currentUser] = useState(() => getClientUser());
-  const [stats, setStats] = useState<AdminOverviewStats>(getAdminOverviewStats());
-  const [events, setEvents] = useState<AuditEvent[]>(INITIAL_AUDIT_EVENTS);
+  const [stats, setStats] = useState<AdminOverviewStats>(EMPTY_STATS);
+  const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchAdminData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setLoading(true);
+  const fetchAdminData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const [auditRes, reportRes, vendorsRes] = await Promise.allSettled([
+      if (DEMO_MODE) {
+        setStats(getAdminOverviewStats());
+        setEvents(INITIAL_AUDIT_EVENTS);
+        return;
+      }
+      const [auditRes, reportRes, vendorsRes, usersRes] = await Promise.all([
         auditService.listEvents({ limit: '10' }),
         reportingService.getSummary(),
         vendorService.listVendors(),
+        userService.list(),
       ]);
-
-      // 1. Audit events
-      if (auditRes.status === 'fulfilled' && auditRes.value?.results?.length) {
-        const mappedEvents: AuditEvent[] = auditRes.value.results.map((e) => ({
-          id: e.id,
-          at: e.created_at || new Date().toISOString(),
-          actorName: e.actor_email ? e.actor_email.split('@')[0] : 'System Admin',
-          action: e.action,
-          entity: e.entity_type,
-          paymentRequestId: e.entity_type === 'PAYMENT_REQUEST' ? e.entity_id : undefined,
-          requestReference: e.entity_id ? e.entity_id.slice(0, 8).toUpperCase() : undefined,
-          description: e.description,
-        }));
-        setEvents(mappedEvents);
-      }
-
-      // 2. Metrics & Vendors
-      const baseStats = getAdminOverviewStats();
-      let totalVendors = baseStats.totalVendors;
-      let totalRequests = baseStats.totalRequests;
-
-      if (vendorsRes.status === 'fulfilled' && vendorsRes.value?.vendors) {
-        totalVendors = vendorsRes.value.vendors.length;
-      }
-
-      if (reportRes.status === 'fulfilled' && reportRes.value) {
-        totalRequests = reportRes.value.total_requests_count ?? baseStats.totalRequests;
-      }
-
+      setEvents((auditRes.results ?? []).map(toAuditEvent));
       setStats({
-        ...baseStats,
-        totalVendors,
-        totalRequests,
+        totalUsers: usersRes.results.length,
+        activeUsers: usersRes.results.filter((u) => u.is_active).length,
+        totalVendors: vendorsRes.vendors?.length ?? 0,
+        totalRequests: reportRes.total_requests_count ?? 0,
       });
-
-      setUsingFallback(false);
-    } catch {
-      setUsingFallback(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to load the administrator overview.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    Promise.allSettled([
-      auditService.listEvents({ limit: '10' }),
-      reportingService.getSummary(),
-      vendorService.listVendors(),
-    ]).then(([auditRes, reportRes, vendorsRes]) => {
-      if (ignore) return;
-      if (auditRes.status === 'fulfilled' && auditRes.value?.results?.length) {
-        const mappedEvents: AuditEvent[] = auditRes.value.results.map((e) => ({
-          id: e.id,
-          at: e.created_at || new Date().toISOString(),
-          actorName: e.actor_email ? e.actor_email.split('@')[0] : 'System Admin',
-          action: e.action,
-          entity: e.entity_type,
-          paymentRequestId: e.entity_type === 'PAYMENT_REQUEST' ? e.entity_id : undefined,
-          requestReference: e.entity_id ? e.entity_id.slice(0, 8).toUpperCase() : undefined,
-          description: e.description,
-        }));
-        setEvents(mappedEvents);
-      }
-
-      const baseStats = getAdminOverviewStats();
-      let totalVendors = baseStats.totalVendors;
-      let totalRequests = baseStats.totalRequests;
-
-      if (vendorsRes.status === 'fulfilled' && vendorsRes.value?.vendors) {
-        totalVendors = vendorsRes.value.vendors.length;
-      }
-
-      if (reportRes.status === 'fulfilled' && reportRes.value) {
-        totalRequests = reportRes.value.total_requests_count ?? baseStats.totalRequests;
-      }
-
-      setStats({
-        ...baseStats,
-        totalVendors,
-        totalRequests,
-      });
-
-      setUsingFallback(false);
-      setLoading(false);
-    }).catch(() => {
-      if (ignore) return;
-      setUsingFallback(true);
-      setLoading(false);
-    });
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch
+    fetchAdminData();
+  }, [fetchAdminData]);
 
   const firstName = currentUser?.name ? currentUser.name.split(' ')[0] : 'Administrator';
 
@@ -134,7 +68,7 @@ export function AdminDashboard() {
         />
         <button
           type="button"
-          onClick={() => fetchAdminData(true)}
+          onClick={fetchAdminData}
           disabled={loading}
           className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs"
         >
@@ -143,10 +77,10 @@ export function AdminDashboard() {
         </button>
       </div>
 
-      {usingFallback && (
-        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
-          <AlertCircle className="size-4 shrink-0 text-muted-ink" />
-          <span>Backend governance services unreachable. Showing system snapshot.</span>
+      {error && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+          <AlertCircle className="size-4 shrink-0 text-amber-600" />
+          <span>{error}</span>
         </div>
       )}
 

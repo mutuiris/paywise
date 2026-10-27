@@ -333,8 +333,8 @@ def process_payment_request(
     """Execute payment processing through the payment provider idempotently.
 
     Enforces that only Finance Officers and Administrators can initiate processing,
-    and only for requests in APPROVED status. Prevents duplicate provider executions
-    via the unique idempotency key.
+    and only for requests in APPROVED or FAILED (retry) status. Prevents
+    duplicate provider executions via the unique idempotency key.
     """
     if not getattr(actor, "is_active", False):
         raise PermissionDenied("Inactive users cannot process payments.")
@@ -388,13 +388,18 @@ def process_payment_request(
                 )
             return attempt_race, payment_request
 
-        if payment_request.status != PaymentRequestStatus.APPROVED:
+        # FAILED is retryable: the provider confirmed no money moved. AMBIGUOUS
+        # attempts keep the request PROCESSING, so they must be reconciled first.
+        if payment_request.status not in (
+            PaymentRequestStatus.APPROVED,
+            PaymentRequestStatus.FAILED,
+        ):
             raise ValidationError(
                 {
                     "status": (
                         f"Cannot process payment request with status "
-                        f"'{payment_request.status}'. Only APPROVED requests "
-                        "can be processed."
+                        f"'{payment_request.status}'. Only APPROVED or FAILED "
+                        "requests can be processed."
                     )
                 }
             )

@@ -12,7 +12,6 @@ export function ManagerHeader({ onMenuClick }: ManagerHeaderProps) {
   return (
     <AppHeader
       user={DEMO_USERS.carol}
-      notificationCount={3}
       onMenuClick={onMenuClick}
     />
   );

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Building2, ChevronDown } from 'lucide-react';
-import { MOCK_VENDORS } from '@/data/mock-manager-data';
 import { VendorItem } from '@/types/manager';
 
 interface VendorInvoicingSectionProps {
@@ -18,7 +17,7 @@ export function VendorInvoicingSection({
   vendorId,
   invoiceNumber,
   errors,
-  vendors = MOCK_VENDORS,
+  vendors = [],
   onVendorChange,
   onInvoiceNumberChange,
 }: VendorInvoicingSectionProps) {

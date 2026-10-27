@@ -7,6 +7,9 @@ import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { MOCK_VENDORS, MOCK_PROJECTS } from '@/data/mock-manager-data';
 import { PaymentMethod, VendorItem } from '@/types/manager';
 import { vendorService, paymentService } from '@/lib/api/services';
+import { apiClient } from '@/lib/api/client';
+import { DEMO_MODE } from '@/lib/config';
+import { toPaymentMethod } from '../common/mapPaymentRequest';
 import { VendorInvoicingSection } from './VendorInvoicingSection';
 import { AmountRoutingSection } from './AmountRoutingSection';
 import { ProjectSettlementSection } from './ProjectSettlementSection';
@@ -31,8 +34,10 @@ export function NewRequestForm({
   const effectiveBackHref = backHref || `${basePath}/requests`;
   const effectiveRedirectHref = redirectHref || `${basePath}/requests`;
 
-  const [vendors, setVendors] = useState<VendorItem[]>(MOCK_VENDORS);
-  const [projects, setProjects] = useState<string[]>(MOCK_PROJECTS);
+  const [vendors, setVendors] = useState<VendorItem[]>(DEMO_MODE ? MOCK_VENDORS : []);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>(
+    DEMO_MODE ? MOCK_PROJECTS.map((name) => ({ id: name, name })) : []
+  );
   const [vendorId, setVendorId] = useState('');
   const [amount, setAmount] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -47,36 +52,34 @@ export function NewRequestForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (DEMO_MODE) return;
     let ignore = false;
     Promise.allSettled([
       vendorService.listVendors(),
       vendorService.listProjects(),
     ]).then(([vendorsRes, projectsRes]) => {
       if (ignore) return;
-      if (vendorsRes.status === 'fulfilled' && vendorsRes.value) {
-        const rawList = vendorsRes.value;
-        if (rawList.length > 0) {
-          const mappedVendors: VendorItem[] = rawList.map((v) => ({
+      if (vendorsRes.status === 'fulfilled') {
+        setVendors(
+          vendorsRes.value.map((v) => ({
             id: v.id,
             name: v.name,
             service: v.service,
             contactName: v.contactName,
             contactEmail: v.contactEmail,
             contactPhone: v.contactPhone,
-            payoutMethod: v.payoutMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+            payoutMethod: toPaymentMethod(v.payoutMethod),
             bankName: v.bankName,
             accountNumber: v.accountNumber,
             isActive: v.isActive,
             createdAt: v.createdAt,
-          }));
-          setVendors(mappedVendors);
-        }
+          }))
+        );
+      } else {
+        setServerError('Unable to load vendors. Check the backend is running.');
       }
-      if (projectsRes.status === 'fulfilled' && projectsRes.value) {
-        const rawProjects = projectsRes.value;
-        if (rawProjects.length > 0) {
-          setProjects(rawProjects.map((p) => p.name));
-        }
+      if (projectsRes.status === 'fulfilled') {
+        setProjects(projectsRes.value.map((p) => ({ id: p.id, name: p.name })));
       }
     });
 
@@ -114,32 +117,37 @@ export function NewRequestForm({
     setIsSubmitting(true);
     setServerError(null);
 
+    if (DEMO_MODE) {
+      setServerError('Demo mode: requests are not saved.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    let createdId: string | null = null;
     try {
-      await paymentService.createRequest({
+      const created = await paymentService.createRequest({
         vendor_id: vendorId,
-        amount: numericAmount,
+        project_id: project,
+        amount: amount.trim(),
         currency: 'KES',
         invoice_number: invoiceNumber.trim(),
         description: reason.trim(),
-        payment_method: paymentMethod === 'BANK_TRANSFER' ? 'BANK' : 'MPESA',
+        payment_method: paymentMethod,
         supporting_notes: notes.trim(),
       });
+      createdId = created.id;
+      // Creation yields a DRAFT; submitting puts it in the approval queue.
+      await apiClient(`/api/payments/${createdId}/submit/`, { method: 'POST' });
 
       setSubmittedSuccess(true);
       setTimeout(() => {
         router.push(effectiveRedirectHref);
       }, 1500);
     } catch (err: unknown) {
-      // If backend fails (e.g. offline dev), fallback to optimistic local routing
-      if (err instanceof Error && err.message.includes('fetch')) {
-        setSubmittedSuccess(true);
-        setTimeout(() => {
-          router.push(effectiveRedirectHref);
-        }, 1500);
-      } else {
-        const msg = err instanceof Error ? err.message : 'Failed to submit payment request to backend.';
-        setServerError(msg);
-      }
+      const msg = err instanceof Error ? err.message : 'Failed to submit payment request to backend.';
+      setServerError(
+        createdId ? `Saved as a draft, but submitting for approval failed: ${msg}` : msg
+      );
     } finally {
       setIsSubmitting(false);
     }

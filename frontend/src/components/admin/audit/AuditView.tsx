@@ -13,7 +13,7 @@ export function AuditView() {
   const {
     search, setSearch, actionFilter, setActionFilter,
     page, setPage, pageSize, total, actionsList,
-    pagedEvents, loading, usingFallback, refreshEvents, handleClear,
+    pagedEvents, loading, error, refreshEvents, handleClear,
   } = useAudit();
 
   return (
@@ -31,10 +31,10 @@ export function AuditView() {
         </button>
       </div>
 
-      {usingFallback && (
-        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
-          <AlertCircle className="size-4 shrink-0 text-muted-ink" />
-          <span>Backend audit log service is currently offline or unseeded. Presenting demonstration governance records.</span>
+      {error && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+          <AlertCircle className="size-4 shrink-0 text-amber-600" />
+          <span>{error}</span>
         </div>
       )}
 

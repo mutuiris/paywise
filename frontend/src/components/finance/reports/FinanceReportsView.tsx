@@ -103,7 +103,7 @@ export function FinanceReportsView() {
       {usingFallback && (
         <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
           <AlertCircle className="size-4 shrink-0 text-muted-ink" />
-          <span>Backend reporting endpoints unavailable or unseeded. Demonstrating structured reporting template.</span>
+          <span>Could not load reporting data from the Paywise API. Try Refresh Data.</span>
         </div>
       )}
 

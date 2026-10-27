@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import {
-  INITIAL_PAYMENT_REQUESTS,
-  CURRENT_MANAGER,
-  formatDate,
-} from '@/data/mock-manager-data';
-import { PaymentRequestItem } from '@/types/manager';
+import { INITIAL_PAYMENT_REQUESTS, formatDate } from '@/data/mock-manager-data';
+import { ApprovalStepType, PaymentRequestItem } from '@/types/manager';
 import { StatusBadge } from '../common/StatusBadge';
 import { paymentService, approvalService } from '@/lib/api/services';
 import { getClientUser } from '@/lib/auth/session';
+import { DEMO_MODE } from '@/lib/config';
+import type { PaymentRequestDTO } from '@/lib/api/types';
+import { toRequestItem } from '../common/mapPaymentRequest';
 import { RequestHighlightCards } from './RequestHighlightCards';
 import { RequisitionDetailsCard } from './RequisitionDetailsCard';
 import { ApprovalActionCard } from './ApprovalActionCard';
@@ -24,60 +23,52 @@ export interface RequestDetailProps {
 }
 
 export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetailProps) {
-  const fallback = INITIAL_PAYMENT_REQUESTS.find((r) => r.id === requestId) || INITIAL_PAYMENT_REQUESTS[0];
-  const [request, setRequest] = useState<PaymentRequestItem>(fallback);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [request, setRequest] = useState<PaymentRequestItem | null>(
+    DEMO_MODE ? INITIAL_PAYMENT_REQUESTS.find((r) => r.id === requestId) ?? null : null
+  );
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
 
-  useEffect(() => {
-    let ignore = false;
-    paymentService
-      .getRequest(requestId)
-      .then((dto) => {
-        if (ignore) return;
-        if (dto) {
-          const mapped: PaymentRequestItem = {
-            id: dto.id,
-            reference: dto.reference,
-            vendorId: dto.vendorId,
-            vendorName: dto.vendorName,
-            amount: dto.amount,
-            currency: 'KES',
-            invoiceNumber: dto.invoiceNumber,
-            project: dto.project,
-            requesterId: dto.requesterId,
-            requesterName: dto.requesterName,
-            paymentMethod: dto.paymentMethod === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-            requestedPaymentDate: dto.createdAt,
-            notes: dto.notes || '',
-            reason: dto.reason,
-            status: dto.status,
-            rejectionReason: dto.rejectionReason,
-            createdAt: dto.createdAt,
-            updatedAt: dto.updatedAt,
-          };
-          setRequest(mapped);
-          setUsingFallback(false);
-        }
-      })
-      .catch(() => {
-        if (ignore) return;
-        setUsingFallback(true);
-      });
-
-    return () => {
-      ignore = true;
-    };
+  const loadRequest = useCallback(async () => {
+    if (DEMO_MODE) return;
+    const [requestRes, detailRes] = await Promise.allSettled([
+      paymentService.getRequest(requestId),
+      approvalService.getDetail(requestId),
+    ]);
+    if (requestRes.status === 'rejected') {
+      const err = requestRes.reason;
+      setLoadError(err instanceof Error ? err.message : 'Unable to load this payment request.');
+      return;
+    }
+    const item = toRequestItem(requestRes.value.payment_request as PaymentRequestDTO);
+    // Approval history and tiers come from the approvals endpoint when it is readable.
+    if (detailRes.status === 'fulfilled') {
+      const detail = detailRes.value;
+      item.requiredTiers = detail.required_tiers as ApprovalStepType[];
+      item.pendingTiers = detail.pending_tiers as ApprovalStepType[];
+      item.approvals = (detail.history ?? []).map((a) => ({
+        id: a.id,
+        type: a.tier,
+        decision: a.decision,
+        approverId: a.approver_id,
+        approverName: a.approver_name,
+        decidedAt: a.created_at || undefined,
+        reason: a.reason || undefined,
+      }));
+    }
+    setRequest(item);
+    setLoadError(null);
   }, [requestId]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
+    loadRequest();
+  }, [loadRequest]);
+
   const currentUser = getClientUser();
+  // The backend also rejects self-approval; this only hides the buttons early.
   const isSelfRequest = Boolean(
-    request && (
-      (currentUser && request.requesterId === currentUser.id) ||
-      (request.requesterName && currentUser?.name && request.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
-      request.requesterId === CURRENT_MANAGER.id ||
-      (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
-    )
+    request && currentUser?.id && request.requesterId === currentUser.id
   );
 
   const showToast = (message: string, isError = false) => {
@@ -86,14 +77,10 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
   };
 
   const handleApprove = async () => {
-    if (isSelfRequest) return;
+    if (!request || isSelfRequest) return;
     try {
       await approvalService.approve(request.id);
-      setRequest((prev) => ({
-        ...prev,
-        status: 'APPROVED',
-        updatedAt: new Date().toISOString(),
-      }));
+      await loadRequest();
       showToast(`✓ Payment request ${request.reference} has been approved.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Approval failed.';
@@ -102,20 +89,43 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
   };
 
   const handleReject = async (reason: string) => {
+    if (!request) return;
     try {
       await approvalService.reject(request.id, reason);
-      setRequest((prev) => ({
-        ...prev,
-        status: 'REJECTED',
-        updatedAt: new Date().toISOString(),
-        rejectionReason: reason,
-      }));
+      await loadRequest();
       showToast(`Payment request ${request.reference} was rejected.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Rejection failed.';
       showToast(msg, true);
     }
   };
+
+  if (!request) {
+    return (
+      <div className="space-y-4 font-serif max-w-5xl mx-auto pb-12">
+        <Link
+          href={`${basePath}/requests`}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-ink hover:text-ink transition-colors"
+        >
+          <ArrowLeft className="size-3.5" />
+          <span>Back to Payment Requests</span>
+        </Link>
+        {loadError ? (
+          <div role="alert" className="flex items-center gap-2 rounded-lg border border-err/30 bg-err-light p-3 text-xs text-err">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-ink">Loading payment request…</p>
+        )}
+      </div>
+    );
+  }
+
+  // Only offer the manager decision while the manager tier is still pending.
+  const managerDecisionPending =
+    (request.status === 'PENDING_APPROVAL' || request.status === 'SUBMITTED') &&
+    (request.pendingTiers ? request.pendingTiers.includes('MANAGER') : true);
 
   return (
     <div className="space-y-6 font-serif max-w-5xl mx-auto pb-12">
@@ -159,10 +169,10 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
         </div>
       </div>
 
-      {usingFallback && (
+      {DEMO_MODE && (
         <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">
           <AlertCircle className="size-4 shrink-0 text-muted-ink" />
-          <span>Backend payments endpoint offline. Displaying local data.</span>
+          <span>Demo mode: showing a sample request. Nothing is read from the backend.</span>
         </div>
       )}
 
@@ -175,7 +185,7 @@ export function RequestDetail({ requestId, basePath = '/manager' }: RequestDetai
         <div className="lg:col-span-2 space-y-6">
           <RequisitionDetailsCard request={request} />
 
-          {basePath === '/manager' && (request.status === 'PENDING_APPROVAL' || request.status === 'SUBMITTED') && (
+          {basePath === '/manager' && managerDecisionPending && (
             <ApprovalActionCard
               request={request}
               isSelfRequest={isSelfRequest}

@@ -99,11 +99,19 @@ logout, and the current identity are available at:
 
 Payment request creation uses `POST /api/payments/`; submit with
 `POST /api/payments/<id>/submit/`. Approval decisions use
-`POST /api/approvals/<id>/decisions/` with `tier`, `decision`, and a required
-nonblank `reason` for rejections. Processing requires a unique
+`POST /api/approvals/<id>/decide/` with `tier`, `decision`, and a required
+nonblank `reason` for rejections (or the `approve/` and `reject/` shortcuts). Processing requires a unique
 `Idempotency-Key` header at `POST /api/payments/<id>/process/`; ambiguous
-attempts can be reconciled at
-`POST /api/payments/attempts/<id>/reconcile/`.
+attempts are listed at `GET /api/payments/attempts/?status=AMBIGUOUS` and
+reconciled at `POST /api/payments/attempts/<id>/reconcile/`. FAILED requests can
+be processed again with a new key.
+
+Payments go through `MockPaymentProvider`. The amount's cents pick the outcome:
+`.99` fails, `.88` is ambiguous (then reconcile), anything else succeeds.
+
+Administrators manage users at `GET/POST /api/accounts/users/` and
+`PATCH /api/accounts/users/<id>/` (`role`, `department`, `is_active`). Login
+accepts a username or a unique email.
 
 Employees can create and view their own requests. Managers, finance officers,
 and administrators can view organization requests; finance officers and
@@ -112,6 +120,35 @@ while finance officers and administrators manage vendors. Invalid or stale
 state transitions return `400`; authentication failures return `401`,
 authorization failures `403`, missing resources `404`, and idempotency or
 uniqueness conflicts `409`.
+
+### Demo data
+
+```bash
+uv run python manage.py seed_demo            # grace, faith, carol, david, alice / password123
+uv run python manage.py seed_demo --password '<something-strong>'
+```
+
+To show one-click buttons for these on the sign-in page, set
+`NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=true` in `frontend/.env.local`. Leave it unset in
+production.
+
+`createsuperuser` accounts are always given the Administrator role.
+
+### Deploying
+
+Backend environment:
+
+- `DJANGO_SETTINGS_MODULE=config.settings.production`
+- `DJANGO_SECRET_KEY`, `POSTGRES_*`
+- `DJANGO_ALLOWED_HOSTS` — the backend's own hostname
+- `DJANGO_CSRF_TRUSTED_ORIGINS` — the frontend origin, e.g. `https://paywise.vercel.app`
+- Run `python manage.py migrate` once per release (or `RUN_MIGRATIONS=true` in a release job)
+
+Frontend (Vercel): set `PAYWISE_API_ORIGIN` to the backend URL. Next.js proxies
+`/api/*` to it, so the browser stays same-origin and no CORS setup is needed.
+
+The Django admin (`/admin/`) has no static file serving under gunicorn, so its
+pages render unstyled; the app itself does not need it.
 
 ### Optional observability
 

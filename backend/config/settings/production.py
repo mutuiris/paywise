@@ -21,3 +21,7 @@ X_FRAME_OPTIONS = "DENY"
 
 if os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(dsn=os.environ["SENTRY_DSN"], send_default_pii=False)
+
+# ponytail: Paywise sends no email (out of scope), so the console mailer is
+# deliberate. Configure SMTP in MAILERS and drop this when email is added.
+SILENCED_SYSTEM_CHECKS = ["mail.E001"]

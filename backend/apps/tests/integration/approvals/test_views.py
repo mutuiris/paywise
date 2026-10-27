@@ -91,6 +91,17 @@ class ApprovalViewsIntegrationTestCase(TestCase):
         missing_resp = self.client.get(missing_url)
         self.assertEqual(missing_resp.status_code, 404)
 
+    def test_detail_endpoint_hidden_from_other_employees(self) -> None:
+        url = reverse("approvals:approval-detail", args=[self.payment_req.id])
+        self.client.force_login(self.employee)
+        self.assertEqual(self.client.get(url).status_code, 200)
+
+        outsider = UserAccount.objects.create_user(
+            username="view_outsider", role=UserRole.EMPLOYEE
+        )
+        self.client.force_login(outsider)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
     def test_approve_endpoint_manager_success_low_value(self) -> None:
         self.client.force_login(self.manager)
         url = reverse("approvals:approval-approve", args=[self.payment_req.id])

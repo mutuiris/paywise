@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { BackendUserRole } from './types';
 import {
   Vendor,
   VendorDTO,
@@ -323,7 +324,7 @@ function denormalizePaymentPayload(payload: Record<string, unknown>): Record<str
     result.invoice_number = payload.invoiceNumber;
   }
   if ('paymentMethod' in payload && !('payment_method' in payload)) {
-    result.payment_method = payload.paymentMethod === 'BANK_TRANSFER' ? 'BANK' : payload.paymentMethod;
+    result.payment_method = payload.paymentMethod === 'BANK' ? 'BANK_TRANSFER' : payload.paymentMethod;
   }
   if ('notes' in payload && !('supporting_notes' in payload)) {
     result.supporting_notes = payload.notes;
@@ -434,7 +435,68 @@ export const paymentService = {
     });
     return createPaymentRequestResponse(res);
   },
+  /** Runs an APPROVED request through the backend's (mock) payment provider. */
+  processRequest: (id: string, idempotencyKey: string) =>
+    apiClient<{ payment_attempt: PaymentAttemptDTO; payment_request: UnknownRecord }>(
+      `/api/payments/${id}/process/`,
+      { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey } }
+    ),
+  listAttempts: (params?: Record<string, string>) => {
+    const q = params ? `?${new URLSearchParams(params).toString()}` : '';
+    return apiClient<{ results: PaymentAttemptDTO[]; count: number }>(`/api/payments/attempts/${q}`);
+  },
+  reconcileAttempt: (attemptId: string) =>
+    apiClient<{ payment_attempt: PaymentAttemptDTO; payment_request: UnknownRecord }>(
+      `/api/payments/attempts/${attemptId}/reconcile/`,
+      { method: 'POST' }
+    ),
 };
+
+export interface UserDTO {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: BackendUserRole;
+  department: string;
+  is_active: boolean;
+  date_joined: string;
+}
+
+/** Administrator-only user management. */
+export const userService = {
+  list: () => apiClient<{ results: UserDTO[]; count: number }>('/api/accounts/users/'),
+  create: (payload: {
+    email: string;
+    password: string;
+    role: BackendUserRole;
+    first_name?: string;
+    last_name?: string;
+    department?: string;
+  }) =>
+    apiClient<{ user: UserDTO }>('/api/accounts/users/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  update: (id: string, payload: { role?: BackendUserRole; department?: string; is_active?: boolean }) =>
+    apiClient<{ user: UserDTO }>(`/api/accounts/users/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+};
+
+export interface PaymentAttemptDTO {
+  id: string;
+  payment_request_id: string;
+  status: 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'AMBIGUOUS';
+  provider_reference: string;
+  amount: string;
+  failure_reason: string;
+  created_at: string | null;
+  invoice_number?: string;
+  vendor_name?: string;
+}
 
 export const approvalService = {
   getQueue: async (params?: Record<string, string>): Promise<ApprovalQueueResponse> => {

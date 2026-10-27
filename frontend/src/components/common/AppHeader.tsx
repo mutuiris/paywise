@@ -16,7 +16,7 @@ export interface AppHeaderProps {
 
 export function AppHeader({
   user: defaultUser,
-  notificationCount = 3,
+  notificationCount = 0,
   onMenuClick,
 }: AppHeaderProps) {
   const router = useRouter();

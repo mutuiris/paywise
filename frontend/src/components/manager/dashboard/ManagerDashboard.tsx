@@ -4,10 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import {
-  CURRENT_MANAGER,
   INITIAL_PAYMENT_REQUESTS,
   INITIAL_ACTIVITY_LOG,
   formatCurrency,
+  getApprovalRoute,
 } from '@/data/mock-manager-data';
 import { PaymentRequestItem, ActivityEvent } from '@/types/manager';
 import { SummaryCard } from './SummaryCard';
@@ -16,20 +16,28 @@ import { ApprovalModal } from './ApprovalModal';
 import { RecentActivity } from './RecentActivity';
 import { approvalService, paymentService, auditService } from '@/lib/api/services';
 import { getClientUser } from '@/lib/auth/session';
+import { DEMO_MODE } from '@/lib/config';
+import { toActivityEvent, toRequestItem } from '../common/mapPaymentRequest';
 
 export function ManagerDashboard() {
   const [currentUser] = useState(() => getClientUser());
-  const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
-  const [activities, setActivities] = useState<ActivityEvent[]>(INITIAL_ACTIVITY_LOG);
+  const [requests, setRequests] = useState<PaymentRequestItem[]>(
+    DEMO_MODE ? INITIAL_PAYMENT_REQUESTS : []
+  );
+  const [activities, setActivities] = useState<ActivityEvent[]>(
+    DEMO_MODE ? INITIAL_ACTIVITY_LOG : []
+  );
   const [selectedRequest, setSelectedRequest] = useState<PaymentRequestItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [loading, setLoading] = useState(!DEMO_MODE);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Ids awaiting a MANAGER-tier decision; null until the queue loads (demo mode).
+  const [queueIds, setQueueIds] = useState<Set<string> | null>(null);
 
   // Compute live KPIs
-  const pendingRequests = requests.filter(
-    (r) => r.status === 'PENDING_APPROVAL' || r.status === 'SUBMITTED'
+  const pendingRequests = requests.filter((r) =>
+    queueIds ? queueIds.has(r.id) : r.status === 'PENDING_APPROVAL' || r.status === 'SUBMITTED'
   );
   const approvedToday = requests.filter((r) => r.status === 'APPROVED');
   const rejectedRequests = requests.filter((r) => r.status === 'REJECTED');
@@ -47,160 +55,37 @@ export function ManagerDashboard() {
     setIsModalOpen(true);
   };
 
-  const fetchDashboardData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setLoading(true);
-    try {
-      const [queueRes, paymentsRes, auditRes] = await Promise.allSettled([
-        approvalService.getQueue({ tier: 'MANAGER' }),
-        paymentService.listRequests({ limit: '20' }),
-        auditService.listEvents({ limit: '6' }),
-      ]);
+  const fetchDashboardData = useCallback(async () => {
+    if (DEMO_MODE) return;
+    setLoading(true);
+    const [queueRes, paymentsRes, auditRes] = await Promise.allSettled([
+      approvalService.getQueue({ tier: 'MANAGER' }),
+      paymentService.listRequests({ limit: '500' }),
+      auditService.listEvents({ limit: '6' }),
+    ]);
 
-      if (paymentsRes.status === 'fulfilled' && paymentsRes.value?.results?.length) {
-        const mapped: PaymentRequestItem[] = paymentsRes.value.results.map((r) => ({
-          id: r.id,
-          reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
-          vendorId: r.vendor_id,
-          vendorName: r.vendor_name || 'Designated Vendor',
-          amount: parseFloat(r.amount) || 0,
-          currency: 'KES',
-          invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
-          project: r.project_name || 'ImaraWorks Construction',
-          requesterId: r.requester_id || '',
-          requesterName: r.requester_username || 'Employee',
-          paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-          requestedPaymentDate: r.created_at || new Date().toISOString(),
-          notes: r.description || '',
-          reason: r.description,
-          status: r.status,
-          rejectionReason: r.rejection_reason || undefined,
-          createdAt: r.created_at || new Date().toISOString(),
-          updatedAt: r.updated_at || new Date().toISOString(),
-        }));
-        setRequests(mapped);
-      } else if (queueRes.status === 'fulfilled' && queueRes.value?.results?.length) {
-        const mappedQueue: PaymentRequestItem[] = queueRes.value.results.map((q) => ({
-          id: q.id,
-          reference: q.invoice_number || `PR-${q.id.slice(0, 6).toUpperCase()}`,
-          vendorId: q.vendor_id,
-          vendorName: q.vendor_name || 'Designated Vendor',
-          amount: parseFloat(q.amount) || 0,
-          currency: 'KES',
-          invoiceNumber: q.invoice_number || `INV-${q.id.slice(0, 6).toUpperCase()}`,
-          project: 'ImaraWorks Construction',
-          requesterId: q.requester_id || '',
-          requesterName: q.requester_name || 'Employee',
-          paymentMethod: 'MPESA',
-          requestedPaymentDate: q.created_at || new Date().toISOString(),
-          notes: q.description || '',
-          reason: q.description,
-          status: q.status,
-          createdAt: q.created_at || new Date().toISOString(),
-          updatedAt: q.created_at || new Date().toISOString(),
-        }));
-        setRequests(mappedQueue);
-      }
-
-      if (auditRes.status === 'fulfilled' && auditRes.value?.results?.length) {
-        const mappedActs: ActivityEvent[] = auditRes.value.results.map((e) => ({
-          id: e.id,
-          at: e.created_at || new Date().toISOString(),
-          actorName: e.actor_email ? e.actor_email.split('@')[0] : 'System User',
-          action: e.action,
-          entity: e.entity_type,
-          requestReference: e.entity_id ? e.entity_id.slice(0, 8).toUpperCase() : 'PR',
-          description: e.description,
-        }));
-        setActivities(mappedActs);
-      }
-
-      setUsingFallback(false);
-    } catch {
-      setUsingFallback(true);
-    } finally {
-      setLoading(false);
+    if (queueRes.status === 'fulfilled') {
+      setQueueIds(new Set((queueRes.value.results ?? []).map((q) => q.id)));
     }
+
+    if (paymentsRes.status === 'fulfilled') {
+      setRequests((paymentsRes.value.results ?? []).map(toRequestItem));
+      setLoadError(null);
+    } else {
+      const err = paymentsRes.reason;
+      setLoadError(err instanceof Error ? err.message : 'Unable to load payment requests.');
+    }
+
+    if (auditRes.status === 'fulfilled') {
+      setActivities((auditRes.value.results ?? []).map(toActivityEvent));
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    Promise.allSettled([
-      approvalService.getQueue({ tier: 'MANAGER' }),
-      paymentService.listRequests({ limit: '20' }),
-      auditService.listEvents({ limit: '6' }),
-    ]).then(([queueRes, paymentsRes, auditRes]) => {
-      if (ignore) return;
-
-      if (paymentsRes.status === 'fulfilled' && paymentsRes.value?.results?.length) {
-        const mapped: PaymentRequestItem[] = paymentsRes.value.results.map((r) => ({
-          id: r.id,
-          reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
-          vendorId: r.vendor_id,
-          vendorName: r.vendor_name || 'Designated Vendor',
-          amount: parseFloat(r.amount) || 0,
-          currency: 'KES',
-          invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
-          project: r.project_name || 'ImaraWorks Construction',
-          requesterId: r.requester_id || '',
-          requesterName: r.requester_username || 'Employee',
-          paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-          requestedPaymentDate: r.created_at || new Date().toISOString(),
-          notes: r.description || '',
-          reason: r.description,
-          status: r.status,
-          rejectionReason: r.rejection_reason || undefined,
-          createdAt: r.created_at || new Date().toISOString(),
-          updatedAt: r.updated_at || new Date().toISOString(),
-        }));
-        setRequests(mapped);
-      } else if (queueRes.status === 'fulfilled' && queueRes.value?.results?.length) {
-        const mappedQueue: PaymentRequestItem[] = queueRes.value.results.map((q) => ({
-          id: q.id,
-          reference: q.invoice_number || `PR-${q.id.slice(0, 6).toUpperCase()}`,
-          vendorId: q.vendor_id,
-          vendorName: q.vendor_name || 'Designated Vendor',
-          amount: parseFloat(q.amount) || 0,
-          currency: 'KES',
-          invoiceNumber: q.invoice_number || `INV-${q.id.slice(0, 6).toUpperCase()}`,
-          project: 'ImaraWorks Construction',
-          requesterId: q.requester_id || '',
-          requesterName: q.requester_name || 'Employee',
-          paymentMethod: 'MPESA',
-          requestedPaymentDate: q.created_at || new Date().toISOString(),
-          notes: q.description || '',
-          reason: q.description,
-          status: q.status,
-          createdAt: q.created_at || new Date().toISOString(),
-          updatedAt: q.created_at || new Date().toISOString(),
-        }));
-        setRequests(mappedQueue);
-      }
-
-      if (auditRes.status === 'fulfilled' && auditRes.value?.results?.length) {
-        const mappedActs: ActivityEvent[] = auditRes.value.results.map((e) => ({
-          id: e.id,
-          at: e.created_at || new Date().toISOString(),
-          actorName: e.actor_email ? e.actor_email.split('@')[0] : 'System User',
-          action: e.action,
-          entity: e.entity_type,
-          requestReference: e.entity_id ? e.entity_id.slice(0, 8).toUpperCase() : 'PR',
-          description: e.description,
-        }));
-        setActivities(mappedActs);
-      }
-
-      setUsingFallback(false);
-      setLoading(false);
-    }).catch(() => {
-      if (ignore) return;
-      setUsingFallback(true);
-      setLoading(false);
-    });
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleApprove = async (requestId: string) => {
     const target = requests.find((r) => r.id === requestId);
@@ -208,15 +93,17 @@ export function ManagerDashboard() {
 
     try {
       await approvalService.approve(requestId);
-      const isDual = target.amount > CURRENT_MANAGER.approvalLimit;
+      setQueueIds((prev) => (prev ? new Set([...prev].filter((id) => id !== requestId)) : prev));
+      const isDual = getApprovalRoute(target.amount).isDual;
       const nowIso = new Date().toISOString();
 
       setRequests((prev) =>
         prev.map((r) => {
           if (r.id !== requestId) return r;
+          // Above the threshold the request still awaits the finance tier.
           return {
             ...r,
-            status: 'APPROVED',
+            status: isDual ? r.status : 'APPROVED',
             updatedAt: nowIso,
           };
         })
@@ -225,10 +112,10 @@ export function ManagerDashboard() {
       const newActivity: ActivityEvent = {
         id: `act-${Date.now()}`,
         at: nowIso,
-        actorName: currentUser?.name || CURRENT_MANAGER.name,
+        actorName: currentUser?.name || 'You',
         action: 'Approved payment',
         entity: 'PaymentRequest',
-        requestReference: target.reference,
+        requestReference: target.id,
         description: `Manager approved ${target.reference} (${target.vendorName} — ${formatCurrency(target.amount)})${
           isDual ? ' · Routed to Finance for final approval' : ' · Ready for payout'
         }`,
@@ -252,6 +139,7 @@ export function ManagerDashboard() {
 
     try {
       await approvalService.reject(requestId, reason);
+      setQueueIds((prev) => (prev ? new Set([...prev].filter((id) => id !== requestId)) : prev));
       const nowIso = new Date().toISOString();
 
       setRequests((prev) =>
@@ -268,10 +156,10 @@ export function ManagerDashboard() {
       const newActivity: ActivityEvent = {
         id: `act-${Date.now()}`,
         at: nowIso,
-        actorName: currentUser?.name || CURRENT_MANAGER.name,
+        actorName: currentUser?.name || 'You',
         action: 'Rejected payment',
         entity: 'PaymentRequest',
-        requestReference: target.reference,
+        requestReference: target.id,
         description: `Manager rejected ${target.reference}: "${reason}"`,
       };
 
@@ -283,7 +171,7 @@ export function ManagerDashboard() {
     }
   };
 
-  const displayName = currentUser?.name || CURRENT_MANAGER.name;
+  const displayName = currentUser?.name || 'Manager';
   const firstName = displayName.split(' ')[0];
 
   return (
@@ -313,14 +201,14 @@ export function ManagerDashboard() {
             Welcome back, {firstName}
           </h1>
           <p className="mt-1 text-sm text-muted-ink">
-            Manager dashboard · {CURRENT_MANAGER.department}
+            Manager dashboard{currentUser?.department ? ` · ${currentUser.department}` : ''}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => fetchDashboardData(true)}
+            onClick={() => fetchDashboardData()}
             disabled={loading}
             className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-2 text-sm font-medium text-ink hover:bg-canvas transition shadow-2xs cursor-pointer"
           >
@@ -337,10 +225,17 @@ export function ManagerDashboard() {
         </div>
       </div>
 
-      {usingFallback && (
+      {DEMO_MODE && (
         <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
           <AlertCircle className="size-4 shrink-0 text-amber-600" />
-          <span>Showing cached demonstration queue (Backend server unreachable). Approvals run in local demonstration mode.</span>
+          <span>Demo mode: showing sample data. Nothing is read from the backend.</span>
+        </div>
+      )}
+
+      {loadError && (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-err/30 bg-err-light p-3 text-xs text-err">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{loadError}</span>
         </div>
       )}
 
@@ -381,7 +276,7 @@ export function ManagerDashboard() {
       />
 
       {/* Recent Activity Feed */}
-      <RecentActivity events={activities} />
+      <RecentActivity events={activities} requests={requests} />
 
       {/* Interactive Review / Decision Modal */}
       <ApprovalModal

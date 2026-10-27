@@ -14,11 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
-import {
-  CURRENT_MANAGER,
-  formatCurrency,
-  getApprovalRoute,
-} from '@/data/mock-manager-data';
+import { formatCurrency, getApprovalRoute } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
 import { getClientUser } from '@/lib/auth/session';
 
@@ -45,12 +41,8 @@ export function ApprovalModal({
 
   const currentUser = getClientUser();
   const route = getApprovalRoute(request.amount);
-  const isSelfRequest = Boolean(
-    (currentUser && request.requesterId === currentUser.id) ||
-    (request.requesterName && currentUser?.name && request.requesterName.toLowerCase() === currentUser.name.toLowerCase()) ||
-    request.requesterId === CURRENT_MANAGER.id ||
-    (request.requesterName && request.requesterName.toLowerCase() === CURRENT_MANAGER.name.toLowerCase())
-  );
+  // The backend also rejects self-approval; this only hides the button early.
+  const isSelfRequest = Boolean(currentUser?.id && request.requesterId === currentUser.id);
 
   const handleApprove = () => {
     if (isSelfRequest) return;
