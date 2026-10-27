@@ -1,28 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  Search,
-  Plus,
-  Eye,
-  RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  RefreshCw,
-  AlertCircle,
-} from 'lucide-react';
+import { Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
-import {
-  MOCK_VENDORS,
-  MOCK_PROJECTS,
-  INITIAL_PAYMENT_REQUESTS,
-  formatCurrency,
-  formatDate,
-} from '@/data/mock-manager-data';
-import { StatusBadge } from '../common/StatusBadge';
+import { INITIAL_PAYMENT_REQUESTS } from '@/data/mock-manager-data';
 import { paymentService } from '@/lib/api/services';
+import { PaymentRequest } from '@/lib/api/types';
+import { RequestFilterBar } from './RequestFilterBar';
+import { RequestsTable } from './RequestsTable';
 
 export interface RequestsListProps {
   basePath?: string;
@@ -30,42 +16,45 @@ export interface RequestsListProps {
 
 export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) {
   const [requests, setRequests] = useState<PaymentRequestItem[]>(INITIAL_PAYMENT_REQUESTS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [vendorFilter, setVendorFilter] = useState<string>('ALL');
   const [projectFilter, setProjectFilter] = useState<string>('ALL');
-  const [methodFilter, setMethodFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
-  const fetchLiveRequests = React.useCallback(async (isRefresh = false) => {
+  const mapRequest = useCallback((r: PaymentRequest | Record<string, unknown>): PaymentRequestItem => {
+    const raw = r as Record<string, unknown>;
+    return {
+      id: String(raw.id || ''),
+      reference: String(raw.reference || raw.invoice_number || (raw.id ? `PR-${String(raw.id).slice(0, 6).toUpperCase()}` : 'PR-REQ')),
+      vendorId: String(raw.vendorId || raw.vendor_id || ''),
+      vendorName: String(raw.vendorName || raw.vendor_name || 'Designated Vendor'),
+      amount: typeof raw.amount === 'number' ? raw.amount : parseFloat(String(raw.amount)) || 0,
+      currency: 'KES',
+      invoiceNumber: String(raw.invoiceNumber || raw.invoice_number || (raw.id ? `INV-${String(raw.id).slice(0, 6).toUpperCase()}` : 'INV-REQ')),
+      project: String(raw.project || raw.project_name || 'ImaraWorks Construction'),
+      requesterId: String(raw.requesterId || raw.requester_id || ''),
+      requesterName: String(raw.requesterName || raw.requester_username || 'Employee'),
+      paymentMethod: (raw.paymentMethod || raw.payment_method) === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
+      requestedPaymentDate: String(raw.createdAt || raw.created_at || new Date().toISOString()),
+      notes: String(raw.notes || raw.description || ''),
+      reason: String(raw.reason || raw.description || ''),
+      status: (raw.status as PaymentRequestItem['status']) || 'DRAFT',
+      rejectionReason: typeof raw.rejectionReason === 'string' ? raw.rejectionReason : typeof raw.rejection_reason === 'string' ? raw.rejection_reason : undefined,
+      createdAt: String(raw.createdAt || raw.created_at || new Date().toISOString()),
+      updatedAt: String(raw.updatedAt || raw.updated_at || new Date().toISOString()),
+    };
+  }, []);
+
+  const fetchLiveRequests = useCallback(async (isRefresh = false) => {
     if (isRefresh) setLoading(true);
     try {
       const res = await paymentService.listRequests();
-      if (res && res.results && res.results.length > 0) {
-        const mapped: PaymentRequestItem[] = res.results.map((r) => ({
-          id: r.id,
-          reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
-          vendorId: r.vendor_id,
-          vendorName: r.vendor_name || 'Designated Vendor',
-          amount: parseFloat(r.amount) || 0,
-          currency: 'KES',
-          invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
-          project: r.project_name || 'ImaraWorks Construction',
-          requesterId: r.requester_id || '',
-          requesterName: r.requester_username || 'Employee',
-          paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-          requestedPaymentDate: r.created_at || new Date().toISOString(),
-          notes: r.description || '',
-          reason: r.description,
-          status: r.status,
-          rejectionReason: r.rejection_reason || undefined,
-          createdAt: r.created_at || new Date().toISOString(),
-          updatedAt: r.updated_at || new Date().toISOString(),
-        }));
-        setRequests(mapped);
+      if (res && res.length > 0) {
+        setRequests(res.map(mapRequest));
         setUsingFallback(false);
       } else {
         setUsingFallback(true);
@@ -75,59 +64,36 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mapRequest]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let ignore = false;
     paymentService
       .listRequests()
       .then((res) => {
         if (ignore) return;
-        if (res && res.results && res.results.length > 0) {
-          const mapped: PaymentRequestItem[] = res.results.map((r) => ({
-            id: r.id,
-            reference: r.invoice_number || `PR-${r.id.slice(0, 6).toUpperCase()}`,
-            vendorId: r.vendor_id,
-            vendorName: r.vendor_name || 'Designated Vendor',
-            amount: parseFloat(r.amount) || 0,
-            currency: 'KES',
-            invoiceNumber: r.invoice_number || `INV-${r.id.slice(0, 6).toUpperCase()}`,
-            project: r.project_name || 'ImaraWorks Construction',
-            requesterId: r.requester_id || '',
-            requesterName: r.requester_username || 'Employee',
-            paymentMethod: r.payment_method === 'BANK' ? 'BANK_TRANSFER' : 'MPESA',
-            requestedPaymentDate: r.created_at || new Date().toISOString(),
-            notes: r.description || '',
-            reason: r.description,
-            status: r.status,
-            rejectionReason: r.rejection_reason || undefined,
-            createdAt: r.created_at || new Date().toISOString(),
-            updatedAt: r.updated_at || new Date().toISOString(),
-          }));
-          setRequests(mapped);
+        if (res && res.length > 0) {
+          setRequests(res.map(mapRequest));
           setUsingFallback(false);
         } else {
           setUsingFallback(true);
         }
-        setLoading(false);
       })
       .catch(() => {
         if (ignore) return;
         setUsingFallback(true);
-        setLoading(false);
       });
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [mapRequest]);
 
   // Filtering
   const filtered = requests.filter((r) => {
     if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
     if (vendorFilter !== 'ALL' && r.vendorId !== vendorFilter) return false;
     if (projectFilter !== 'ALL' && r.project !== projectFilter) return false;
-    if (methodFilter !== 'ALL' && r.paymentMethod !== methodFilter) return false;
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -155,7 +121,6 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
     setStatusFilter('ALL');
     setVendorFilter('ALL');
     setProjectFilter('ALL');
-    setMethodFilter('ALL');
     setCurrentPage(1);
   };
 
@@ -179,7 +144,7 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
             type="button"
             onClick={() => fetchLiveRequests(true)}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-2 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-2 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -203,276 +168,41 @@ export function RequestsList({ basePath = '/manager' }: RequestsListProps = {}) 
         </div>
       )}
 
-      {/* Filter Bar Card */}
-      <div className="rounded-xl border border-line bg-surface p-4 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Search */}
-          <div className="relative lg:col-span-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-ink" />
-            <input
-              type="text"
-              placeholder="Search reference, vendor, invoice, reason…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-md border border-line bg-canvas/60 py-2 pl-9 pr-3 text-xs sm:text-sm text-ink placeholder:text-muted-ink focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all font-serif"
-            />
-          </div>
+      {/* Filter Bar */}
+      <RequestFilterBar
+        search={search}
+        statusFilter={statusFilter}
+        projectFilter={projectFilter}
+        vendorFilter={vendorFilter}
+        filteredCount={filtered.length}
+        totalFilteredAmount={totalFilteredAmount}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
+        onStatusChange={(val) => {
+          setStatusFilter(val);
+          setCurrentPage(1);
+        }}
+        onProjectChange={(val) => {
+          setProjectFilter(val);
+          setCurrentPage(1);
+        }}
+        onVendorChange={(val) => {
+          setVendorFilter(val);
+          setCurrentPage(1);
+        }}
+        onReset={resetFilters}
+      />
 
-          {/* Status Filter */}
-          <div>
-            <label htmlFor="status-filter" className="sr-only">Status</label>
-            <select
-              id="status-filter"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="PENDING_APPROVAL">Pending Approval</option>
-              <option value="APPROVED">Approved</option>
-              <option value="PAID">Paid</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="PROCESSING">Processing</option>
-              <option value="SUBMITTED">Submitted</option>
-            </select>
-          </div>
-
-          {/* Project Filter */}
-          <div>
-            <label htmlFor="project-filter" className="sr-only">Project</label>
-            <select
-              id="project-filter"
-              value={projectFilter}
-              onChange={(e) => {
-                setProjectFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
-            >
-              <option value="ALL">All Projects</option>
-              {MOCK_PROJECTS.map((proj) => (
-                <option key={proj} value={proj}>
-                  {proj}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Vendor Filter */}
-          <div>
-            <label htmlFor="vendor-filter" className="sr-only">Vendor</label>
-            <select
-              id="vendor-filter"
-              value={vendorFilter}
-              onChange={(e) => {
-                setVendorFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 font-serif"
-            >
-              <option value="ALL">All Vendors</option>
-              {MOCK_VENDORS.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Filter Summary & Reset */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line/60 pt-3 text-xs text-muted-ink">
-          <div className="flex items-center gap-3">
-            <span>
-              Requests: <strong className="text-ink">{filtered.length}</strong>
-            </span>
-            <span>·</span>
-            <span>
-              Total Value: <strong className="text-ink font-serif">{formatCurrency(totalFilteredAmount)}</strong>
-            </span>
-          </div>
-
-          {(search || statusFilter !== 'ALL' || vendorFilter !== 'ALL' || projectFilter !== 'ALL' || methodFilter !== 'ALL') && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="inline-flex items-center gap-1 text-brand font-semibold hover:underline cursor-pointer"
-            >
-              <RotateCcw className="size-3" />
-              <span>Reset Filters</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Table Section */}
-      <section className="rounded-xl border border-line bg-surface overflow-hidden shadow-xs">
-        {paginatedRequests.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileText className="mx-auto size-10 text-muted-ink/40" />
-            <h3 className="mt-3 text-sm font-semibold text-ink">
-              No matching payment requests
-            </h3>
-            <p className="mt-1 text-xs text-muted-ink">
-              Try adjusting your search query or filters.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-line bg-canvas text-[11px] font-semibold text-muted-ink uppercase tracking-wider">
-                    <th scope="col" className="px-5 py-3">Request ID</th>
-                    <th scope="col" className="px-5 py-3">Vendor</th>
-                    <th scope="col" className="px-5 py-3 text-right">Amount</th>
-                    <th scope="col" className="px-5 py-3">Project</th>
-                    <th scope="col" className="px-5 py-3">Requester</th>
-                    <th scope="col" className="px-5 py-3">Method</th>
-                    <th scope="col" className="px-5 py-3">Date</th>
-                    <th scope="col" className="px-5 py-3">Status</th>
-                    <th scope="col" className="px-5 py-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {paginatedRequests.map((req) => (
-                    <tr
-                      key={req.id}
-                      className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
-                    >
-                      {/* ID */}
-                      <td className="whitespace-nowrap px-5 py-3.5">
-                        <Link
-                          href={`${basePath}/requests/${req.id}`}
-                          className="font-serif text-[13px] font-semibold text-brand group-hover:underline"
-                        >
-                          {req.reference}
-                        </Link>
-                        <span className="block font-serif text-[11px] text-muted-ink">
-                          {req.invoiceNumber}
-                        </span>
-                      </td>
-
-                      {/* Vendor */}
-                      <td className="whitespace-nowrap px-5 py-3.5">
-                        <span className="font-semibold text-ink block">
-                          {req.vendorName}
-                        </span>
-                        <span className="text-[11px] text-muted-ink truncate max-w-[180px] block">
-                          {req.reason}
-                        </span>
-                      </td>
-
-                      {/* Amount */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">
-                        {formatCurrency(req.amount)}
-                      </td>
-
-                      {/* Project */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">
-                        {req.project}
-                      </td>
-
-                      {/* Requester */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-ink font-medium">
-                        {req.requesterName}
-                      </td>
-
-                      {/* Method */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">
-                        {req.paymentMethod === 'MPESA' ? 'M-Pesa' : 'Bank'}
-                      </td>
-
-                      {/* Date */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">
-                        {formatDate(req.createdAt)}
-                      </td>
-
-                      {/* Status */}
-                      <td className="whitespace-nowrap px-5 py-3.5">
-                        <StatusBadge status={req.status} />
-                      </td>
-
-                      {/* Action Link */}
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                        <Link
-                          href={`${basePath}/requests/${req.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink hover:bg-canvas hover:border-brand/40 cursor-pointer transition-all shadow-2xs"
-                        >
-                          <Eye className="size-3.5 text-muted-ink" />
-                          <span>View</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <ul className="divide-y divide-line lg:hidden" aria-label="Payment requests">
-              {paginatedRequests.map((req) => (
-                <li key={req.id}>
-                  <Link
-                    href={`${basePath}/requests/${req.id}`}
-                    className="group flex items-center justify-between p-4 hover:bg-slate-50/90 active:bg-slate-100 transition-colors block"
-                  >
-                    <div className="min-w-0 pr-3">
-                      <span className="font-serif text-[13px] font-semibold text-brand group-hover:text-brand-deep group-hover:underline block transition-colors">
-                        {req.reference}
-                      </span>
-                      <p className="mt-0.5 font-semibold text-ink text-sm truncate group-hover:text-brand-deep transition-colors">
-                        {req.vendorName}
-                      </p>
-                    </div>
-
-                    <div className="shrink-0">
-                      <Eye className="size-4 text-muted-ink group-hover:text-brand group-hover:scale-110 transition-all" />
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-line px-5 py-3 bg-surface-subtle text-xs">
-                <span className="text-muted-ink">
-                  Page <strong className="text-ink">{currentPage}</strong> of <strong className="text-ink">{totalPages}</strong>
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="inline-flex items-center gap-1 rounded-md border border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink hover:bg-canvas disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <ChevronLeft className="size-3.5" />
-                    <span>Previous</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="inline-flex items-center gap-1 rounded-md border border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink hover:bg-canvas disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <span>Next</span>
-                    <ChevronRight className="size-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </section>
+      {/* Requests Table */}
+      <RequestsTable
+        requests={paginatedRequests}
+        basePath={basePath}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }
