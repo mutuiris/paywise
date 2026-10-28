@@ -9,7 +9,7 @@ import { LandingFooter } from './LandingFooter';
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 antialiased selection:bg-[#004aad] selection:text-white">
+    <div className="min-h-screen bg-white font-serif text-slate-900 antialiased selection:bg-[#004aad] selection:text-white">
       <LandingNavbar />
       <main>
         <HeroSection />
