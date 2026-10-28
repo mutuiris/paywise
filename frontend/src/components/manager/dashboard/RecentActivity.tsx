@@ -39,6 +39,12 @@ export function RecentActivity({ events, requests = [] }: RecentActivityProps) {
           const isApproved = evt.action.toLowerCase().includes('approved');
           const isRejected = evt.action.toLowerCase().includes('rejected');
           const isSubmitted = evt.action.toLowerCase().includes('submitted');
+          const isRequested =
+            evt.action === 'PAYMENT_REQUEST_CREATED' ||
+            evt.action === 'PAYMENT_REQUEST_STARTED' ||
+            evt.action.toLowerCase().includes('created') ||
+            evt.action.toLowerCase().includes('started') ||
+            evt.action.toLowerCase() === 'requested';
 
           let badgeLabel = evt.action;
           let badgeClass = 'bg-slate-100 text-slate-700 border border-slate-200';
@@ -52,6 +58,9 @@ export function RecentActivity({ events, requests = [] }: RecentActivityProps) {
           } else if (isSubmitted) {
             badgeLabel = 'Submitted';
             badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+          } else if (isRequested) {
+            badgeLabel = 'Requested';
+            badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
           }
 
           // Audit events carry the request id; resolve it against the loaded requests.
