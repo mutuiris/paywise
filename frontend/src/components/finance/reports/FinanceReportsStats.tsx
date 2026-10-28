@@ -20,7 +20,6 @@ export function FinanceReportsStats({
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 font-serif">
       <SummaryCard
         label="Total Disbursed"
-        badge="Settled"
         value={totalDisbursed}
         hint={`${totalPaidCount} settled payouts`}
         tone="brand"

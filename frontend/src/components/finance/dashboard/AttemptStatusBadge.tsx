@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { AttemptItem } from './types';
 
 export function AttemptStatusBadge({ status }: { status: AttemptItem['status'] }) {
@@ -21,7 +21,7 @@ export function AttemptStatusBadge({ status }: { status: AttemptItem['status'] }
   }
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-warn/30 bg-warn/10 px-2 py-0.5 text-[11px] font-medium text-warn">
-      <AlertCircle className="size-3" /><span>{status}</span>
+      <Clock className="size-3" /><span>In Process</span>
     </span>
   );
 }

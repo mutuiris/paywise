@@ -101,12 +101,7 @@ export function AppSidebar({
         </ul>
       </nav>
 
-      {/* Footer Info */}
-      <div className="border-t border-line px-4 py-3">
-        <p className="text-[11px] text-muted-ink">
-          ImaraWorks Ltd · Demo environment
-        </p>
-      </div>
+
     </div>
   );
 

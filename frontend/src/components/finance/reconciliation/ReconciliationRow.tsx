@@ -39,7 +39,7 @@ export function ReconciliationRow({ item, isVerifying, onVerify }: Props) {
             className="inline-flex items-center gap-1 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-amber-700 disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`size-3 ${isVerifying ? 'animate-spin' : ''}`} />
-            <span>{isVerifying ? 'Checking…' : 'Re-query'}</span>
+            <span>{isVerifying ? 'Checking…' : 'Re-try'}</span>
           </button>
         ) : (
           <span className="text-xs text-muted-ink">Settled</span>

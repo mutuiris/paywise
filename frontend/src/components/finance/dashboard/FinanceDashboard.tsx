@@ -59,7 +59,7 @@ async function loadDashboard(): Promise<DashboardData> {
       vendorName: f.vendor_name || 'Vendor',
       amount: parseFloat(f.amount) || 0,
       paymentMethod: toMethod(f.payment_method),
-      failureReason: f.failure_reason,
+      failureReason: f.failure_reason ? f.failure_reason.replace(/^simulated gateway error:\s*/i, '').trim() : '',
     })),
     attempts: attemptsRes.results.slice(0, 10).map((a) => ({
       id: a.id,

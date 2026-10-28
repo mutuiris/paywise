@@ -34,7 +34,9 @@ export function FailedAttemptsTable({ items }: { items: FailedItem[] }) {
             <td className="whitespace-nowrap px-5 py-3.5 font-medium text-ink">{f.vendorName}</td>
             <td className="whitespace-nowrap px-5 py-3.5 text-right font-serif font-semibold tabular-nums text-ink">{formatCurrency(f.amount)}</td>
             <td className="whitespace-nowrap px-5 py-3.5 text-xs text-muted-ink">{f.paymentMethod === 'MPESA' ? 'M-Pesa' : 'Bank Transfer'}</td>
-            <td className="whitespace-nowrap px-5 py-3.5 text-xs text-err font-medium">{f.failureReason}</td>
+            <td className="whitespace-nowrap px-5 py-3.5 text-xs text-err font-medium">
+              {f.failureReason ? f.failureReason.replace(/^simulated gateway error:\s*/i, '').trim() : ''}
+            </td>
             <td className="whitespace-nowrap px-5 py-3.5 text-right">
               <Link href="/finance/payments" className="inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1 text-xs font-semibold text-ink hover:bg-canvas transition">
                 <RotateCcw className="size-3" /><span>Review</span>
