@@ -11,7 +11,6 @@ export function UsersHeader({ onAddUserClick }: UsersHeaderProps) {
     <PageHeader
       title="Users"
       description="Deactivated users cannot take further actions. Their past approvals remain in the record."
-      crumbs={[{ label: 'Dashboard', to: '/admin/dashboard' }, { label: 'Users' }]}
       actions={
         <button
           type="button"
