@@ -59,17 +59,17 @@ export function ManagerReportsHeader() {
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between font-serif">
-      <div>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between font-serif pb-2">
+      <div className="min-w-0">
         <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Financial &amp; Approval Reports</h1>
         <p className="mt-1 text-sm text-muted-ink">Department spend distribution, approval SLAs and governance compliance auditing.</p>
       </div>
-      <div className="flex flex-col items-start gap-2 sm:items-end">
+      <div className="flex flex-col items-start gap-2 sm:items-end sm:ml-auto shrink-0 self-end sm:self-auto">
         <button
           type="button"
           onClick={handleExportCsv}
           disabled={exporting}
-          className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink shadow-2xs hover:bg-canvas transition cursor-pointer self-start sm:self-auto disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-xs hover:bg-canvas hover:border-slate-300 transition cursor-pointer self-start sm:self-auto disabled:opacity-60"
         >
           <Download className="size-3.5 text-muted-ink" />
           <span>{exporting ? 'Preparing…' : 'Export CSV'}</span>

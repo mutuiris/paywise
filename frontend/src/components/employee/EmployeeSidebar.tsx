@@ -87,11 +87,7 @@ export default function EmployeeSidebar() {
         </nav>
       </div>
 
-      {/* Footer Info */}
-      <div className="p-4 border-t border-gray-200 text-xs text-gray-400">
-        <p className="font-semibold text-gray-600">ImaraWorks Ltd.</p>
-        <p className="text-[11px]">Demo environment</p>
-      </div>
+
     </aside>
   );
 }

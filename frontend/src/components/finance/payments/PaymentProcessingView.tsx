@@ -8,7 +8,7 @@ import { PaymentFailedTable } from './PaymentFailedTable';
 import { PaymentExecutionModal } from './PaymentExecutionModal';
 import { usePaymentProcessing } from './usePaymentProcessing';
 
-import { AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export type { PaymentItem };
 
@@ -40,15 +40,6 @@ export function PaymentProcessingView() {
         </button>
       </div>
 
-      <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/80 p-4 text-xs text-sky-950 shadow-2xs">
-        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-sky-600" />
-        <div className="space-y-0.5">
-          <p className="font-semibold text-sky-900">Mock Payment Provider Active</p>
-          <p className="text-sky-800">
-            Disbursements run through simulated sandbox gateways (M-Pesa B2C &amp; Bank RTGS/EFT). Real monetary settlement contracts are mocked in compliance with product specifications.
-          </p>
-        </div>
-      </div>
 
       {error && (
         <div role="alert" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">

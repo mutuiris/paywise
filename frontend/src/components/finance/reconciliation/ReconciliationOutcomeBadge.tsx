@@ -10,11 +10,11 @@ export function ReconciliationOutcomeBadge({ status }: { status: string }) {
       </span>
     );
   }
-  if (status === 'AMBIGUOUS') {
+  if (status === 'AMBIGUOUS' || status === 'PROCESSING') {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
         <AlertCircle className="size-3" />
-        <span>Unconfirmed</span>
+        <span>In Process</span>
       </span>
     );
   }
