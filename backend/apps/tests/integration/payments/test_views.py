@@ -230,3 +230,45 @@ class PaymentViewsIntegrationTests(TestCase):
         url = reverse("payments:process", kwargs={"payment_id": req.id})
         response = self.client.post(url, HTTP_IDEMPOTENCY_KEY="key-unauth-test")
         self.assertEqual(response.status_code, 403)
+
+    def test_attempt_list_and_reconcile_ambiguous_attempt(self) -> None:
+        req = services.create_payment_request(
+            actor=self.employee1,
+            vendor_id=self.vendor.id,
+            amount=Decimal("12000.88"),
+            invoice_number="INV-AMBIGUOUS-01",
+            description="Ambiguous gateway test",
+            payment_method=PaymentMethod.MPESA,
+        )
+        services.submit_payment_request(req, actor=self.employee1)
+        approval_services.record_approval_decision(
+            payment_request_id=req.id,
+            approver=self.manager,
+            tier=ApprovalTier.MANAGER,
+            decision=ApprovalDecision.APPROVED,
+        )
+        services.process_payment_request(
+            payment_request_id=req.id,
+            idempotency_key="idemp-ambiguous-01",
+            actor=self.finance_user,
+        )
+
+        list_url = reverse("payments:attempt-list")
+        self.client.force_login(self.employee1)
+        self.assertEqual(self.client.get(list_url).status_code, 403)
+
+        self.client.force_login(self.finance_user)
+        resp = self.client.get(list_url, {"status": "ambiguous"})
+        self.assertEqual(resp.status_code, 200)
+        [attempt] = resp.json()["results"]
+        self.assertEqual(attempt["status"], PaymentAttemptStatus.AMBIGUOUS)
+        self.assertEqual(attempt["invoice_number"], "INV-AMBIGUOUS-01")
+        self.assertEqual(attempt["vendor_name"], self.vendor.name)
+
+        rec_resp = self.client.post(
+            reverse("payments:reconcile", kwargs={"attempt_id": attempt["id"]})
+        )
+        self.assertEqual(rec_resp.status_code, 200)
+        self.assertEqual(
+            rec_resp.json()["payment_request"]["status"], PaymentRequestStatus.PAID
+        )

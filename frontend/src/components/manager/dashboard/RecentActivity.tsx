@@ -1,16 +1,18 @@
 'use client';
 
 import React from 'react';
-import { ActivityEvent } from '@/types/manager';
-import { INITIAL_PAYMENT_REQUESTS, formatDateTime } from '@/data/mock-manager-data';
+import { ActivityEvent, PaymentRequestItem } from '@/types/manager';
+import { formatDateTime } from '@/data/mock-manager-data';
 import { CheckCircle2, XCircle, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface RecentActivityProps {
   events: ActivityEvent[];
+  /** Loaded requests, used to resolve an event's request id to vendor and amount. */
+  requests?: PaymentRequestItem[];
 }
 
-export function RecentActivity({ events }: RecentActivityProps) {
+export function RecentActivity({ events, requests = [] }: RecentActivityProps) {
   return (
     <section className="rounded-xl border border-line bg-surface overflow-hidden shadow-xs font-serif">
       <div className="border-b border-line px-5 py-4 bg-surface-subtle">
@@ -29,6 +31,9 @@ export function RecentActivity({ events }: RecentActivityProps) {
         </div>
       </div>
 
+      {events.length === 0 && (
+        <p className="px-5 py-6 text-center text-xs text-muted-ink">No activity recorded yet.</p>
+      )}
       <ul className="divide-y divide-line">
         {events.slice(0, 5).map((evt) => {
           const isApproved = evt.action.toLowerCase().includes('approved');
@@ -49,10 +54,15 @@ export function RecentActivity({ events }: RecentActivityProps) {
             badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
           }
 
-          // Find vendor name & amount from initial requests or parse from description
+          // Audit events carry the request id; resolve it against the loaded requests.
           const matchingReq = evt.requestReference
-            ? INITIAL_PAYMENT_REQUESTS.find((r) => r.reference === evt.requestReference)
+            ? requests.find(
+                (r) => r.id === evt.requestReference || r.reference === evt.requestReference
+              )
             : null;
+          const referenceLabel =
+            matchingReq?.reference ||
+            (evt.requestReference ? evt.requestReference.slice(0, 8).toUpperCase() : '');
 
           let vendorName = matchingReq?.vendorName;
           if (!vendorName && evt.description) {
@@ -65,7 +75,7 @@ export function RecentActivity({ events }: RecentActivityProps) {
             }
           }
           if (!vendorName) {
-            vendorName = evt.requestReference || 'Payment Activity';
+            vendorName = referenceLabel || 'Payment Activity';
           }
 
           let amountNumber: number | null = null;
@@ -116,14 +126,14 @@ export function RecentActivity({ events }: RecentActivityProps) {
                           <span className="text-[10px] font-medium text-muted-ink mr-0.5">KES</span>
                           {formattedNumber}
                         </span>
-                        {evt.requestReference && (
-                          <span className="text-[11px] text-muted-ink">({evt.requestReference})</span>
+                        {referenceLabel && (
+                          <span className="text-[11px] text-muted-ink">({referenceLabel})</span>
                         )}
                       </div>
                     ) : (
-                      evt.requestReference && (
+                      referenceLabel && (
                         <p className="mt-0.5 text-xs text-muted-ink font-medium">
-                          {evt.requestReference}
+                          {referenceLabel}
                         </p>
                       )
                     )}

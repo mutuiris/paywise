@@ -38,10 +38,17 @@ export interface PaymentRequestItem {
   requesterId: string;
   requesterName: string;
   status: PaymentStatus;
+  rejectionReason?: string;
   createdAt: string;
   submittedAt?: string;
   updatedAt: string;
   approvals?: ApprovalStep[];
+  /** Approval tiers the backend requires for this request. */
+  requiredTiers?: ApprovalStepType[];
+  /** Approval tiers still awaiting a decision. */
+  pendingTiers?: ApprovalStepType[];
+  /** The exact decimal amount the backend returned, for money maths. */
+  amountExact?: string;
 }
 
 export interface VendorItem {
@@ -57,6 +64,7 @@ export interface VendorItem {
   tillNumber?: string;
   paybillNumber?: string;
   isActive: boolean;
+  createdAt?: string;
 }
 
 export interface ActivityEvent {

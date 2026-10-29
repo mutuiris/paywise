@@ -34,6 +34,7 @@ urlpatterns: list[URLPattern] = [
         views.payment_request_process_view,
         name="process",
     ),
+    path("attempts/", views.payment_attempt_list_view, name="attempt-list"),
     path(
         "attempts/<uuid:attempt_id>/reconcile/",
         views.payment_attempt_reconcile_view,

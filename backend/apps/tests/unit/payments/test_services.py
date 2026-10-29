@@ -397,6 +397,15 @@ class PaymentServicesTestCase(TestCase):
         self.assertEqual(failed_req.status, PaymentRequestStatus.FAILED)
         self.assertTrue(len(attempt.failure_reason) > 0)
 
+        retry, paid_req = services.process_payment_request(
+            payment_request_id=req.id,
+            idempotency_key="idemp-proc-fail-retry",
+            actor=self.finance,
+            provider=MockPaymentProvider(mode="FORCE_SUCCESS"),
+        )
+        self.assertNotEqual(retry.id, attempt.id)
+        self.assertEqual(paid_req.status, PaymentRequestStatus.PAID)
+
     def test_process_payment_request_ambiguous_and_reconciliation(self) -> None:
         req = services.create_payment_request(
             actor=self.employee,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.reporting import services
@@ -13,7 +12,6 @@ from apps.reporting.permissions import (
 )
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def activity_summary_view(request: HttpRequest) -> JsonResponse:
     """Return high-level payment activity KPIs and summary metrics."""
@@ -54,7 +52,6 @@ def activity_summary_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse(report, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def failed_payments_view(request: HttpRequest) -> JsonResponse:
     """Return queryable records of failed payments with root cause reasons."""
@@ -100,7 +97,6 @@ def failed_payments_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse(report, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def projects_breakdown_view(request: HttpRequest) -> JsonResponse:
     """Return payments grouped by organizational project and period."""

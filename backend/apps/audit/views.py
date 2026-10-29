@@ -6,7 +6,6 @@ import uuid
 from typing import Any
 
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.audit import services
@@ -32,7 +31,6 @@ def audit_event_to_dict(event: AuditEvent) -> dict[str, Any]:
     }
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def audit_event_list_view(request: HttpRequest) -> JsonResponse:
     """List system audit events with optional filtering for authorized actors."""
@@ -83,7 +81,6 @@ def audit_event_list_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"results": results, "count": len(results)}, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def entity_audit_trail_view(
     request: HttpRequest, entity_type: str, entity_id: uuid.UUID

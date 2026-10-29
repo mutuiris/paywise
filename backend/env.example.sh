@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# Use config.settings.production when deploying.
 export DJANGO_SETTINGS_MODULE="config.settings.base"
 export DJANGO_SECRET_KEY="secret-key-here"
 export DJANGO_DEBUG="true"
 export DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1"
+# The frontend origin(s). Production: e.g. https://paywise.vercel.app
+export DJANGO_CSRF_TRUSTED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000"
 
 export POSTGRES_DB="paywise"
 export POSTGRES_USER="paywise"
