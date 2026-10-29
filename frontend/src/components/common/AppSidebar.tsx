@@ -80,17 +80,17 @@ export function AppSidebar({
                 <Link
                   href={item.to}
                   onClick={onClose}
-                  className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
+                  className={`flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-brand/10 font-medium text-brand-deep'
-                      : 'text-muted-ink hover:bg-canvas hover:text-ink'
+                      ? 'bg-blue-50 text-blue-600 font-semibold'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <Icon className="size-4 shrink-0" />
+                  <Icon className={`size-4 shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
                   <span className="flex-1">{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 ? (
-                    <span className="rounded-full bg-brand px-1.5 text-[11px] font-semibold text-brand-foreground">
+                    <span className="rounded-full bg-blue-600 px-1.5 text-[11px] font-semibold text-white">
                       {item.badge}
                     </span>
                   ) : null}
@@ -101,12 +101,7 @@ export function AppSidebar({
         </ul>
       </nav>
 
-      {/* Footer Info */}
-      <div className="border-t border-line px-4 py-3">
-        <p className="text-[11px] text-muted-ink">
-          ImaraWorks Ltd · Demo environment
-        </p>
-      </div>
+
     </div>
   );
 

@@ -11,46 +11,12 @@ import { ForgotNotice } from './ForgotNotice';
 import { authService } from '@/lib/api/services';
 import { ApiClientError } from '@/lib/api/client';
 import { setClientSession, getRoleDashboardPath } from '@/lib/auth/session';
-import { SHOW_DEMO_ACCOUNTS } from '@/lib/config';
 
 interface AuthError {
   title: string;
   message: string;
   suggestion?: string;
 }
-
-const DEMO_ACCOUNTS = [
-  {
-    name: 'Grace Otieno',
-    role: 'Administrator',
-    email: 'grace.otieno@imaraworks.co.ke',
-    target: '/admin/dashboard',
-  },
-  {
-    name: 'Faith Njeri',
-    role: 'Finance Officer',
-    email: 'faith.njeri@imaraworks.co.ke',
-    target: '/finance/dashboard',
-  },
-  {
-    name: 'Carol Wanjiku',
-    role: 'Manager',
-    email: 'carol.wanjiku@imaraworks.co.ke',
-    target: '/manager/dashboard',
-  },
-  {
-    name: 'David Mutua',
-    role: 'Manager',
-    email: 'david.mutua@imaraworks.co.ke',
-    target: '/manager/dashboard',
-  },
-  {
-    name: 'Alice Mwangi',
-    role: 'Employee',
-    email: 'alice.mwangi@imaraworks.co.ke',
-    target: '/employee',
-  },
-];
 
 export function SignInForm() {
   const router = useRouter();
@@ -153,12 +119,6 @@ export function SignInForm() {
     }
   };
 
-  const handleSelectDemo = (demo: (typeof DEMO_ACCOUNTS)[0]) => {
-    setEmail(demo.email);
-    setPassword('password123');
-    signIn(demo.email, 'password123');
-  };
-
   const hasError = Boolean(error);
 
   return (
@@ -226,36 +186,6 @@ export function SignInForm() {
           disabled={isSubmitting}
         />
       </form>
-
-      {/* Demo Accounts Quick-Access */}
-      {SHOW_DEMO_ACCOUNTS && (
-        <div className="mt-8 rounded-lg border border-dashed border-line bg-surface p-4">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-ink">
-            Demo accounts (development only)
-          </p>
-          <p className="mt-1 text-[12px] text-muted-ink">
-            Click any account to jump directly into that role:
-          </p>
-          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <li key={acc.email}>
-                <button
-                  type="button"
-                  onClick={() => handleSelectDemo(acc)}
-                  className="w-full rounded-md border border-line p-2 text-left transition hover:border-brand hover:bg-brand/5 cursor-pointer"
-                >
-                  <span className="block text-[13px] font-medium text-ink">
-                    {acc.name}
-                  </span>
-                  <span className="block text-[11px] text-muted-ink">
-                    {acc.role}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

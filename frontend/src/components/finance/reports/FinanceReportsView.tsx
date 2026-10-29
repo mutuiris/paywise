@@ -87,18 +87,7 @@ export function FinanceReportsView() {
 
   return (
     <div className="space-y-6 font-serif">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <FinanceReportsHeader />
-        <button
-          type="button"
-          onClick={() => fetchReports(true)}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition"
-        >
-          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Data</span>
-        </button>
-      </div>
+      <FinanceReportsHeader onRefresh={() => fetchReports(true)} loading={loading} />
 
       {usingFallback && (
         <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle p-3 text-xs text-muted-ink">

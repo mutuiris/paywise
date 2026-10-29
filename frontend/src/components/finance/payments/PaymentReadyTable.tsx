@@ -10,14 +10,9 @@ interface Props {
 export function PaymentReadyTable({ items, onExecute }: Props) {
   return (
     <div className="rounded-xl border border-line bg-surface shadow-2xs">
-      <div className="border-b border-line p-5 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-ink">Ready for Payout ({items.length})</h2>
-          <p className="text-xs text-muted-ink">Dual authorizations complete. Ready for transfer.</p>
-        </div>
-        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-          Mock Gateway Ready
-        </span>
+      <div className="border-b border-line p-5">
+        <h2 className="text-base font-bold text-ink">Ready for Payout ({items.length})</h2>
+        <p className="text-xs text-muted-ink">Dual authorizations complete. Ready for transfer.</p>
       </div>
       {items.length === 0 ? (
         <div className="p-8 text-center text-sm text-muted-ink">No payments waiting for payout trigger.</div>
