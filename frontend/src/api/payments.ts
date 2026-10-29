@@ -43,5 +43,8 @@ export function createPaymentRequest(
 }
 
 export function submitPaymentRequest(id: string): Promise<PaymentRequest> {
-  return apiFetch<PaymentRequest>(`/api/payments/${id}/submit/`, { method: 'POST' });
+  return apiFetch<PaymentRequest & { payment_request?: PaymentRequest }>(
+    `/api/payments/${id}/submit/`,
+    { method: 'POST' },
+  ).then((data) => data.payment_request ?? data);
 }

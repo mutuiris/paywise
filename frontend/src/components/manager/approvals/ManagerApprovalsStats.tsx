@@ -2,30 +2,33 @@
 
 import React from 'react';
 import { SummaryCard } from '@/components/common/SummaryCard';
-import { formatCurrency } from '@/data/mock-manager-data';
 
 interface ManagerApprovalsStatsProps {
   pendingCount: number;
-  pendingAmount: number;
+  /** Pre-formatted exact total, for example "KES 109,500". */
+  pendingAmount: string;
   dualCount: number;
+  /** Age of the oldest request still waiting for a decision. */
+  oldestAge: string;
 }
 
 export function ManagerApprovalsStats({
   pendingCount,
   pendingAmount,
   dualCount,
+  oldestAge,
 }: ManagerApprovalsStatsProps) {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <SummaryCard
-        label="Awaiting My Approval"
+        label="Pending Approval"
         value={pendingCount}
         tone="warn"
         hint="Needs your authorization"
       />
       <SummaryCard
         label="Pending Value"
-        value={formatCurrency(pendingAmount)}
+        value={pendingAmount}
         tone="brand"
         hint="Requisitions in queue"
       />
@@ -36,10 +39,10 @@ export function ManagerApprovalsStats({
         hint="> KES 50k requires Finance"
       />
       <SummaryCard
-        label="Approval SLA"
-        value="4.2 hrs"
+        label="Oldest In Queue"
+        value={oldestAge}
         tone="ok"
-        hint="Within company policy"
+        hint="Waiting the longest"
       />
     </div>
   );

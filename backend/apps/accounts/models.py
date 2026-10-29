@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -26,10 +27,17 @@ class UserAccount(AbstractUser, TimeStampable):
         choices=UserRole.choices,
         default=UserRole.EMPLOYEE,
     )
+    department = models.CharField(max_length=100, blank=True)
 
     class Meta:
         db_table = "accounts_useraccount"
         ordering = ("username",)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # `createsuperuser` has no role prompt; a superuser is an administrator.
+        if self.is_superuser:
+            self.role = UserRole.ADMINISTRATOR
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         role_label = getattr(self, "get_role_display")()

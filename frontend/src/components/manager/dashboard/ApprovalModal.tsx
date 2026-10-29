@@ -14,11 +14,9 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { PaymentRequestItem } from '@/types/manager';
-import {
-  formatCurrency,
-  getApprovalRoute,
-} from '@/data/mock-manager-data';
+import { formatCurrency, getApprovalRoute } from '@/data/mock-manager-data';
 import { StatusBadge } from '../common/StatusBadge';
+import { getClientUser } from '@/lib/auth/session';
 
 interface ApprovalModalProps {
   request: PaymentRequestItem | null;
@@ -41,9 +39,13 @@ export function ApprovalModal({
 
   if (!isOpen || !request) return null;
 
+  const currentUser = getClientUser();
   const route = getApprovalRoute(request.amount);
+  // The backend also rejects self-approval; this only hides the button early.
+  const isSelfRequest = Boolean(currentUser?.id && request.requesterId === currentUser.id);
 
   const handleApprove = () => {
+    if (isSelfRequest) return;
     onApprove(request.id);
     onClose();
   };
@@ -242,8 +244,10 @@ export function ApprovalModal({
             </button>
             <button
               type="button"
+              disabled={isSelfRequest}
               onClick={handleApprove}
-              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer shadow-sm transition-colors"
+              title={isSelfRequest ? 'Self-approval is prohibited' : undefined}
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-deep cursor-pointer shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="size-4" />
               <span>Approve Payment</span>

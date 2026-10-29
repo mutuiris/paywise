@@ -1,5 +1,6 @@
 import React from 'react';
 import { FilterBar } from '../common/FilterBar';
+import { formatAuditAction } from '@/data/mock-admin-store';
 
 export interface AuditFiltersProps {
   search: string;
@@ -32,7 +33,7 @@ export function AuditFilters({
         >
           <option value="ALL">All actions</option>
           {actionsList.map((act) => (
-            <option key={act} value={act}>{act}</option>
+            <option key={act} value={act}>{formatAuditAction(act)}</option>
           ))}
         </select>
       </div>

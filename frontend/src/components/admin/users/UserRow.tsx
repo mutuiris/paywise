@@ -2,6 +2,7 @@ import React from 'react';
 import { AdminUser } from '@/types/admin';
 import { UserRole, ROLE_LABELS } from '@/types/auth';
 import { UserStatusBadge } from './UserStatusBadge';
+import { getClientUser } from '@/lib/auth/session';
 
 export interface UserRowProps {
   user: AdminUser;
@@ -10,7 +11,7 @@ export interface UserRowProps {
 }
 
 export function UserRow({ user, onRoleChange, onRequestToggleStatus }: UserRowProps) {
-  const isSelf = user.id === 'u6';
+  const isSelf = user.id === getClientUser()?.id;
   const dateStr = new Date(user.createdAt).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' });
   const initials = user.name.split(' ').map((n) => n[0]).join('');
 

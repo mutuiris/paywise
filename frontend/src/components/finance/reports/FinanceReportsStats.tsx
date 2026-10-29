@@ -3,27 +3,39 @@
 import React from 'react';
 import { SummaryCard } from '@/components/common/SummaryCard';
 
-export function FinanceReportsStats() {
+interface FinanceReportsStatsProps {
+  totalDisbursed?: string;
+  totalPaidCount?: number;
+  totalRequests?: number;
+  awaitingApprovalCount?: number;
+}
+
+export function FinanceReportsStats({
+  totalDisbursed = 'KES 1,480,200',
+  totalPaidCount = 14,
+  totalRequests = 17,
+  awaitingApprovalCount = 2,
+}: FinanceReportsStatsProps = {}) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <SummaryCard
         label="Total Disbursed"
-        badge="MTD"
-        value="KES 1,480,200"
-        hint="+14.2% MoM · 14 settled payouts"
+        badge="Settled"
+        value={totalDisbursed}
+        hint={`${totalPaidCount} settled payouts`}
         tone="brand"
       />
       <SummaryCard
-        label="Via M-Pesa B2C"
-        value="KES 640,900"
-        hint="43.3% of total volume"
-        tone="ok"
+        label="Requests Tracked"
+        value={String(totalRequests)}
+        hint="Cumulative workflow requests"
+        tone="neutral"
       />
       <SummaryCard
-        label="Via Bank RTGS / EFT"
-        value="KES 839,300"
-        hint="56.7% of total volume"
-        tone="neutral"
+        label="Pending Approvals"
+        value={String(awaitingApprovalCount)}
+        hint="Awaiting clearance"
+        tone="warn"
       />
       <SummaryCard
         label="Dual-Approval Compliance"

@@ -21,3 +21,21 @@ export function formatAuditDate(isoString: string): string {
     minute: '2-digit',
   });
 }
+
+export const AUDIT_ACTION_LABELS: Record<string, string> = {
+  PAYMENT_REQUEST_CREATED: 'Payment Request Created',
+  PAYMENT_REQUEST_SUBMITTED: 'Payment Request Submitted',
+  PAYMENT_REQUEST_APPROVED: 'Payment Request Approved',
+  PAYMENT_REQUEST_REJECTED: 'Payment Request Rejected',
+  PAYMENT_PROCESSING_STARTED: 'Payment Processing Started',
+  PAYMENT_COMPLETED: 'Payment Completed',
+  PAYMENT_FAILED: 'Payment Failed',
+  APPROVAL_INVALIDATED: 'Approval Invalidated',
+  VENDOR_CREATED: 'Vendor Created',
+  PROJECT_CREATED: 'Project Created',
+  USER_ROLE_CHANGED: 'User Role Changed',
+};
+
+export function formatAuditAction(action: string): string {
+  return AUDIT_ACTION_LABELS[action] || action;
+}

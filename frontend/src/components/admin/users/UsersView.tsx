@@ -9,8 +9,10 @@ import { UsersHeader } from './UsersHeader';
 import { UsersTable } from './UsersTable';
 import { AddUserModal } from './AddUserModal';
 
+import { ShieldAlert } from 'lucide-react';
+
 export function UsersView() {
-  const { filteredUsers, search, setSearch, updateRole, toggleActive, addUser } = useUsers();
+  const { filteredUsers, search, setSearch, error, updateRole, toggleActive, addUser } = useUsers();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -23,6 +25,13 @@ export function UsersView() {
   return (
     <div className="space-y-4">
       <UsersHeader onAddUserClick={() => setShowAddModal(true)} />
+
+      {error && (
+        <div role="alert" className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-4 text-xs text-amber-900 shadow-2xs">
+          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <span>{error}</span>
+        </div>
+      )}
       <FilterBar
         searchValue={search} onSearchChange={setSearch} searchPlaceholder="Name, email, role…"
         meta={`${filteredUsers.length} user${filteredUsers.length === 1 ? '' : 's'}`}

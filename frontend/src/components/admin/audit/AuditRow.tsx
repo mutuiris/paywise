@@ -1,10 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { AuditEvent } from '@/types/admin';
-import { formatAuditDate } from '@/data/mock-admin-store';
+import { formatAuditDate, formatAuditAction } from '@/data/mock-admin-store';
 
 export function AuditRow({ event }: { event: AuditEvent }) {
-  const isErr = /fail|reject/i.test(event.action);
+  const isErr = /fail|reject|invalidat/i.test(event.action);
   const isWarn = /deactivat|unconfirmed/i.test(event.action);
   const actionColor = isErr ? 'text-err font-semibold' : isWarn ? 'text-warn font-semibold' : 'text-ink font-semibold';
 
@@ -14,7 +14,7 @@ export function AuditRow({ event }: { event: AuditEvent }) {
         {formatAuditDate(event.at)}
       </td>
       <td className="px-4 py-3 text-sm font-semibold text-ink">{event.actorName}</td>
-      <td className={`px-4 py-3 text-xs ${actionColor}`}>{event.action}</td>
+      <td className={`px-4 py-3 text-xs ${actionColor}`}>{formatAuditAction(event.action)}</td>
       <td className="px-4 py-3 text-xs text-muted-ink">{event.entity}</td>
       <td className="px-4 py-3">
         {event.paymentRequestId ? (

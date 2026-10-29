@@ -12,7 +12,6 @@ export function FinanceHeader({ onMenuClick }: FinanceHeaderProps) {
   return (
     <AppHeader
       user={DEMO_USERS.faith}
-      notificationCount={3}
       onMenuClick={onMenuClick}
     />
   );
