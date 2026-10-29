@@ -10,9 +10,9 @@ interface Props {
 
 export function ReconciliationTable({ items, verifyingId, onVerify }: Props) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-canvas text-[11px] font-semibold uppercase tracking-wider text-muted-ink">
+    <div className="overflow-x-auto rounded-xl border border-line bg-surface shadow-2xs">
+      <table className="w-full min-w-[780px] text-left text-sm font-serif">
+        <thead className="bg-canvas text-[11px] font-semibold uppercase tracking-wider text-muted-ink border-b border-line">
           <tr>
             <th className="px-5 py-3">Request</th>
             <th className="px-5 py-3">Vendor</th>

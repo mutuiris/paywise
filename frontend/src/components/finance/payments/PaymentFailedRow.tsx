@@ -18,7 +18,9 @@ export function PaymentFailedRow({ item, onRetry }: Props) {
       <td className="whitespace-nowrap px-5 py-4 text-right font-serif font-semibold tabular-nums text-ink">
         {formatCurrency(item.amount)}
       </td>
-      <td className="px-5 py-4 text-xs text-err">{item.failureReason}</td>
+      <td className="px-5 py-4 text-xs text-err">
+        {item.failureReason ? item.failureReason.replace(/^simulated gateway error:\s*/i, '').trim() : ''}
+      </td>
       <td className="px-5 py-4 text-right">
         <button
           type="button"

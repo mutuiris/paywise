@@ -6,7 +6,6 @@ export function AuditHeader() {
     <PageHeader
       title="Audit Log"
       description="Read-only. Audit events cannot be edited or deleted."
-      crumbs={[{ label: 'Dashboard', to: '/admin/dashboard' }, { label: 'Audit Log' }]}
     />
   );
 }

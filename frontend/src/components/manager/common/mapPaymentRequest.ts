@@ -32,11 +32,15 @@ export function toRequestItem(r: PaymentRequestDTO): PaymentRequestItem {
 }
 
 export function toActivityEvent(e: AuditEventDTO): ActivityEvent {
+  let action = e.action;
+  if (action === 'PAYMENT_REQUEST_CREATED' || action === 'PAYMENT_REQUEST_STARTED') {
+    action = 'Requested';
+  }
   return {
     id: e.id,
     at: e.created_at || '',
     actorName: e.actor_name || (e.actor_email ? e.actor_email.split('@')[0] : 'System'),
-    action: e.action,
+    action,
     entity: e.entity_type,
     // The audit trail points at the request id; consumers resolve it to a reference.
     requestReference: e.entity_id || '',
