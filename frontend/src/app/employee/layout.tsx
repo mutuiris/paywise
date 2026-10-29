@@ -10,7 +10,7 @@ export default function EmployeeLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden font-serif">
       <EmployeeSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Suspense
