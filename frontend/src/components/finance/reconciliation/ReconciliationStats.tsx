@@ -17,19 +17,16 @@ export function ReconciliationStats({
       <SummaryCard
         label="Unconfirmed Attempts"
         value={ambiguousCount}
-        hint="Requires provider ledger query"
         tone="warn"
       />
       <SummaryCard
         label="Succeeded Settlements"
         value={succeededCount}
-        hint="Confirmed on provider statements"
         tone="ok"
       />
       <SummaryCard
         label="Failed Rejections"
         value={failedCount}
-        hint="Rejected or gateway timeout"
         tone="err"
       />
     </div>
