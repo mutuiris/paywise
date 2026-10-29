@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { FinanceDashboardHeader } from './FinanceDashboardHeader';
 import { FinanceDashboardStats } from './FinanceDashboardStats';
 import { FinanceActivityTable } from './FinanceActivityTable';
 import { QueueItem, FailedItem, AttemptItem } from './types';
 import { reportingService, approvalService, paymentService } from '@/lib/api/services';
 import { ApiClientError } from '@/lib/api/client';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, Banknote, Scale } from 'lucide-react';
 
 const toMethod = (method?: string): QueueItem['paymentMethod'] =>
   method === 'BANK' || method === 'BANK_TRANSFER' ? 'BANK_TRANSFER' : 'MPESA';
@@ -59,7 +60,7 @@ async function loadDashboard(): Promise<DashboardData> {
       vendorName: f.vendor_name || 'Vendor',
       amount: parseFloat(f.amount) || 0,
       paymentMethod: toMethod(f.payment_method),
-      failureReason: f.failure_reason,
+      failureReason: f.failure_reason ? f.failure_reason.replace(/^simulated gateway error:\s*/i, '').trim() : '',
     })),
     attempts: attemptsRes.results.slice(0, 10).map((a) => ({
       id: a.id,
@@ -110,17 +111,38 @@ export function FinanceDashboard() {
 
   return (
     <div className="space-y-6 font-serif">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <FinanceDashboardHeader />
-        <button
-          type="button"
-          onClick={fetchDashboardData}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition"
-        >
-          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Metrics</span>
-        </button>
+
+        {/* Top right actions: Process Payments & Reconciliation on top, Refresh Metrics directly beneath */}
+        <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 sm:ml-auto">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/finance/payments"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-xs sm:text-sm font-semibold text-brand-foreground shadow-2xs hover:bg-brand-deep transition-all active:scale-95"
+            >
+              <Banknote className="size-4 shrink-0" />
+              <span>Process Payments</span>
+            </Link>
+            <Link
+              href="/finance/reconciliation"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-2 text-xs sm:text-sm font-semibold text-ink shadow-2xs hover:bg-canvas hover:border-slate-300 transition-all active:scale-95"
+            >
+              <Scale className="size-4 shrink-0 text-muted-ink" />
+              <span>Reconciliation</span>
+            </Link>
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchDashboardData}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-canvas transition shadow-2xs cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh Metrics</span>
+          </button>
+        </div>
       </div>
 
       {error && (

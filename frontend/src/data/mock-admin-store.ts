@@ -23,7 +23,7 @@ export function formatAuditDate(isoString: string): string {
 }
 
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
-  PAYMENT_REQUEST_CREATED: 'Payment Request Created',
+  PAYMENT_REQUEST_CREATED: 'Requested',
   PAYMENT_REQUEST_SUBMITTED: 'Payment Request Submitted',
   PAYMENT_REQUEST_APPROVED: 'Payment Request Approved',
   PAYMENT_REQUEST_REJECTED: 'Payment Request Rejected',

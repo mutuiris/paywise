@@ -14,7 +14,7 @@ function toAttempt(a: PaymentAttemptDTO): PaymentAttempt | null {
     status: a.status === 'SUCCESS' ? 'SUCCEEDED' : a.status,
     providerReference: a.provider_reference || undefined,
     startedAt: a.created_at || '',
-    note: a.failure_reason || undefined,
+    note: a.failure_reason ? a.failure_reason.replace(/^simulated gateway error:\s*/i, '').trim() : undefined,
   };
 }
 

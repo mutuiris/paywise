@@ -5,6 +5,11 @@ import { ApiClientError } from '@/lib/api/client';
 
 const ACCOUNT_DETAILS = 'Vendor payout details on file';
 
+function cleanFailureReason(reason?: string | null): string {
+  if (!reason) return '';
+  return reason.replace(/^simulated gateway error:\s*/i, '').trim();
+}
+
 function toPaymentMethod(method: string | undefined): PaymentItem['paymentMethod'] {
   return method === 'BANK' || method === 'BANK_TRANSFER' ? 'BANK_TRANSFER' : 'MPESA';
 }
@@ -42,7 +47,7 @@ async function loadPayments(): Promise<PaymentItem[]> {
         paymentMethod: toPaymentMethod(f.payment_method),
         accountDetails: ACCOUNT_DETAILS,
         status: 'FAILED',
-        failureReason: f.failure_reason,
+        failureReason: cleanFailureReason(f.failure_reason),
       });
     });
   }
@@ -93,8 +98,8 @@ export function usePaymentProcessing() {
       setActiveItem(null);
       setError(
         attempt.status === 'AMBIGUOUS'
-          ? `${item.reference}: provider did not confirm (${attempt.failure_reason}). Resolve it on the Reconciliation page.`
-          : `${item.reference} failed: ${attempt.failure_reason || 'provider declined the payment.'}`
+          ? `${item.reference}: provider did not confirm (${cleanFailureReason(attempt.failure_reason)}). Resolve it on the Reconciliation page.`
+          : `${item.reference} failed: ${cleanFailureReason(attempt.failure_reason) || 'provider declined the payment.'}`
       );
       refreshData();
     } catch (err) {

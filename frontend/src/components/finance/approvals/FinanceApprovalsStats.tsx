@@ -19,25 +19,21 @@ export function FinanceApprovalsStats({
         label="Awaiting Approval"
         value={pendingCount}
         tone="warn"
-        hint="Dual-tier clearance (>50k)"
       />
       <SummaryCard
         label="Total Pending Value"
         value={formatCurrency(totalPendingAmount)}
         tone="brand"
-        hint="Reserved in budget"
       />
       <SummaryCard
         label="Policy Threshold"
         value="KES 50,000"
         tone="neutral"
-        hint="Manager + Finance sign-off"
       />
       <SummaryCard
-        label="Audit SLA"
+        label="Audit"
         value="100%"
         tone="ok"
-        hint="Zero self-approvals permitted"
       />
     </div>
   );
