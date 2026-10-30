@@ -19,7 +19,7 @@ export function ManagerApprovalsStats({
   oldestAge,
 }: ManagerApprovalsStatsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 font-serif">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <SummaryCard
         label="Pending Approval"
         value={pendingCount}

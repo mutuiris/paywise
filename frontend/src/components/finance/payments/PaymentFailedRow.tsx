@@ -11,11 +11,11 @@ interface Props {
 export function PaymentFailedRow({ item, onRetry }: Props) {
   return (
     <tr className="transition hover:bg-canvas/50">
-      <td className="whitespace-nowrap px-5 py-4 font-serif text-[13px] font-semibold text-err">
+      <td className="whitespace-nowrap px-5 py-4  text-[13px] font-semibold text-err">
         {item.reference}
       </td>
       <td className="px-5 py-4 font-medium text-ink">{item.vendorName}</td>
-      <td className="whitespace-nowrap px-5 py-4 text-right font-serif font-semibold tabular-nums text-ink">
+      <td className="whitespace-nowrap px-5 py-4 text-right  font-semibold tabular-nums text-ink">
         {formatCurrency(item.amount)}
       </td>
       <td className="px-5 py-4 text-xs text-err">{item.failureReason}</td>

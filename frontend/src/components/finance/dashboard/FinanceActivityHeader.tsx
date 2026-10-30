@@ -21,7 +21,7 @@ export function FinanceActivityHeader({
 }: FinanceActivityHeaderProps) {
   const tabs: DashboardTableTab[] = ['RECENT', 'QUEUE', 'FAILED'];
   return (
-    <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between bg-surface-subtle font-serif">
+    <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between bg-surface-subtle">
       <div>
         <h2 className="text-base font-semibold text-ink">{activeTab === 'RECENT' ? 'Recent Payment Attempts' : activeTab === 'QUEUE' ? 'Payment Processing Queue' : 'Failed Payment Attempts'}</h2>
         <p className="text-xs text-muted-ink mt-0.5">{activeTab === 'RECENT' ? 'Gateway outcomes & audits' : activeTab === 'QUEUE' ? 'Approved payouts queued' : 'Exceptions requiring review'}</p>

@@ -10,7 +10,7 @@ const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export function ManagerReportsView() {
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       <ManagerReportsHeader />
 
       {DEMO_MODE ? (

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useApiResource } from '@/hooks/useApiResource';
 import { listPaymentRequests } from '@/api/payments';
@@ -36,10 +37,18 @@ export default function EmployeeSidebar() {
       <div>
         {/* PayWise Brand Header */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <Link href="/employee" className="flex items-center">
-            <span className="font-serif text-lg font-bold tracking-tight text-brand">
-              PayWise
-            </span>
+          <Link
+            href="/employee"
+            className="flex items-center py-1 transition-transform hover:scale-[1.02]"
+          >
+            <Image
+              src="/images/logo.png"
+              alt="PayWise Logo"
+              width={160}
+              height={50}
+              className="h-9 w-auto object-contain"
+              priority
+            />
           </Link>
         </div>
 

@@ -19,7 +19,7 @@ export function ConfirmModal({
   const isDanger = tone === 'danger';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 font-serif">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
       <div className="w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-xl animate-fade-up">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">

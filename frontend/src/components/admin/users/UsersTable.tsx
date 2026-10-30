@@ -12,14 +12,14 @@ export interface UsersTableProps {
 export function UsersTable({ users, onRoleChange, onRequestToggleStatus }: UsersTableProps) {
   if (users.length === 0) {
     return (
-      <div className="rounded-xl border border-line bg-surface p-8 text-center text-sm text-muted-ink font-serif">
+      <div className="rounded-xl border border-line bg-surface p-8 text-center text-sm text-muted-ink">
         No users match your search criteria.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-2xs font-serif">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Users Directory</caption>

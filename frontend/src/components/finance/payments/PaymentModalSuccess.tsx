@@ -20,11 +20,11 @@ export function PaymentModalSuccess({ reference, amount, successProviderRef, onC
       <div className="mt-4 rounded-lg bg-canvas p-3.5 text-left space-y-1.5">
         <div className="flex justify-between text-xs">
           <span className="text-muted-ink">Provider Reference:</span>
-          <span className="font-serif text-xs font-semibold text-ink">{successProviderRef}</span>
+          <span className="text-xs font-semibold text-ink">{successProviderRef}</span>
         </div>
         <div className="flex justify-between text-xs">
           <span className="text-muted-ink">Disbursed Amount:</span>
-          <span className="font-serif font-semibold tabular-nums text-ink">{formatCurrency(amount)}</span>
+          <span className="font-semibold tabular-nums text-ink">{formatCurrency(amount)}</span>
         </div>
         <div className="flex justify-between text-xs">
           <span className="text-muted-ink">Status:</span>

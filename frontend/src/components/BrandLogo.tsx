@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { BrandIcon } from './BrandIcon';
 
 export { BrandIcon };
@@ -13,20 +14,19 @@ interface BrandLogoProps {
 export function BrandLogo({
   name = 'PayWise',
   subtitle = 'ImaraWorks Ltd.',
-  markClassName = 'size-9',
+  markClassName = 'h-9 w-auto object-contain',
   className = '',
 }: BrandLogoProps) {
   return (
-    <span className={`flex items-center gap-2.5 ${className}`}>
-      <BrandIcon className={markClassName} />
-      <span className="min-w-0 text-left">
-        <span className="block text-sm font-semibold leading-tight text-ink">
-          {name}
-        </span>
-        <span className="block text-[11px] leading-tight text-muted-ink">
-          {subtitle}
-        </span>
-      </span>
+    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+      <Image
+        src="/images/logo.png"
+        alt={`${name} — ${subtitle}`}
+        width={160}
+        height={50}
+        className={markClassName}
+        priority
+      />
     </span>
   );
 }
