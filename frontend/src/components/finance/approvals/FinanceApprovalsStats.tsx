@@ -14,7 +14,7 @@ export function FinanceApprovalsStats({
   totalPendingAmount,
 }: FinanceApprovalsStatsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 font-serif">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <SummaryCard
         label="Awaiting Approval"
         value={pendingCount}

@@ -175,7 +175,7 @@ export function ManagerDashboard() {
   const firstName = displayName.split(' ')[0];
 
   return (
-    <div className="space-y-6 font-serif">
+    <div className="space-y-6">
       {/* Toast Notification */}
       {toast && (
         <div

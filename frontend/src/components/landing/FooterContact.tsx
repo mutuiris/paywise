@@ -2,7 +2,7 @@ import { CONTACT_DETAILS } from './footerData';
 
 export function FooterContact() {
   return (
-    <div className="lg:col-span-3">
+    <div className="md:col-span-1 lg:col-span-3 font-serif">
       <h4 className="font-semibold text-slate-900 mb-3 text-sm tracking-wide">Contact</h4>
       <div className="space-y-2.5">
         {CONTACT_DETAILS.map((item) => {

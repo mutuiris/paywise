@@ -60,7 +60,7 @@ export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium font-serif ${config.bg} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium  ${config.bg} ${className}`}
     >
       <span className={`size-1.5 rounded-full ${config.dot}`} aria-hidden="true" />
       {config.shortLabel ? (

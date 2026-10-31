@@ -5,7 +5,7 @@ import { ScrollCue } from './ScrollCue';
 
 export function HeroSection() {
   return (
-    <section id="hero" className="relative flex min-h-[82vh] sm:min-h-[86vh] lg:min-h-[88vh] items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 border-b border-slate-200">
+    <section id="hero" className="relative flex min-h-[82vh] sm:min-h-[86vh] lg:min-h-[88vh] items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 border-b border-slate-200 font-serif">
       <div className="absolute inset-0 z-0">
         <Image src="/images/hero-bg.jpg" alt="PayWise Architecture" fill priority quality={95} className="object-cover object-center" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.68) 50%, rgba(255, 255, 255, 0.30) 85%, rgba(255, 255, 255, 0.15) 100%)' }} />

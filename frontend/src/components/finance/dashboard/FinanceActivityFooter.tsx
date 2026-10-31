@@ -16,7 +16,7 @@ export function FinanceActivityFooter({
 }: FinanceActivityFooterProps) {
   const isRecent = activeTab === 'RECENT';
   return (
-    <div className="flex items-center justify-between border-t border-line bg-canvas/40 px-5 py-3 text-xs text-muted-ink font-serif">
+    <div className="flex items-center justify-between border-t border-line bg-canvas/40 px-5 py-3 text-xs text-muted-ink">
       <span>Showing {entryCount} entries</span>
       <Link
         href={isRecent ? '/finance/reconciliation' : '/finance/payments'}

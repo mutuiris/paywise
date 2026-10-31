@@ -24,7 +24,7 @@ export function ManagerApprovalsTable({
   decidingId,
 }: ManagerApprovalsTableProps) {
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-2xs overflow-hidden font-serif">
+    <div className="rounded-xl border border-line bg-surface shadow-2xs overflow-hidden">
       <div className="border-b border-line px-5 py-4 bg-surface-subtle flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-ink">Pending Requisitions ({requests.length})</h2>

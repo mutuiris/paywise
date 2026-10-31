@@ -14,7 +14,7 @@ interface RecentActivityProps {
 
 export function RecentActivity({ events, requests = [] }: RecentActivityProps) {
   return (
-    <section className="rounded-xl border border-line bg-surface overflow-hidden shadow-xs font-serif">
+    <section className="rounded-xl border border-line bg-surface overflow-hidden shadow-xs">
       <div className="border-b border-line px-5 py-4 bg-surface-subtle">
         <h2 className="text-base font-semibold text-ink">Recent Activity & Audit Trail</h2>
         <p className="text-xs text-muted-ink mt-0.5">

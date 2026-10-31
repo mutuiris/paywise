@@ -15,7 +15,7 @@ export interface PageHeaderProps {
 
 export function PageHeader({ title, description, crumbs, actions }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between font-serif">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         {crumbs && crumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-2 flex items-center gap-1.5 text-xs text-muted-ink">

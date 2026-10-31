@@ -7,7 +7,7 @@ export interface AddUserFormData {
 
 export function AddUserForm({ data, onChange }: { data: AddUserFormData; onChange: (d: AddUserFormData) => void }) {
   return (
-    <div className="space-y-3 font-serif">
+    <div className="space-y-3">
       <div>
         <label className="block text-xs font-semibold text-ink">Full Name</label>
         <input type="text" required value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })} placeholder="e.g. Samuel Gitau" className="mt-1 w-full rounded-md border border-line px-3 py-1.5 text-xs text-ink focus:border-brand focus:outline-none" />

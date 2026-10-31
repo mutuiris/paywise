@@ -17,7 +17,7 @@ export function PaymentModalProcessing({ vendorName, amount }: Props) {
       <p className="mt-1 text-xs text-muted-ink">
         Transmitting disbursement payload for {vendorName}.
       </p>
-      <p className="mt-3 font-serif text-xs font-semibold text-brand-deep">
+      <p className="mt-3  text-xs font-semibold text-brand-deep">
         Amount: {formatCurrency(amount)}
       </p>
     </div>

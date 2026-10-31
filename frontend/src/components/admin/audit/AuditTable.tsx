@@ -5,14 +5,14 @@ import { AuditRow } from './AuditRow';
 export function AuditTable({ events }: { events: AuditEvent[] }) {
   if (events.length === 0) {
     return (
-      <div className="rounded-xl border border-line bg-surface p-8 text-center text-sm text-muted-ink font-serif">
+      <div className="rounded-xl border border-line bg-surface p-8 text-center text-sm text-muted-ink">
         No audit events match your search criteria.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-2xs font-serif">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Audit Events</caption>

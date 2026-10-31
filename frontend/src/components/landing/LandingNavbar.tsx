@@ -10,8 +10,8 @@ export function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-      <nav className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md font-serif">
+      <nav className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 font-serif">
         <Link href="/" className="flex items-center py-1 group shrink-0">
           <Image src="/images/logo.png" alt="PayWise Logo" width={160} height={48} className="h-8 sm:h-9 w-auto object-contain" priority />
         </Link>

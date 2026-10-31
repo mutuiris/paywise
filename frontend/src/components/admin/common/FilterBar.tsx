@@ -14,7 +14,7 @@ export function FilterBar({
   searchValue, onSearchChange, searchPlaceholder = 'Search…', meta, onClear, children,
 }: FilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface p-3 font-serif">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface p-3">
       <div className="flex flex-1 flex-wrap items-center gap-2.5 min-w-[240px]">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-ink" />

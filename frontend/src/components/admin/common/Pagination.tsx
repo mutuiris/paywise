@@ -14,7 +14,7 @@ export function Pagination({ page, pageSize, total, onChange }: PaginationProps)
   const end = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex items-center justify-between border-t border-line bg-surface px-4 py-3 text-xs text-muted-ink font-serif">
+    <div className="flex items-center justify-between border-t border-line bg-surface px-4 py-3 text-xs text-muted-ink">
       <p>Showing <span className="font-medium text-ink">{start}</span> to <span className="font-medium text-ink">{end}</span> of <span className="font-medium text-ink">{total}</span></p>
       <div className="flex items-center gap-1.5">
         <button

@@ -4,7 +4,7 @@ import { PLATFORM_LINKS } from './footerData';
 
 export function FooterLinks() {
   return (
-    <div className="lg:col-span-3 lg:col-start-7">
+    <div className="md:col-span-1 lg:col-span-3 lg:col-start-7 font-serif">
       <h4 className="font-semibold text-slate-900 mb-3 text-sm tracking-wide">Platform</h4>
       <ul className="space-y-2 text-xs sm:text-sm">
         {PLATFORM_LINKS.map((link) => (

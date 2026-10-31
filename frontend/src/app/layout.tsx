@@ -1,12 +1,6 @@
 import type { Metadata } from 'next';
-import { Inter, IBM_Plex_Mono, Lora } from 'next/font/google';
+import { Lora, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
-
-const inter = Inter({
-  variable: '--font-sans',
-  subsets: ['latin'],
-  display: 'swap',
-});
 
 const lora = Lora({
   variable: '--font-lora',
@@ -32,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${lora.variable} ${ibmPlexMono.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-sans antialiased text-ink bg-canvas">
+    <html lang="en" className={`${lora.variable} ${ibmPlexMono.variable} h-full scroll-smooth`}>
+      <body className="min-h-full flex flex-col font-serif antialiased text-ink bg-canvas">
         {children}
       </body>
     </html>

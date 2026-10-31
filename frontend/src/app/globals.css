@@ -22,10 +22,10 @@
   --line-subtle: #f1f5f9;        /* Delicate divider line (Slate-100) */
   --line-strong: #cbd5e1;        /* Emphasized / active border (Slate-300) */
 
-  /* 4. Brand Primary (PayWise Royal Blue) */
-  --brand: #2563eb;              /* Primary interactive blue (Blue-600) */
-  --brand-deep: #1d4ed8;         /* Darker blue for hover/active (Blue-700) */
-  --brand-light: #eff6ff;        /* Soft tinted background (Blue-50) */
+  /* 4. Brand Primary (PayWise Logo Royal Blue) */
+  --brand: #004aad;              /* Exact PayWise Logo Blue */
+  --brand-deep: #003887;         /* Darker cobalt for hover/active */
+  --brand-light: #eef5fc;        /* Soft tinted brand background */
   --brand-foreground: #ffffff;   /* Text on top of brand backgrounds */
 
   /* 5. Semantic Status Colors */
@@ -55,9 +55,10 @@
    ========================================================================== */
 
 @theme {
-  /* Typography */
-  --font-lora: var(--font-lora), serif;
-  --font-serif: var(--font-lora), serif;
+  /* Typography — Unified system-wide Lora serif font */
+  --font-serif: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-lora: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
 
   /* Surfaces */
   --color-canvas: var(--canvas);
@@ -82,6 +83,15 @@
   --color-brand-light: var(--brand-light);
   --color-brand-foreground: var(--brand-foreground);
 
+  /* Primary Blue Palette (Exact PayWise Logo Blue #004aad) */
+  --color-blue-500: #004aad;
+  --color-blue-600: #004aad;
+  --color-blue-700: #003887;
+  --color-blue-800: #00296b;
+  --color-blue-50: #eef5fc;
+  --color-blue-100: #dceaf9;
+  --color-blue-200: #b9d5f3;
+
   /* Semantic */
   --color-ok: var(--ok);
   --color-ok-light: var(--ok-light);
@@ -104,9 +114,19 @@
    Base & Global Styles
    ========================================================================== */
 
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
 body {
   background-color: var(--canvas);
   color: var(--ink);
+  font-family: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 

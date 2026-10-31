@@ -10,7 +10,7 @@ const ACTIONS = [
 
 export function AdminQuickActions() {
   return (
-    <div className="grid gap-3 sm:grid-cols-3 font-serif">
+    <div className="grid gap-3 sm:grid-cols-3">
       {ACTIONS.map((item) => (
         <Link
           key={item.to}
